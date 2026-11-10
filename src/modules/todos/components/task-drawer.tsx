@@ -3,8 +3,7 @@
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useOptimistic, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +33,7 @@ import {
 } from "../actions/tasks";
 import { DueDateField } from "./due-date-field";
 import { InlineAdd } from "./inline-add";
-import { run } from "./run-action";
+import { run, undoToast } from "./run-action";
 import { TagField } from "./tag-field";
 import { TaskCheckbox } from "./task-row";
 import { useTaskLinks } from "./use-task-links";
@@ -118,11 +117,24 @@ function DrawerBody({
   const [titleError, setTitleError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
 
-  async function save(patch: Record<string, unknown>) {
-    setSaveState("saving");
-    const result = await run(updateTaskAction({ id: task.id, ...patch }));
-    setSaveState(result.ok ? "saved" : "error");
-    return result.ok;
+  // Pickers show the new value at once and fall back to the saved one if saving fails.
+  const [view, applyPatch] = useOptimistic(task, (current, patch: Partial<TaskRow>) => ({
+    ...current,
+    ...patch,
+  }));
+  const [, startTransition] = useTransition();
+
+  /** Saves some fields. Resolves to true when the server accepted them. */
+  function save(patch: Partial<TaskRow>): Promise<boolean> {
+    return new Promise((resolve) => {
+      startTransition(async () => {
+        applyPatch(patch);
+        setSaveState("saving");
+        const result = await run(updateTaskAction({ id: task.id, ...patch }));
+        setSaveState(result.ok ? "saved" : "error");
+        resolve(result.ok);
+      });
+    });
   }
 
   async function saveTitle() {
@@ -133,30 +145,45 @@ function DrawerBody({
       return;
     }
     setTitleError(null);
-    if (next !== task.title) await save({ title: next });
+    if (next !== task.title && !(await save({ title: next }))) {
+      setTitle(task.title); // saving failed: show what is really saved
+      return;
+    }
     setTitle(next);
   }
 
   async function saveNotes() {
     const next = notes.trim();
-    if (next !== (task.notes ?? "")) await save({ notes: next });
+    if (next !== (task.notes ?? "") && !(await save({ notes: next }))) {
+      setNotes(task.notes ?? "");
+    }
+  }
+
+  function saveTags(tagIds: string[]) {
+    startTransition(async () => {
+      applyPatch({ tagIds });
+      await run(setTaskTagsAction({ id: task.id, tagIds }));
+    });
   }
 
   async function trash() {
     const result = await run(trashTaskAction({ id: task.id }));
     if (!result.ok) return;
     close();
-    toast("Task moved to Trash", {
-      duration: 8000,
-      action: { label: "Undo", onClick: () => void run(restoreTaskAction({ id: task.id })) },
-    });
+    undoToast("Task moved to Trash", () => void run(restoreTaskAction({ id: task.id })));
   }
 
   async function moveTo(listId: string) {
     if (listId === task.listId) return;
     const target = lists.find((l) => l.id === listId);
+    const from = { listId: task.listId, sectionId: task.sectionId };
     const result = await run(moveTaskAction({ id: task.id, listId }));
-    if (result.ok) toast.success(`Moved to ${target?.name ?? "list"}`);
+    if (result.ok) {
+      undoToast(
+        `Moved to ${target?.name ?? "list"}`,
+        () => void run(moveTaskAction({ id: task.id, ...from })),
+      );
+    }
   }
 
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
@@ -215,7 +242,7 @@ function DrawerBody({
         <div className="flex flex-col gap-2">
           <Label>Due</Label>
           <DueDateField
-            value={{ dueDate: task.dueDate, dueTime: task.dueTime }}
+            value={{ dueDate: view.dueDate, dueTime: view.dueTime }}
             ctx={ctx}
             onChange={(due) => void save(due)}
           />
@@ -224,7 +251,7 @@ function DrawerBody({
         <div className="flex flex-col gap-2">
           <Label htmlFor="task-priority">Priority</Label>
           <Select
-            value={String(task.priority)}
+            value={String(view.priority)}
             onValueChange={(v) => void save({ priority: Number(v) })}
           >
             <SelectTrigger id="task-priority" className="h-11 w-full md:h-8">
@@ -243,7 +270,7 @@ function DrawerBody({
         {isSubtask ? null : (
           <div className="flex flex-col gap-2">
             <Label htmlFor="task-list">List</Label>
-            <Select value={task.listId} onValueChange={(v) => void moveTo(v)}>
+            <Select value={view.listId} onValueChange={(v) => void moveTo(v)}>
               <SelectTrigger id="task-list" className="h-11 w-full md:h-8">
                 <SelectValue />
               </SelectTrigger>
@@ -263,7 +290,7 @@ function DrawerBody({
           <div className="flex flex-col gap-2">
             <Label htmlFor="task-section">Section</Label>
             <Select
-              value={task.sectionId ?? "none"}
+              value={view.sectionId ?? "none"}
               onValueChange={(v) => void save({ sectionId: v === "none" ? null : v })}
             >
               <SelectTrigger id="task-section" className="h-11 w-full md:h-8">
@@ -284,11 +311,7 @@ function DrawerBody({
 
       <div className="flex flex-col gap-2">
         <Label>Tags</Label>
-        <TagField
-          allTags={tags}
-          selectedIds={task.tagIds}
-          onChange={(ids) => void run(setTaskTagsAction({ id: task.id, tagIds: ids }))}
-        />
+        <TagField allTags={tags} selectedIds={view.tagIds} onChange={saveTags} />
       </div>
 
       <div className="flex flex-col gap-2">

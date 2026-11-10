@@ -22,7 +22,7 @@ import {
 } from "../actions/lists";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ListFormDialog } from "./list-form-dialog";
-import { run } from "./run-action";
+import { run, undoToast } from "./run-action";
 import type { DateContext } from "./types";
 
 function goalText(targetDate: string, ctx: DateContext): string {
@@ -62,13 +62,7 @@ export function ListHeader({
     const result = await run(trashListAction({ id: list.id }));
     if (!result.ok) return;
     router.push("/inbox");
-    toast(`Moved "${list.name}" to Trash`, {
-      duration: 8000,
-      action: {
-        label: "Undo",
-        onClick: () => void run(restoreListAction({ id: list.id })),
-      },
-    });
+    undoToast(`Moved "${list.name}" to Trash`, () => void run(restoreListAction({ id: list.id })));
   }
 
   return (

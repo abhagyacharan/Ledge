@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 4 are done: sign-in, the database, and a working task manager with lists, sections, tags, subtasks, a detail drawer, quick add, the Today, Upcoming, All, Completed and Tag views, sorting, grouping, filtering and drag-and-drop ordering. Undo, Trash and keyboard shortcuts are next (Phase 5).
+**Status:** Phases 0 to 5 are done: sign-in, the database, and a full task manager with lists, sections, tags, subtasks, a detail drawer, quick add, six views, sorting, grouping, filtering, drag-and-drop, Undo, a Trash with 30-day clean-up, instant updates, keyboard shortcuts and a command palette. Polish (Phase 6) is next.
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 

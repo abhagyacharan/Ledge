@@ -24,6 +24,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Collation.** The rule a database uses to decide alphabetical order, for example whether capital letters count the same as small ones.
 
+**Command palette.** A search box that pops up (Ctrl+K or `/`) to jump to any view, list or tag, or to run an action, without using the menu.
+
 **Commit.** A saved snapshot of the project in git, with a short note about what changed.
 
 **Composite foreign key.** A link between two records that must match on two things at once. Ledge uses it so a task can only be linked to a list owned by the same person.
@@ -80,6 +82,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Integration test.** A test that checks several pieces working together, here including a real database.
 
+**Keyboard shortcut.** A key or key combination that does something without the mouse, such as `q` for quick add.
+
 **Lint.** Running ESLint.
 
 **Localhost.** The name for "this very computer". `http://localhost:3000` is the app running on your own computer.
@@ -108,6 +112,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Proxy.** The quick doorman at the front of the app. In Ledge it only checks that a login wristband exists.
 
+**Purge (clean-up).** Erasing items that have been in the Trash longer than 30 days.
+
 **Quick add.** The round "+" button (or the `q` key) that opens a small box for adding tasks one after another.
 
 **Radix.** A set of building blocks for interface parts such as menus and dialogs that work well with keyboards and screen readers.
@@ -115,6 +121,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
 
 **requireUser().** A small helper run at the start of every private page and action. It confirms who you are, or sends you to Sign in.
+
+**Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
 
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
 
@@ -127,6 +135,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Seed data.** Sample records created on purpose so every screen can be tried out with something to show.
 
 **Seed.** The command (`pnpm db:seed`) that fills the app with sample data for development.
+
+**Selected task.** The task the keyboard cursor is on. It shows a ring around it, and keys such as `x` and `e` act on it.
 
 **Server action.** A function that runs on the server when you do something in the page (such as adding a task).
 

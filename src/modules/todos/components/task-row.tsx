@@ -2,12 +2,12 @@
 
 import { AlertCircle, CalendarDays, Check, Flag, ListChecks } from "lucide-react";
 import Link from "next/link";
-import { useTransition, type CSSProperties, type ReactNode, type Ref } from "react";
+import { useOptimistic, useTransition, type CSSProperties, type ReactNode, type Ref } from "react";
 import { formatDue, isOverdue } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
 import { setTaskDoneAction } from "../actions/tasks";
-import { run } from "./run-action";
+import { run, undoToast } from "./run-action";
 import { useTaskLinks } from "./use-task-links";
 import { PRIORITY_LABELS, type DateContext, type TagsById } from "./types";
 
@@ -18,31 +18,51 @@ const PRIORITY_STYLE = [
   "text-red-700 dark:text-red-400",
 ];
 
-export function TaskCheckbox({
-  taskId,
+/**
+ * Ticking is optimistic: the checkbox and the row change at once, and go back (with an error
+ * message) if the server says no. Completing a task shows an Undo toast for a few seconds.
+ */
+export function useToggleDone(taskId: string, title: string, serverDone: boolean) {
+  const [, startTransition] = useTransition();
+  const [done, setDone] = useOptimistic(serverDone);
+
+  function toggle() {
+    startTransition(async () => {
+      const next = !done;
+      setDone(next);
+      const result = await run(setTaskDoneAction({ id: taskId, done: next }));
+      if (result.ok && next) {
+        undoToast(
+          `Completed "${title}"`,
+          () => void run(setTaskDoneAction({ id: taskId, done: false })),
+        );
+      }
+    });
+  }
+
+  return { done, toggle };
+}
+
+export function CheckboxButton({
   title,
   done,
+  onToggle,
   size = "md",
 }: {
-  taskId: string;
   title: string;
   done: boolean;
+  onToggle: () => void;
   size?: "sm" | "md";
 }) {
-  const [pending, startTransition] = useTransition();
   return (
     <button
       type="button"
       role="checkbox"
       aria-checked={done}
       aria-label={`${title}: mark ${done ? "not done" : "done"}`}
-      disabled={pending}
-      onClick={() =>
-        startTransition(
-          async () => void (await run(setTaskDoneAction({ id: taskId, done: !done }))),
-        )
-      }
-      className="flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 md:size-8"
+      data-task-checkbox
+      onClick={onToggle}
+      className="flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-8"
     >
       <span
         className={cn(
@@ -57,6 +77,22 @@ export function TaskCheckbox({
       </span>
     </button>
   );
+}
+
+/** A checkbox that manages its own optimistic state (used in the drawer and its subtask list). */
+export function TaskCheckbox({
+  taskId,
+  title,
+  done: serverDone,
+  size = "md",
+}: {
+  taskId: string;
+  title: string;
+  done: boolean;
+  size?: "sm" | "md";
+}) {
+  const { done, toggle } = useToggleDone(taskId, title, serverDone);
+  return <CheckboxButton title={title} done={done} onToggle={toggle} size={size} />;
 }
 
 export function DueLabel({
@@ -132,7 +168,7 @@ export function TaskRow({
   liStyle?: CSSProperties;
   dragging?: boolean;
 }) {
-  const done = task.status === "done";
+  const { done, toggle } = useToggleDone(task.id, task.title, task.status === "done");
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
   const tagList = task.tagIds.map((id) => tagsById[id]).filter(Boolean);
   const { hrefFor } = useTaskLinks();
@@ -140,6 +176,8 @@ export function TaskRow({
   return (
     <li
       ref={liRef}
+      data-task-row
+      data-task-id={task.id}
       style={liStyle}
       className={cn(
         "group flex items-start gap-1 border-b bg-background py-1 last:border-b-0",
@@ -147,9 +185,10 @@ export function TaskRow({
       )}
     >
       {handle}
-      <TaskCheckbox taskId={task.id} title={task.title} done={done} />
+      <CheckboxButton title={task.title} done={done} onToggle={toggle} />
       <Link
         href={hrefFor(task.id)}
+        data-task-link
         scroll={false}
         className="min-w-0 flex-1 rounded-md py-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:py-1"
       >

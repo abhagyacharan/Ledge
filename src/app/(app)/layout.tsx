@@ -5,13 +5,15 @@ import { enabledModules } from "@/config/modules";
 import { TodosProvider } from "@/modules/todos/components/todos-provider";
 import { getInbox, listLists } from "@/server/data/lists";
 import { listTags } from "@/server/data/tags";
+import { maybePurgeTrash } from "@/server/data/trash";
 import { requireUser } from "@/server/session";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Real auth check (the proxy only looks for a cookie).
   const { userId, user } = await requireUser();
   const [inbox, lists, tags] = await Promise.all([
-    getInbox(userId),
+    // Erases items that have been in Trash for 30 days (at most once an hour per user).
+    maybePurgeTrash(userId).then(() => getInbox(userId)),
     listLists(userId),
     listTags(userId),
   ]);

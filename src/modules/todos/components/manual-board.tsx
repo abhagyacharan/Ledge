@@ -177,7 +177,12 @@ export function ManualBoard({ listId, sections, tasks, subtasksOf, tagsById, ctx
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+    <DndContext
+      id={`board-${listId}`}
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onDragEnd}
+    >
       {containers.map(renderContainer)}
     </DndContext>
   );

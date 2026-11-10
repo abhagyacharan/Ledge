@@ -5,11 +5,12 @@ import {
   ListChecks,
   ListTodo,
   Sun,
+  Trash2,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
-import { QuickAdd } from "@/modules/todos/components/quick-add";
+import { TodoGlobal } from "@/modules/todos/components/todo-global";
 import { TodoSidebarSection } from "@/modules/todos/components/sidebar-section";
 
 /**
@@ -55,9 +56,10 @@ export const modules: AppModule[] = [
       { label: "Upcoming", route: "/upcoming", icon: CalendarDays },
       { label: "All tasks", route: "/all", icon: ListTodo },
       { label: "Completed", route: "/completed", icon: CircleCheckBig },
+      { label: "Trash", route: "/trash", icon: Trash2 },
     ],
     SidebarSection: TodoSidebarSection,
-    Global: QuickAdd,
+    Global: TodoGlobal,
   },
   {
     id: "expenses",
