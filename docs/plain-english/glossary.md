@@ -24,6 +24,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Check constraint.** A rule built into a database table that rejects bad values, for example a priority above 3.
 
+**Cloudflare Tunnel.** A way to reach your home server from the internet without opening any door on your router. Your server connects out to Cloudflare, and Cloudflare passes visitors down that connection, with HTTPS included.
+
 **Collation.** The rule a database uses to decide alphabetical order, for example whether capital letters count the same as small ones.
 
 **Command palette.** A search box that pops up (Ctrl+K or `/`) to jump to any view, list or tag, or to run an action, without using the menu.
@@ -33,6 +35,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Composite foreign key.** A link between two records that must match on two things at once. Ledge uses it so a task can only be linked to a list owned by the same person.
 
 **Container.** A sealed box in which a program runs, so it cannot interfere with the rest of the computer. Made by Docker.
+
+**Content Security Policy (CSP).** A set of instructions a website gives the browser about what it may load, for example "only things from this site, never inside another site's frame". It limits the damage if an attacker slips something into a page.
 
 **Contrast.** How different the colour of text is from its background. Too little makes text hard to read, especially for people with low vision.
 
@@ -84,9 +88,13 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Hashing.** Scrambling a password in a one-way process so that the original cannot be recovered from the stored result.
 
+**Health check.** A small address (`/api/health`) that says "ok" only if the app can really reach its database. Docker and you use it to tell whether Ledge is working.
+
 **HttpOnly.** A cookie rule: scripts on a web page are not allowed to read the cookie.
 
 **HTTPS.** The encrypted version of web traffic. Needed for the "Secure" cookie rule. It shows as a padlock in the browser.
+
+**Image (Docker).** The finished, packaged copy of a program that Docker starts containers from. Ledge's image is built from the Dockerfile.
 
 **Inbox.** The list every account has from the start. New tasks land here unless you choose another list. It cannot be deleted.
 
@@ -111,6 +119,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Net savings.** Money in, minus EMIs and loans, minus living expenses, for the period you are looking at.
 
 **Next.js.** The toolkit used to build the app's pages and server side.
+
+**Off-site backup.** A copy of your backups kept somewhere other than the server (a cloud drive, another computer, a second disk), so one disaster cannot destroy both the data and its backup.
 
 **Optimistic update.** Showing the result of your action instantly, before the server confirms it, and quietly undoing it if the server says no.
 
@@ -143,6 +153,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Reduced motion.** A setting on your computer or phone that asks apps not to animate. Ledge obeys it.
 
 **requireUser().** A small helper run at the start of every private page and action. It confirms who you are, or sends you to Sign in.
+
+**Restore.** Putting a backup back, so the database matches how it was when the backup was taken. Anything saved after the backup is lost.
 
 **Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
 

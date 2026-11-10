@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. A frontend redesign (Phase 8) is next, then deployment and backups (Phase 9).
+**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. The look was redesigned in Phase 8. Phase 9 (deployment and backups) is built and checked locally; the step-by-step guide for putting it on your server is [docs/deploy-guide.md](docs/deploy-guide.md).
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 
@@ -27,15 +27,16 @@ Port 5433 (not 5432) avoids clashing with other local Postgres containers. If yo
 
 Copy `.env.example` to `.env` and fill it in.
 
-| Name                                                | Purpose                                                                            |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                      | Postgres connection string                                                         |
-| `BETTER_AUTH_SECRET`                                | Long random string (32+ chars) used by Better Auth                                 |
-| `BETTER_AUTH_URL`                                   | Public base URL of the app                                                         |
-| `ALLOW_SIGNUP`                                      | `true` or `false`. Set to `false` on the server after creating the owner account   |
-| `TZ`                                                | Server timezone (`Asia/Kolkata`)                                                   |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                  |
-| `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server) |
+| Name                                                | Purpose                                                                             |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                      | Postgres connection string                                                          |
+| `BETTER_AUTH_SECRET`                                | Long random string (32+ chars) used by Better Auth                                  |
+| `BETTER_AUTH_URL`                                   | Public base URL of the app                                                          |
+| `ALLOW_SIGNUP`                                      | `true` or `false`. Set to `false` on the server after creating the owner account    |
+| `TZ`                                                | Server timezone (`Asia/Kolkata`)                                                    |
+| `CLIENT_IP_HEADER` (optional)                       | Header a proxy sets to the visitor's address (`cf-connecting-ip` behind Cloudflare) |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                   |
+| `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server)  |
 
 ## Run
 
@@ -67,8 +68,28 @@ Unit and integration tests take about 15 seconds. Tests that only need a user us
 
 ## Deploy
 
-_TBD (Phase 9)._ Docker Compose on the home server, exposed via Cloudflare Tunnel or Tailscale.
+Ledge runs on a home server with Docker Compose and is reached over HTTPS through a Cloudflare Tunnel (no router ports are opened). **The full step-by-step guide is [docs/deploy-guide.md](docs/deploy-guide.md).** In short, on the server:
+
+```bash
+cp .env.production.example .env   # fill in the secrets and your https address
+mkdir -p backups
+docker compose up -d --build                # database, migrations, app, nightly backups
+docker compose --profile tunnel up -d       # also start the Cloudflare Tunnel
+curl http://127.0.0.1:3000/api/health       # {"status":"ok"} when the app can reach the database
+```
+
+What is in the stack (`docker-compose.yml`): `db` (Postgres 18, named volume, port not published), `migrate` (one-shot: applies new migrations, then exits), `app` (the Next.js standalone server as a non-root user, port bound to 127.0.0.1 only), `cloudflared` (only with `--profile tunnel`), `backup` (nightly dump). The image is built by the multi-stage `Dockerfile`. A build needs internet access once (packages and fonts); the running app does not.
+
+Update later: `git pull && docker compose up -d --build` (migrations run automatically). After creating your account, set `ALLOW_SIGNUP=false` in `.env` and run `docker compose up -d`.
 
 ## Backup and restore
 
-_TBD (Phase 9)._ Nightly `pg_dump`, copied off the machine; the restore command will be documented here after a restore has been tested.
+The `backup` container writes a gzip dump of the database every night at 02:30 India time (21:00 UTC) to `./backups/daily` (newest 14 kept) and copies Sunday's into `./backups/weekly` (newest 8 kept). **A backup on the same disk is not enough: copy `./backups` off the machine** (rclone or a second disk; see the guide, step 9.2).
+
+```bash
+docker compose run --rm --entrypoint "sh /backup.sh once" backup     # a backup right now
+sh scripts/restore.sh backups/daily/ledge-2026-11-12-2100.sql.gz        # practice restore into a scratch database
+sh scripts/restore.sh backups/daily/ledge-2026-11-12-2100.sql.gz --live # REPLACE the live database (asks you to type RESTORE)
+```
+
+The restore (scratch and live) was tested on a development machine against a real dump. Test it once on your own server too (guide, step 9.3).

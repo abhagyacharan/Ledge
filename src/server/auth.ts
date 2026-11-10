@@ -33,8 +33,10 @@ export const auth = betterAuth({
     // plain-http localhost development cannot use them.
     useSecureCookies: isProduction,
     defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
-    // TODO(Phase 9): behind Cloudflare Tunnel set
-    // ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } so rate limits see real client IPs.
+    // Behind Cloudflare Tunnel every request comes from the tunnel, so rate limits would treat all
+    // visitors as one. Read the real address from the header Cloudflare sets (CLIENT_IP_HEADER).
+    // Only safe because the app port is not reachable except through the tunnel (docker-compose.yml).
+    ...(env.CLIENT_IP_HEADER ? { ipAddress: { ipAddressHeaders: [env.CLIENT_IP_HEADER] } } : {}),
   },
   rateLimit: {
     enabled: true, // off by default in development; keep behaviour identical everywhere

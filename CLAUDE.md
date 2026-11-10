@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Current phase          | **Phase 9: Deploy and backup** (Phases 0 to 8 done)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Last verified test run | 2026-11-11 (after the Phase 8 redesign): `typecheck`, `lint`, `format:check` clean; `pnpm test` 361 tests pass (real database); `pnpm test:e2e` 74 Playwright tests pass in Chrome: accessibility audit (axe, WCAG 2.1 A and AA) of every screen (including the five expense screens and the add-entry forms) in light and dark, phone-width checks (tap targets, no sideways scroll, full-screen drawer), sign-up and sign-in, keyboard-only and focus rings, the expense flows (add one entry of each kind, period picker, edit, delete and Undo, filter, sort, search), plus all earlier flows. Browser-checked the expense Summary against O's sheet numbers. Not checked: a real screen reader, `secure` cookie over real HTTPS, real touch devices |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Enabled modules        | todos (lists, tasks, views); expenses (summary, income, EMIs and loans, expenses, investments)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Current phase          | **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, waiting for O to deploy by hand)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Last verified test run | 2026-11-11 (after Phase 9): `typecheck`, `lint`, `format:check` clean; `pnpm test` 362 tests pass (real database); `pnpm test:e2e` 74 Playwright tests pass in Chrome: accessibility audit (axe, WCAG 2.1 A and AA) of every screen (including the five expense screens and the add-entry forms) in light and dark, phone-width checks (tap targets, no sideways scroll, full-screen drawer), sign-up and sign-in, keyboard-only and focus rings, the expense flows (add one entry of each kind, period picker, edit, delete and Undo, filter, sort, search), plus all earlier flows. Browser-checked the expense Summary against O's sheet numbers. Also verified locally: the production Docker stack (build, migrate, health, headers, sign-up and task on the production build, nightly backup, scratch and live restore). Not checked: Cloudflare Tunnel and HTTPS on the real server, the off-site backup copy, a real screen reader, `secure` cookie over real HTTPS, real touch devices |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Enabled modules        | todos (lists, tasks, views); expenses (summary, income, EMIs and loans, expenses, investments)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
@@ -90,7 +90,9 @@ Next.js and Better Auth APIs change between versions. **Verify against current d
 package.json  pnpm-workspace.yaml  .npmrc  next.config.ts  eslint.config.mjs  .prettierrc.json
 vitest.config.mts  playwright.config.ts  drizzle.config.ts  components.json
 docker-compose.yml  docker-compose.dev.yml   # prod-like db / dev-only DB port override
-Dockerfile                                   # arrives in Phase 9
+Dockerfile  .dockerignore  .gitattributes    # multi-stage image: base, deps, builder, migrator, runner
+.env.production.example                      # the server's settings template (compose reads .env)
+scripts/                                     # seed.ts, backup.sh (nightly dump), restore.sh
 src/
   proxy.ts                  # optimistic cookie redirect only (not real auth)
   hooks/                    # shared React hooks (shadcn)
@@ -289,7 +291,8 @@ pnpm db:generate       # drizzle-kit generate migration
 pnpm db:migrate        # apply migrations
 pnpm db:studio         # drizzle studio
 pnpm db:seed           # demo user demo@ledge.test with sample data (dev only; refuses in production)
-docker compose up -d   # app + postgres (production-like; app service arrives in Phase 9)
+docker compose up -d --build   # prod stack: db, migrate (one-shot), app, backup; add `--profile tunnel` for cloudflared (docs/deploy-guide.md)
+sh scripts/restore.sh <backup.sql.gz> [--live]   # restore a backup (scratch database by default)
 ```
 
 Add a `db:seed` script that creates a demo user with realistic lists, tags, subtasks, and overdue and recurring tasks, so every view can be checked quickly. **Seed must refuse to run when `NODE_ENV=production`.**
@@ -306,7 +309,10 @@ BETTER_AUTH_SECRET=             # long random string
 BETTER_AUTH_URL=http://localhost:3000
 ALLOW_SIGNUP=true
 TZ=Asia/Kolkata
+CLIENT_IP_HEADER=               # optional: cf-connecting-ip behind Cloudflare Tunnel
 ```
+
+The server uses `.env.production.example` (adds `TUNNEL_TOKEN`, `BACKUP_UID`, `BACKUP_GID`, optional `BACKUP_AT`, `APP_PORT`); compose builds `DATABASE_URL` itself.
 
 Also listed in `.env.example` for the Postgres container: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (must match `DATABASE_URL`). Local `DATABASE_URL` uses port 5433. Tests use `TEST_DATABASE_URL` if set, else `ledge_test` on the same server.
 
@@ -314,19 +320,20 @@ Also listed in `.env.example` for the Postgres container: `POSTGRES_USER`, `POST
 
 ## 12. Deployment, backup, security
 
-**Deploy (home server)**
+**Deploy (home server)** (decided 2026-11-11: **Cloudflare Tunnel**; step-by-step guide: `docs/deploy-guide.md`)
 
-- Multi-stage `Dockerfile` using Next.js standalone output, running as a non-root user.
-- `docker-compose.yml`: `app` and `db` (pinned current stable Postgres major, named volume, healthcheck). The DB port is **not** published to the host or internet.
-- Expose via **Cloudflare Tunnel or Tailscale**, never by opening router ports. HTTPS is required because cookies are `secure`.
-- `GET /api/health` returns 200 only if the DB is reachable.
-- Migrations run on deploy (a one-shot command or an entrypoint step), never automatically on every request.
+- Multi-stage `Dockerfile` (stages base, deps, builder, migrator, runner) using Next.js standalone output; the runner is `node:26-alpine` as the non-root user `ledge`.
+- `docker-compose.yml`: `db` (Postgres 18, named volume, healthcheck, port **not** published), `migrate` (one-shot, `service_completed_successfully` before `app` and `backup`), `app` (port bound to `127.0.0.1` only), `cloudflared` (profile `tunnel`, `TUNNEL_TOKEN`), `backup` (sidecar, nightly).
+- Expose via Cloudflare Tunnel, never by opening router ports. HTTPS is required because cookies are `secure`. The tunnel's service URL is `http://app:3000` (the compose service name). Rate limits read the visitor address from `CLIENT_IP_HEADER` (`cf-connecting-ip`), which is safe only because the app port is not reachable except through the tunnel.
+- `GET /api/health` returns 200 only if the DB is reachable (503 otherwise); it is public and uncached.
+- Migrations run as the one-shot `migrate` service on every `docker compose up`, never on web requests.
+- Security headers are set in `next.config.ts` (CSP with `'unsafe-inline'` scripts because Next inlines small scripts, `nosniff`, `Referrer-Policy`, `X-Frame-Options`, COOP, Permissions-Policy, HSTS in production).
 
 **Backup**
 
-- Nightly `pg_dump` (gzip, dated filename) via cron or a sidecar container. Keep 14 daily and 8 weekly.
-- Copy dumps **off the machine** (second disk, `rclone`, or a cloud bucket). A backup on the same disk is not a backup.
-- Document the restore command in the README and **test a restore once** before relying on it.
+- `scripts/backup.sh` (run by the `backup` container): `pg_dump` plain SQL, gzip, dated filename, verified (`gzip -t`, minimum size), into `./backups/daily` (newest 14 kept) and, on Sundays, `./backups/weekly` (newest 8 kept). Runs at 21:00 UTC (02:30 IST) and once at first start.
+- Copy dumps **off the machine** (second disk, `rclone`, or a cloud bucket). A backup on the same disk is not a backup. Documented in the guide; **O sets it up** (the repo cannot know the destination).
+- Restore: `scripts/restore.sh <file> [--live]` (README and guide). Tested on a development machine (scratch and live paths); O repeats the scratch restore once on the server.
 
 **Security checklist**
 
@@ -355,19 +362,19 @@ This is the canonical plan. It expands the original suggested build order into p
 
 **Stop line:** if it is Saturday evening and P0 is not done, drop all P1 work. If it is Sunday night, deploy what exists and freeze. After that, maintenance is capped at about 2 hours per week so the main plan is not starved. When the stop line triggers, record it in the status snapshot.
 
-| #   | Phase                           | Status                |
-| --- | ------------------------------- | --------------------- |
-| 0   | Scaffold                        | `[x]` done 2026-11-10 |
-| 1   | Auth                            | `[x]` done 2026-11-10 |
-| 2   | Data model                      | `[x]` done 2026-11-10 |
-| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10 |
-| 4   | Views (P0)                      | `[x]` done 2026-11-10 |
-| 5   | Safety (P0)                     | `[x]` done 2026-11-10 |
-| 6   | Polish                          | `[x]` done 2026-11-10 |
-| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11 |
-| 8   | Frontend redesign               | `[x]` done 2026-11-11 |
-| 9   | Deploy and backup               | `[ ]`                 |
-| 10  | P1 items (only if time remains) | `[ ]`                 |
+| #   | Phase                           | Status                 |
+| --- | ------------------------------- | ---------------------- |
+| 0   | Scaffold                        | `[x]` done 2026-11-10  |
+| 1   | Auth                            | `[x]` done 2026-11-10  |
+| 2   | Data model                      | `[x]` done 2026-11-10  |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10  |
+| 4   | Views (P0)                      | `[x]` done 2026-11-10  |
+| 5   | Safety (P0)                     | `[x]` done 2026-11-10  |
+| 6   | Polish                          | `[x]` done 2026-11-10  |
+| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11  |
+| 8   | Frontend redesign               | `[x]` done 2026-11-11  |
+| 9   | Deploy and backup               | `[~]` built; O deploys |
+| 10  | P1 items (only if time remains) | `[ ]`                  |
 
 ### Phase 0: Scaffold
 
@@ -503,19 +510,21 @@ Exit: O has looked at it in a browser and approved the direction (O: please revi
 
 ### Phase 9: Deploy and backup
 
-Goal: running on the home server, backed up, restorable.
+Goal: running on the home server, backed up, restorable. **Status: built and verified locally (2026-11-11); waiting for O to deploy by hand with `docs/deploy-guide.md`.** O chose to do the server steps himself, so the items marked (O) cannot be ticked by Claude.
 
-- [ ] Multi-stage `Dockerfile` (standalone output, non-root)
-- [ ] Production `docker-compose.yml` (DB not published, healthcheck, named volume)
-- [ ] `GET /api/health` returns 200 only when the DB is reachable
-- [ ] Migrations run as a one-shot step on deploy
-- [ ] Cloudflare Tunnel or Tailscale configured (answer §16 Q2 first); HTTPS working
-- [ ] Security headers; `pnpm audit` clean or reviewed
-- [ ] Nightly `pg_dump` (14 daily, 8 weekly) copied off the machine
-- [ ] Restore tested once; restore command in README
-- [ ] O creates his account, then `ALLOW_SIGNUP=false` on the server
+- [x] Multi-stage `Dockerfile` (standalone output, non-root) (2026-11-11)
+- [x] Production `docker-compose.yml` (DB not published, healthcheck, named volume) (2026-11-11)
+- [x] `GET /api/health` returns 200 only when the DB is reachable (2026-11-11)
+- [x] Migrations run as a one-shot step on deploy (2026-11-11)
+- [x] Cloudflare Tunnel service in compose and a step-by-step guide; hostname and Cloudflare account are O's (§16 Q2 answered: Cloudflare Tunnel) (2026-11-11)
+- [ ] (O) Cloudflare Tunnel configured on the real server; HTTPS working
+- [x] Security headers; `pnpm audit --prod` clean (the `shadcn` CLI moved to dev dependencies; 3 dev-tooling advisories reviewed, none ship) (2026-11-11)
+- [x] Nightly `pg_dump` (14 daily, 8 weekly) with verification (2026-11-11)
+- [ ] (O) Backups copied off the machine (guide step 9.2)
+- [x] Restore tested against a real dump, scratch and live paths, locally; restore commands in README (2026-11-11)
+- [ ] (O) Restore tested once on the server; O creates his account, then `ALLOW_SIGNUP=false`
 
-Exit: app reachable over HTTPS; a backup was restored successfully into a scratch database.
+Exit: app reachable over HTTPS; a backup was restored successfully into a scratch database. (Verified locally over http on a production build; HTTPS and the tunnel are verified only when O deploys.)
 
 ### Phase 10: P1 items (only if time remains)
 
@@ -552,7 +561,7 @@ Exit: each shipped P1 item meets §15; unshipped ones are noted in `docs/ideas.m
 Format when answered: replace the question's status with `ANSWERED YYYY-MM-DD: <answer>`, then apply the answer everywhere it matters (§17).
 
 1. Expense tracker spec (categories, accounts, budgets, recurring expenses, reports, import from bank or UPI exports?). **ANSWERED 2026-11-10:** O described it from his Google Sheet (tabs: summary, income, EMIs and loans, expenses, investments; month and year views); written up in `docs/expenses-spec.md` and built in Phase 7. Budgets, recurring entries, custom categories and import are parked in `docs/ideas.md`.
-2. Domain or hostname for the home server, and Cloudflare Tunnel vs Tailscale. **OPEN** (needed by Phase 9)
+2. Domain or hostname for the home server, and Cloudflare Tunnel vs Tailscale. **PARTLY ANSWERED 2026-11-11:** Cloudflare Tunnel. The hostname is still O's to choose (it goes in `.env` as `BETTER_AUTH_URL`; see `docs/deploy-guide.md`).
 3. Is this multi-user from day one, or single-user with `ALLOW_SIGNUP=false` after the first account? **OPEN**
 4. Final app name and branding. **OPEN** (working name: Ledge)
 
@@ -628,3 +637,4 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-10 | Phase 6 completed. Status snapshot, §10 `test:e2e`, §14 ticks updated; decisions logged                                                                                                                                                                                                                                     | Accessibility audit, phone-width checks, reduced motion, sign-up/in and keyboard tests are in; all five §13 E2E flows pass       |
 | 2026-11-11 | Expense tracker built as the new Phase 7; Frontend redesign inserted as Phase 8; Deploy and backup moved to Phase 9, P1 items to Phase 10; the old Phase 9 (expenses scaffolding) removed. §1 scope, §2 item 6, §4 layout, §7 (rewritten), §14 table and phases, §16 Q1 answered, status snapshot updated; decisions logged | O asked to finish the expense tracker before deploying, then redesign the frontend (O's instruction in chat counts as OK, §17.3) |
 | 2026-11-11 | Phase 8 completed. §8 typeface line (three faces), §14 Phase 8 ticked, status snapshot updated; decisions logged                                                                                                                                                                                                            | O asked for a redesign with Anthropic's frontend-design skill and told Claude to proceed through the next phases                 |
+| 2026-11-11 | Phase 9 built (verified locally; O deploys by hand). §4 layout, §10 commands, §11 env (`CLIENT_IP_HEADER`, `.env.production.example`), §12 rewritten with the real deployment and backup facts, §14 Phase 9 items split between Claude and O, §16 Q2 partly answered; decisions logged                                      | O wants to deploy himself with a detailed guide (`docs/deploy-guide.md`) and told Claude to continue with the next phases        |

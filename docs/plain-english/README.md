@@ -18,19 +18,19 @@ Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 The work is done in eleven steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
-| Phase | Name                          | Status            | Read                                                       |
-| ----- | ----------------------------- | ----------------- | ---------------------------------------------------------- |
-| 0     | Scaffold (the empty workshop) | Done (2026-11-10) | [phase-0-scaffold.md](phase-0-scaffold.md)                 |
-| 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)                         |
-| 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md)             |
-| 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md) |
-| 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                       |
-| 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                     |
-| 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                     |
-| 7     | Expense tracker               | Done (2026-11-11) | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)   |
-| 8     | Frontend redesign             | Done (2026-11-11) | [phase-8-redesign.md](phase-8-redesign.md)                 |
-| 9     | Deploy and backup             | Next              | Written when the phase is done                             |
-| 10    | Extra features (if time)      | Not started       | Written when the phase is done                             |
+| Phase | Name                          | Status            | Read                                                         |
+| ----- | ----------------------------- | ----------------- | ------------------------------------------------------------ |
+| 0     | Scaffold (the empty workshop) | Done (2026-11-10) | [phase-0-scaffold.md](phase-0-scaffold.md)                   |
+| 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)                           |
+| 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md)               |
+| 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md)   |
+| 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                         |
+| 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                       |
+| 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                       |
+| 7     | Expense tracker               | Done (2026-11-11) | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)     |
+| 8     | Frontend redesign             | Done (2026-11-11) | [phase-8-redesign.md](phase-8-redesign.md)                   |
+| 9     | Deploy and backup             | Built, you deploy | [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) |
+| 10    | Extra features (if time)      | In progress       | Written when the phase is done                               |
 
 ## Other pages
 
@@ -46,7 +46,7 @@ The work is done in eleven steps, called phases, always in the same order. A pha
 - **Phase 6: Polish (done).** See [phase-6-polish.md](phase-6-polish.md).
 - **Phase 7: Expense tracker (done).** See [phase-7-expense-tracker.md](phase-7-expense-tracker.md).
 - **Phase 8: Frontend redesign (done).** See [phase-8-redesign.md](phase-8-redesign.md).
-- **Phase 9: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.
+- **Phase 9: Deploy and backup (built; you deploy it).** See [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) and the step-by-step [deploy guide](../deploy-guide.md).
 - **Phase 10: Extra features, only if time remains.** Type tasks in plain sentences ("pay rent tomorrow 5pm"), a board view, search, repeating tasks, export your data (tasks and money), and select many tasks at once.
 
 ## The rule for keeping this folder up to date

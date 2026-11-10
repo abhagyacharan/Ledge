@@ -12,6 +12,12 @@ const schema = z.object({
   BETTER_AUTH_URL: z.url(),
   ALLOW_SIGNUP: booleanString,
   TZ: z.string().default("Asia/Kolkata"),
+  // Name of a request header that the proxy in front of the app sets to the visitor's address
+  // (Cloudflare: "cf-connecting-ip"). Leave empty when nothing sits in front of the app.
+  CLIENT_IP_HEADER: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim().toLowerCase() || undefined),
 });
 
 export type Env = z.infer<typeof schema>;

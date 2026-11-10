@@ -297,6 +297,36 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Also fixed:** the month and year boxes on the expense tabs briefly looked empty on first paint; they now render their text immediately.
 - **Reason:** §8 ("calm, fast, minimal; content first"), and O's request for a redesign that does not look like a template.
 
+## 2026-11-11: Deployment shape (Phase 9)
+
+- **Decision:** Docker Compose with `db`, a one-shot `migrate` job, `app`, an optional `cloudflared` (profile `tunnel`) and a `backup` sidecar. **Cloudflare Tunnel** was chosen over Tailscale (O's choice in chat). Migrations run as their own service built from a `migrator` Dockerfile target (it carries drizzle-kit and the migration files; the runtime image has neither), and `app` and `backup` wait for it to succeed, so a bad migration stops the deploy instead of serving a broken app. The app port is published on `127.0.0.1` only; the tunnel reaches `app:3000` over the internal network.
+- **Reason:** §12 (non-root, DB unpublished, migrations as a deploy step, no router ports). The `backup` waits for `migrate` because the first backup found an empty database before migrations had run (caught while testing).
+
+## 2026-11-11: Real client IPs behind the tunnel
+
+- **Decision:** New optional env var `CLIENT_IP_HEADER`. When set (compose sets `cf-connecting-ip`), Better Auth's `advanced.ipAddress.ipAddressHeaders` is `[that header]`, so the sign-in and sign-up rate limits count each visitor separately instead of counting the whole world as the tunnel's one address.
+- **Reason:** Better Auth warns that any client can send these headers, so list only one your proxy overwrites. Cloudflare overwrites `cf-connecting-ip`, and the app port is not reachable except through the tunnel. Left empty in development, where nothing sits in front of the app.
+
+## 2026-11-11: Content Security Policy keeps `'unsafe-inline'` for scripts
+
+- **Decision:** The CSP in `next.config.ts` allows inline scripts (and eval only in development). Everything else is locked to the site itself, with `frame-ancestors 'none'`, `object-src 'none'` and `form-action 'self'`. A nonce-based policy is parked in `docs/ideas.md`.
+- **Reason:** Next.js puts small inline scripts in every page. Removing `'unsafe-inline'` needs a per-request nonce set in `proxy.ts` and passed to the theme provider, which touches every page's rendering. The remaining policy still blocks other origins and framing.
+
+## 2026-11-11: Backups: plain SQL, sidecar, off-machine copy is the owner's
+
+- **Decision:** `scripts/backup.sh` runs in a `postgres:18-alpine` sidecar (so `pg_dump` matches the server), dumps to plain SQL then gzips (two steps, so a failed dump cannot hide behind a successful gzip), verifies the file, keeps 14 daily and 8 weekly. The copy off the machine is documented (rclone or a second disk) but set up by O, because the destination is his. `scripts/restore.sh` restores into a scratch database by default and replaces the live one only with `--live` and a typed `RESTORE`.
+- **Reason:** §12. Found while testing: `docker compose exec` swallowed the typed confirmation from standard input, so every command that does not need input now reads `/dev/null`. `.gitattributes` forces Unix line endings on shell scripts and container files, because Windows checkouts would break them inside Linux containers.
+
+## 2026-11-11: `shadcn` moved to dev dependencies
+
+- **Decision:** The `shadcn` package (component generator CLI; the app only imports its CSS at build time) is now a dev dependency. `pnpm audit --prod` is clean. Three advisories remain in dev tooling (the CLI's own dependencies), reviewed: none is installed in the production image, whose runtime packages are next, react, react-dom and pg.
+- **Reason:** §12 ("pnpm audit before each deploy"); a build tool should not count as a runtime dependency.
+
+## 2026-11-11: Phase 9 is not "done" until O deploys
+
+- **Decision:** Phase 9 is marked built-and-verified-locally. Items that need O's Cloudflare account, domain, server and storage are listed separately and left unticked. O told Claude to continue with the next phases, so Phase 10 starts while those wait.
+- **Reason:** Honesty about what was and was not checked: the Docker pieces, health check, headers, migrations, backup and restore were run on a development machine over plain http on a production build. The tunnel, HTTPS cookies and the off-site copy were not.
+
 ## Pending decisions (log here when made)
 
-- Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 9).
+- Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

@@ -1,6 +1,11 @@
-# Production-like stack. The `app` service is added in Phase 7.
-# The DB port is intentionally NOT published (CLAUDE.md §12). For local development
-# use docker-compose.dev.yml, which binds Postgres to 127.0.0.1 only.
+# Production stack (CLAUDE.md §12). Full walk-through: docs/deploy-guide.md
+#
+#   docker compose up -d --build                 # database, migrations, app, nightly backups
+#   docker compose --profile tunnel up -d        # the same, plus the Cloudflare Tunnel
+#
+# The database port is NOT published, and the app port is bound to this machine only (127.0.0.1),
+# so the only way in from outside is the Cloudflare Tunnel. For local development use
+# docker-compose.dev.yml, which publishes Postgres on 127.0.0.1 only.
 services:
   db:
     image: postgres:18
@@ -17,6 +22,77 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # One-shot job: applies any new database migrations, then exits. It runs on every
+  # `docker compose up`, never on web requests. The app starts only after it succeeds.
+  migrate:
+    build:
+      context: .
+      target: migrator
+    image: ledge-migrate
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-ledge}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-ledge}
+
+  app:
+    build:
+      context: .
+      target: runner
+    image: ledge-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-ledge}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-ledge}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set BETTER_AUTH_URL in .env (your https address)}
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-false}
+      TZ: ${TZ:-Asia/Kolkata}
+      # Cloudflare sets this header to the visitor's real address; rate limits use it.
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+    ports:
+      # This machine only. The tunnel reaches the app over the internal Docker network instead.
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+
+  # The Cloudflare Tunnel connector. Only started with `--profile tunnel`.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # Nightly database backup into ./backups (14 daily, 8 weekly). scripts/backup.sh has the details.
+  backup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    user: "${BACKUP_UID:-1000}:${BACKUP_GID:-1000}"
+    depends_on:
+      db:
+        condition: service_healthy
+      # So the very first backup already contains the tables, not an empty database.
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-ledge}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PGDATABASE: ${POSTGRES_DB:-ledge}
+      BACKUP_AT: ${BACKUP_AT:-21:00}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "/backup.sh", "loop"]
 
 volumes:
   ledge_db:
