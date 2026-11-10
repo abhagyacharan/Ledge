@@ -47,7 +47,7 @@ The work is done in eleven steps, called phases, always in the same order. A pha
 - **Phase 7: Expense tracker (done).** See [phase-7-expense-tracker.md](phase-7-expense-tracker.md).
 - **Phase 8: Frontend redesign (done).** See [phase-8-redesign.md](phase-8-redesign.md).
 - **Phase 9: Deploy and backup (built; you deploy it).** See [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) and the step-by-step [deploy guide](../deploy-guide.md).
-- **Phase 10: Extra features, only if time remains (in progress).** See [phase-10-extra-features.md](phase-10-extra-features.md). Done so far: type tasks in plain sentences. Still to come: a board view, search, repeating tasks, export your data, and select many tasks at once.
+- **Phase 10: Extra features, only if time remains (in progress).** See [phase-10-extra-features.md](phase-10-extra-features.md). Done so far: type tasks in plain sentences, and a board view. Still to come: search, repeating tasks, export your data, and select many tasks at once.
 
 ## The rule for keeping this folder up to date
 

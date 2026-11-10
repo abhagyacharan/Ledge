@@ -1,11 +1,11 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Columns3, List as ListIcon, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { List, Section, Tag } from "@/server/db/schema";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
-import { setListViewSettingsAction } from "../actions/lists";
+import { setListViewModeAction, setListViewSettingsAction } from "../actions/lists";
 import { createSectionAction } from "../actions/sections";
 import { applyView, filterTasks } from "../view-logic";
 import { DEFAULT_VIEW_SETTINGS, type ViewSettings } from "../view-settings";
@@ -44,6 +44,23 @@ export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings:
   }
   const [addingSection, setAddingSection] = useState(false);
 
+  // The list or board choice is remembered per list; it also shows at once.
+  const [savedMode, setSavedMode] = useState(list.viewMode);
+  const [mode, setMode] = useState(list.viewMode);
+  if (list.viewMode !== savedMode) {
+    setSavedMode(list.viewMode);
+    setMode(list.viewMode);
+  }
+  const asBoard = mode === "board";
+
+  async function changeMode(next: "list" | "board") {
+    if (next === mode) return;
+    const previous = mode;
+    setMode(next);
+    const result = await run(setListViewModeAction({ id: list.id, mode: next }));
+    if (!result.ok) setMode(previous);
+  }
+
   async function change(next: ViewSettings) {
     const previous = settings;
     setSettings(next);
@@ -55,11 +72,14 @@ export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings:
   const subtasksOf = (id: string) => tasks.filter((t) => t.parentId === id);
   const doneCount = topLevel.filter((t) => t.status === "done").length;
   const visible = filterTasks(topLevel, settings);
-  const manual = settings.sort === "manual" && settings.group === "none";
+  // The board always uses manual order: its columns are the sections.
+  const manual = asBoard || (settings.sort === "manual" && settings.group === "none");
   const filtersHideEverything = visible.length === 0 && topLevel.length > doneCount;
 
   // The drag board remounts with fresh state whenever the saved order changes.
   const boardKey = [
+    mode,
+    "|",
     ...sections.map((s) => s.id),
     "|",
     ...visible.map((t) => `${t.id}:${t.sectionId}:${t.position}:${t.status}`),
@@ -76,6 +96,26 @@ export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings:
           allowManual
           onChange={(next) => void change(next)}
         />
+        <div role="group" aria-label="Layout" className="inline-flex rounded-lg border p-0.5">
+          <Button
+            variant={asBoard ? "ghost" : "secondary"}
+            className="h-11 gap-1.5 px-3 md:h-7"
+            aria-pressed={!asBoard}
+            aria-label="List view"
+            onClick={() => void changeMode("list")}
+          >
+            <ListIcon aria-hidden /> List
+          </Button>
+          <Button
+            variant={asBoard ? "secondary" : "ghost"}
+            className="h-11 gap-1.5 px-3 md:h-7"
+            aria-pressed={asBoard}
+            aria-label="Board view"
+            onClick={() => void changeMode("board")}
+          >
+            <Columns3 aria-hidden /> Board
+          </Button>
+        </div>
         {doneCount > 0 ? (
           <Button
             variant="ghost"
@@ -87,6 +127,13 @@ export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings:
           </Button>
         ) : null}
       </div>
+
+      {asBoard && (settings.sort !== "manual" || settings.group !== "none") ? (
+        <p className="mb-3 text-xs text-muted-foreground">
+          The board shows tasks in manual order, one column per section. Sort and group apply to the
+          list view.
+        </p>
+      ) : null}
 
       {topLevel.length === 0 && sections.length === 0 ? (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -116,6 +163,7 @@ export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings:
           subtasksOf={subtasksOf}
           tagsById={tagsById}
           ctx={ctx}
+          layout={asBoard ? "columns" : "stack"}
         />
       ) : (
         <>

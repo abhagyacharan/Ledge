@@ -113,6 +113,7 @@ export const reorderTaskSchema = z.object({
   /** Omit to keep the section; null means "no section". */
   sectionId: id.nullable().optional(),
 });
+export const listViewModeSchema = z.object({ id, mode: z.enum(["list", "board"]) });
 export const listViewSettingsSchema = z.object({ id, settings: viewSettingsSchema });
 export const setTaskTagsSchema = z.object({ id, tagIds: z.array(id).max(50) });
 

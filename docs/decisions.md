@@ -332,6 +332,12 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** The sentence is read in the browser by `src/modules/todos/quick-add-parser.ts` (pure, 23 unit tests), not on the server. `chrono-node` 2.10.3 reads dates and times (its British parser for `en-IN` so `5/12` is 5 December, forward-looking so "friday" is the next one); `#list`, `@tag` and `p1` to `p3` are read by small patterns. Only words that were really understood become chips, and removing a chip adds its key (`kind:text`) to an ignore set so the words return to the title. Unknown `@tags` are created when the task is added. The app layout now also gives the browser the user's timezone and locale so "today" is computed the way the server does.
 - **Reason:** §6.2 (chips before submit). Client-side parsing gives instant chips; the server still validates everything with Zod when the task is created, so the browser is not trusted.
 
+## 2026-11-11: Board view (Phase 10)
+
+- **Decision:** The board is the manual-order drag code with a second layout (`layout="columns"` in `manual-board.tsx`): one column per section plus a "No section" column, in a focusable, sideways-scrolling `role="region"` named "Board". The list-or-board choice is stored in the existing `lists.view_mode` column through `setListViewModeAction` (owner-checked, integration-tested) and shown instantly with rollback on failure. The board ignores sort and group (its columns are the sections); filters still apply.
+- **Reason:** §6.2 (board view per list, columns = sections, choice remembered). Reusing the drag board keeps one implementation of ordering, Undo-free optimistic moves, rollback and screen-reader announcements.
+- **Found and fixed:** `sr-only` text inside far-right columns is absolutely positioned and was not contained by the scroll box, so the page scrolled sideways by about 120 px on a phone. The region is `position: relative`, which contains it. The main content area also got `min-w-0` so a wide child can never stretch it.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

@@ -21,16 +21,19 @@ export function SectionBlock({
   section,
   count,
   children,
+  className = "mt-6",
 }: {
   section: Section;
   count: number;
   children: ReactNode;
+  /** Spacing around the block; a board column removes the top margin. */
+  className?: string;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   return (
-    <section aria-labelledby={`section-${section.id}`} className="mt-6">
+    <section aria-labelledby={`section-${section.id}`} className={className}>
       <div className="flex items-center justify-between border-b pb-1">
         <h2 id={`section-${section.id}`} className="text-sm font-semibold">
           {section.name} <span className="font-normal text-muted-foreground">{count}</span>

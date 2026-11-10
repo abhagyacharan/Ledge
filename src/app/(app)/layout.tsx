@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     >
       <SidebarProvider>
         <AppSidebar user={{ name: user.name, email: user.email }} />
-        <SidebarInset>
+        <SidebarInset className="min-w-0">
           <header className="flex h-14 items-center gap-2 border-b px-4 md:hidden">
             <SidebarTrigger className="size-11" aria-label="Open navigation" />
             <span className="font-semibold tracking-tight">{APP_NAME}</span>
