@@ -33,7 +33,7 @@ export const auth = betterAuth({
     // plain-http localhost development cannot use them.
     useSecureCookies: isProduction,
     defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
-    // TODO(Phase 7): behind Cloudflare Tunnel set
+    // TODO(Phase 9): behind Cloudflare Tunnel set
     // ipAddress: { ipAddressHeaders: ["cf-connecting-ip"] } so rate limits see real client IPs.
   },
   rateLimit: {

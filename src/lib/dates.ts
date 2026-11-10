@@ -167,3 +167,12 @@ export function formatDayHeading(iso: IsoDate, today: IsoDate, locale = "en-IN")
           : new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
   return `${first} · ${short}`;
 }
+
+/** "2 Nov 2026" for a floating date, in the user's locale. */
+export function formatDate(iso: IsoDate, locale = "en-IN"): string {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(parseIsoDate(iso));
+}

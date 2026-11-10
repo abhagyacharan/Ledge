@@ -76,7 +76,7 @@ A rule written only in the app can be forgotten by a mistake. A rule built into 
 
 ### 4. Search that is ready for later
 
-Each task has a hidden **search column** that the database fills in by itself from the title and the notes. It understands word forms ("paying" matches "pay"). A special index makes searching fast even with thousands of tasks. The search screen itself is a later feature (Phase 8), but the plumbing is installed and tested now. The app can never write into this column by hand, so it cannot go stale.
+Each task has a hidden **search column** that the database fills in by itself from the title and the notes. It understands word forms ("paying" matches "pay"). A special index makes searching fast even with thousands of tasks. The search screen itself is a later feature (Phase 10), but the plumbing is installed and tested now. The app can never write into this column by hand, so it cannot go stale.
 
 ### 5. Speed helpers (indexes)
 
@@ -147,5 +147,5 @@ The task screens themselves (Inbox, Today and so on) still show "nothing here" u
 ## What was not done or not checked
 
 - No screens use the data yet, so the demo data is not visible in the app.
-- The "completed copy of a repeating task" is stored, but the logic that creates it when you tick a repeating task is a later feature (Phase 8).
+- The "completed copy of a repeating task" is stored, but the logic that creates it when you tick a repeating task is a later feature (Phase 10).
 - A rare failure case: if creating the settings and Inbox ever failed right after an account was created, the account would exist without them. Phase 3 will make the Inbox lookup repair this automatically.

@@ -1,8 +1,8 @@
 # Ledge
 
-A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
+A self-hosted personal life-management app: auth, a to-do/task manager, and an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 6 are done: sign-in, the database, and a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), polished and audited for accessibility on phone and desktop in light and dark. Deployment and backups (Phase 7) are next.
+**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. A frontend redesign (Phase 8) is next, then deployment and backups (Phase 9).
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 
@@ -67,8 +67,8 @@ Unit and integration tests take about 15 seconds. Tests that only need a user us
 
 ## Deploy
 
-_TBD (Phase 7)._ Docker Compose on the home server, exposed via Cloudflare Tunnel or Tailscale.
+_TBD (Phase 9)._ Docker Compose on the home server, exposed via Cloudflare Tunnel or Tailscale.
 
 ## Backup and restore
 
-_TBD (Phase 7)._ Nightly `pg_dump`, copied off the machine; the restore command will be documented here after a restore has been tested.
+_TBD (Phase 9)._ Nightly `pg_dump`, copied off the machine; the restore command will be documented here after a restore has been tested.

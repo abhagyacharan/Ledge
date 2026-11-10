@@ -19,7 +19,7 @@ A small message pops up at the bottom of the screen for **5 seconds** with an **
 
 A new **Trash** page in the side menu.
 
-- Deleting a task or list never erases it. It moves to the Trash and waits there for **30 days**.
+- Deleting a task or list never erases it. It moves to the Trash and waits there for **30 days**. (Since Phase 7, money entries from the expense tracker use the same Trash, with the same restore, delete forever and 30-day clean-up.)
 - For each item the Trash shows what it is, where it came from ("In Home", "Subtask of Plan trip in Home", or "List with 4 tasks") and how many days are left before it is erased for good.
 - **Restore** puts it back where it was.
 - **Delete forever** erases it at once, after a confirmation. It only works on items that are in the Trash; it can never erase a live task.
@@ -60,7 +60,7 @@ A search box that pops up in the middle of the screen. Start typing and it narro
 - **Go to:** every view (Inbox, Today, Upcoming, All tasks, Completed, Trash, Settings).
 - **Lists:** every list. **Tags:** every tag.
 
-**A note about `/`:** the plan lists `/` as "search". Real searching of the words inside your tasks is a later, optional feature (Phase 8). For now `/` opens the palette, which can jump to any view, list or tag.
+**A note about `/`:** the plan lists `/` as "search". Real searching of the words inside your tasks is a later, optional feature (Phase 10). For now `/` opens the palette, which can jump to any view, list or tag.
 
 ## Bugs found and fixed along the way
 

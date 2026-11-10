@@ -38,7 +38,7 @@ export function CommandPalette() {
   const views = [
     ...enabledModules("primary").flatMap(navItemsFor),
     { label: "Settings", route: "/settings" },
-    ...enabledModules("modules").flatMap(navItemsFor),
+    ...enabledModules("modules").flatMap((m) => m.paletteRoutes ?? navItemsFor(m)),
   ];
 
   function go(route: string) {

@@ -203,7 +203,7 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 
 ## 2026-11-10: Keyboard shortcuts, command palette and `/`
 
-- **Decision:** One global handler (`keyboard-shortcuts.tsx`) for `?`, `/`, `j`, `k`, arrow keys (only while a task is selected), `x`, `e` and Ctrl or Cmd + K. Selection is real keyboard focus on a task's title link, so Enter opens the task with no extra code. Plain keys are ignored while typing or while a dialog is open. The palette (cmdk) lists actions (new task, new list, shortcuts, switch theme, sign out), every view, every list and every tag. `/` opens the palette. Searching task text with Postgres full-text search stays Phase 8, so `/` jumps to views, lists and tags for now. The `g` then `i`, `t`, `u` and `d`, `p` shortcuts are P1 and not built.
+- **Decision:** One global handler (`keyboard-shortcuts.tsx`) for `?`, `/`, `j`, `k`, arrow keys (only while a task is selected), `x`, `e` and Ctrl or Cmd + K. Selection is real keyboard focus on a task's title link, so Enter opens the task with no extra code. Plain keys are ignored while typing or while a dialog is open. The palette (cmdk) lists actions (new task, new list, shortcuts, switch theme, sign out), every view, every list and every tag. `/` opens the palette. Searching task text with Postgres full-text search stays Phase 10, so `/` jumps to views, lists and tags for now. The `g` then `i`, `t`, `u` and `d`, `p` shortcuts are P1 and not built.
 - **Reason:** §6.2 lists `/` as "search" under P0 but the full-text search feature is P1; the palette is the P0 piece that can honestly answer `/` today.
 
 ## 2026-11-10: Two bugs fixed in the generated command component
@@ -237,6 +237,56 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** An end-to-end test tabs through the Today screen and a list screen (45 stops each) and requires every stop to show a visible ring (outline or box shadow). Another test adds, selects, opens, renames and closes a task using only the keyboard. The Next.js development overlay is excluded; it does not exist in production.
 - **Reason:** §8 (visible focus rings, full keyboard operation).
 
+## 2026-11-11: Expense tracker brought forward; phases renumbered
+
+- **Decision:** O asked to finish the expense tracker before deployment, then redesign the frontend with Anthropic's `frontend-design` skill, then deploy. New order: Phase 7 Expense tracker, Phase 8 Frontend redesign, Phase 9 Deploy and backup, Phase 10 P1 items. The old Phase 9 (expenses scaffolding) is removed because the real module replaces it. A blog is a possible later module and is parked in `docs/ideas.md`.
+- **Reason:** O's own instruction in chat (counts as OK under §17.3). The spec for expenses (§16 Q1) arrived as a description of O's Google Sheet plus a screenshot; the written version is `docs/expenses-spec.md`.
+
+## 2026-11-11: Expense data model, one table
+
+- **Decision:** All four kinds (income, EMI, expense, investment) live in one table, `finance_entries`, with a `kind` column and a few nullable columns that only one kind uses (`payment_method` for expenses; `lender`, `emi_type`, `status`, `paid_on` for EMIs; `platform` for investments). CHECK constraints make a row of the wrong shape impossible. Amounts are `bigint` paise (kept as a JS number, capped at `MAX_AMOUNT_MINOR` = ₹1,000,000,000, far inside the safe integer range). `entry_date` is a floating date and places the row in a month.
+- **Reason:** The four kinds share almost every column, queries by month and kind are the same shape, and Trash, ownership and the clean-up job work once instead of four times. Separate tables would duplicate all of that for no gain.
+
+## 2026-11-11: Fixed category lists (stored as text)
+
+- **Decision:** Category, EMI type, payment method and investment type are fixed lists in `src/modules/expenses/categories.ts` (the nine expense categories come from O's sheet; the rest were chosen to fit it). Stored as plain text, validated by Zod per kind, so custom categories can be added later without a migration.
+- **Reason:** O did not list categories for income, EMIs or investments. Fixed lists keep the summary tidy and the data clean now; custom categories are parked in `docs/ideas.md`.
+
+## 2026-11-11: Five tabs, with EMIs and loans separate
+
+- **Decision:** The Expenses module has five tabs: Summary, Income, EMIs & loans, Expenses, Investments. O listed four but described EMIs as having their own columns and their own summary tile, so EMIs & loans is its own tab. Investment fields (date, name, type, platform, amount, notes) were left to us.
+- **Reason:** Different columns and a different status workflow (scheduled, paid, delayed). Merging into Expenses later is easy if O prefers four tabs.
+
+## 2026-11-11: How the summary counts
+
+- **Decision:** Net savings = income − EMIs − expenses. Savings rate = net ÷ income (shown as "—" with no income). EMIs count in the month of their **due date**, whatever their status, because a loan instalment is owed either way; the tile also says how much is paid, still to pay and delayed. Investments are not an expense: they appear as two extra tiles ("Invested" and "Left after investing") and do not change net savings or the savings rate. A scheduled EMI whose due date has passed is shown as "Overdue" (text and icon) without changing its stored status. Percentages are computed with integer maths (basis points), never floats.
+- **Reason:** Matches the numbers in O's sheet (verified with the demo data: ₹28,000 in, ₹10,142 EMIs, ₹4,600 expenses, ₹13,258 saved, 47.4%), and keeps money maths exact.
+
+## 2026-11-11: EMI repeat series
+
+- **Decision:** When adding an EMI, "Repeat monthly for N more months" (0 to 60) creates the whole series at once as Scheduled entries. A month without the chosen day uses its last day (31 Jan becomes 28 or 29 Feb, then 31 Mar). Each month is computed from the first date, so one short month does not drag later months earlier.
+- **Reason:** Loans are the same amount on the same day for years; entering them one by one would be the main annoyance of the sheet. Full recurring entries (editing a whole series, recurring income) are parked in `docs/ideas.md`.
+
+## 2026-11-11: Money entries use the same Trash as tasks
+
+- **Decision:** Deleting an income, EMI, expense or investment entry sets `deleted_at` and shows an Undo toast; the Trash screen lists them with tasks (restore, delete forever), and the 30-day clean-up purges them too. Delete forever is permanent and asks for confirmation.
+- **Reason:** One safety net everywhere (§6.2 "Delete moves to Trash"); someone tracking a year of money must be able to undo a mistaken delete.
+
+## 2026-11-11: Period lives in the URL; optimistic picker
+
+- **Decision:** The month, year and "whole year" choice is in the address (`?y=2026&m=11`, `m=all`), as are the category filter, sort and search on the entry tabs. The picker uses `useOptimistic`, so the label changes the instant you click an arrow even while the server renders the new month; a fast double click moves two months rather than one.
+- **Reason:** Bookmarkable, survives reload, back button works. The optimistic state fixed a real bug found by the end-to-end test (a second click used the old address).
+
+## 2026-11-11: Shared server-action guard
+
+- **Decision:** The "require user, validate with Zod, return a typed result, revalidate the pages" wrapper moved from the todo module to `src/server/action-guard.ts` (`guarded()`); the todo module's `actions/guard.ts` re-exports it. Expense actions use it too.
+- **Reason:** One implementation of the §5 and §9 rules for both modules, so a fix applies everywhere.
+
+## 2026-11-11: Expense screens: accessibility choices
+
+- **Decision:** The summary tiles are a description list with each tile's caption inside its value, and their captions use a darker text colour so contrast passes on the tinted backgrounds (axe measured 4.3 to 1 with the grey; the minimum is 4.5). The "Mark paid" button's hidden name starts with its visible words ("Mark paid: Car loan"), as with Trash's "Delete forever". The bar chart is hidden from screen readers; the table beside it is the accessible version. On phones the summary sections use `min-w-0` so a wide table scrolls inside its own box instead of stretching the whole page.
+- **Reason:** §8 and §15 (WCAG AA, phone width), found by the axe audit and the phone checks.
+
 ## Pending decisions (log here when made)
 
-- Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 7).
+- Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 9).

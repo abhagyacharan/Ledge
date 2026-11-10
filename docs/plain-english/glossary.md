@@ -52,6 +52,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Drizzle.** The translator that lets the app read and write the database safely in code.
 
+**EMI.** "Equated monthly instalment": the fixed amount you pay each month towards a loan. In Ledge's expense tracker, "EMIs & loans" also covers credit card bills and other debt payments.
+
 **End-to-end test (e2e).** A robot that uses a real browser and clicks through the app the way a person would.
 
 **Environment variable.** A setting kept outside the code (for example a secret or an address), so the same code can run in different places. Stored in the `.env` file.
@@ -88,6 +90,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Integration test.** A test that checks several pieces working together, here including a real database.
 
+**Invested.** Money you put into something that should grow (a fund, shares, a deposit, gold). Ledge counts it separately from spending, so it does not reduce your savings rate.
+
 **Keyboard shortcut.** A key or key combination that does something without the mouse, such as `q` for quick add.
 
 **Lint.** Running ESLint.
@@ -100,13 +104,19 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Module.** One self-contained part of the app, such as tasks or expenses.
 
+**Net savings.** Money in, minus EMIs and loans, minus living expenses, for the period you are looking at.
+
 **Next.js.** The toolkit used to build the app's pages and server side.
 
 **Optimistic update.** Showing the result of your action instantly, before the server confirms it, and quietly undoing it if the server says no.
 
 **Overdue.** A task whose due date has passed, or whose due time today has passed. Shown with an icon, red text and the word "Overdue".
 
+**Paise.** One hundredth of a rupee. Ledge stores every amount as a whole number of paise (₹28,000.00 is 2800000) so money never suffers the tiny rounding mistakes that decimals cause.
+
 **Password minimum.** The shortest password allowed. In Ledge it is 10 characters.
+
+**Period picker.** The arrows and menus under the expense tabs that choose which month, or which whole year, you are looking at. The choice is kept in the web address.
 
 **Phase.** One numbered stage of the build plan.
 
@@ -133,6 +143,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
 
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
+
+**Savings rate.** Net savings as a percentage of the money that came in. 47.4% means you kept about 47 paise of every rupee.
 
 **Scaffold.** The starting skeleton of a project, with the tools and folders in place but little content.
 

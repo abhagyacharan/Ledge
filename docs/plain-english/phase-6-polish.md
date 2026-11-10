@@ -81,5 +81,5 @@ Not checked:
 
 - **A real screen reader** (such as NVDA or VoiceOver) has not been used. The announcements are built to the library's documented design but were not heard.
 - **A real phone.** The phone tests use a phone-sized screen with touch in desktop Chrome, which is close but not the same as holding a device.
-- The **"secure" cookie over real HTTPS** is still to be checked at deployment (Phase 7).
+- The **"secure" cookie over real HTTPS** is still to be checked at deployment (Phase 9).
 - The reading order of the Trash and Settings screens and the exact wording for screen readers have not had a human review.

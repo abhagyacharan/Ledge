@@ -123,4 +123,4 @@ Not done or not checked yet:
 - A full **keyboard-only walk-through** and a **screen-reader** check are part of Phase 6 (only the drag handle was tested with the keyboard).
 - The **Trash screen**, **undo after completing or moving**, **instant updates for ticking tasks**, and the other **keyboard shortcuts** and command box are Phase 5.
 - **Dragging subtasks** within a task, and dragging to reorder lists in the side menu, are not built (lists still use Move up and Move down).
-- The **board view** (columns) is a later optional feature (Phase 8).
+- The **board view** (columns) is a later optional feature (Phase 10).

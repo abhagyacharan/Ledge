@@ -144,6 +144,7 @@ test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   await page.keyboard.press("j");
   await page.keyboard.press("x");
   await expect(toast(page)).toContainText('Completed "Key B"');
+  await page.waitForLoadState("networkidle"); // the list refreshes after the save; focus before that is lost
 
   // e opens the selected task with the title ready to edit; Escape closes the drawer.
   await page.getByRole("link", { name: /^Key A/ }).focus();

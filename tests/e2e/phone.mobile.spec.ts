@@ -49,7 +49,20 @@ async function noSidewaysScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-const SCREENS = ["/inbox", "/today", "/upcoming", "/all", "/completed", "/trash", "/settings"];
+const SCREENS = [
+  "/inbox",
+  "/today",
+  "/upcoming",
+  "/all",
+  "/completed",
+  "/trash",
+  "/settings",
+  "/expenses",
+  "/expenses/income",
+  "/expenses/emis",
+  "/expenses/spending",
+  "/expenses/investments",
+];
 
 for (const path of SCREENS) {
   test(`${path}: fits the screen and has big enough tap targets`, async ({ page }) => {
@@ -102,4 +115,23 @@ test("quick add button is always reachable and the dialog fits", async ({ page }
   await expect(page.getByRole("dialog", { name: "Quick add" })).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
+});
+
+test("the expense dialog fits a phone and has big enough tap targets", async ({ page }) => {
+  await page.goto("/expenses/emis");
+  await page.getByRole("button", { name: "Add EMI or loan payment", exact: true }).first().tap();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+});
+
+test("the expense tabs scroll sideways inside their own bar, not the page", async ({ page }) => {
+  await page.goto("/expenses");
+  const tabs = page.getByRole("navigation", { name: "Expense sections" });
+  await expect(tabs.getByRole("link", { name: "Summary" })).toBeVisible();
+  await tabs.getByRole("link", { name: "Investments" }).scrollIntoViewIfNeeded();
+  await tabs.getByRole("link", { name: "Investments" }).tap();
+  await expect(page).toHaveURL(/\/expenses\/investments/);
+  await noSidewaysScroll(page);
 });

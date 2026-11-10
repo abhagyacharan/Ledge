@@ -6,21 +6,21 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Current phase          | **Phase 7: Deploy and backup** (Phases 0 to 6 done)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Last verified test run | 2026-11-10: `typecheck`, `lint`, `format:check` clean; `pnpm test` 250 tests pass (real database); `pnpm test:e2e` 49 Playwright tests pass in Chrome: accessibility audit (axe, WCAG 2.1 A and AA) of every screen in light and dark, phone-width checks (tap targets, no sideways scroll, full-screen drawer), sign-up and sign-in, keyboard-only and focus rings, plus all earlier flows. Browser-checked the light theme. Not checked: a real screen reader, `secure` cookie over real HTTPS, real touch devices |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Enabled modules        | todos (lists, tasks, views)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Current phase          | **Phase 8: Frontend redesign** (Phases 0 to 7 done; waiting for O's go-ahead to start)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Last verified test run | 2026-11-11: `typecheck`, `lint`, `format:check` clean; `pnpm test` 361 tests pass (real database); `pnpm test:e2e` 74 Playwright tests pass in Chrome: accessibility audit (axe, WCAG 2.1 A and AA) of every screen (including the five expense screens and the add-entry forms) in light and dark, phone-width checks (tap targets, no sideways scroll, full-screen drawer), sign-up and sign-in, keyboard-only and focus rings, the expense flows (add one entry of each kind, period picker, edit, delete and Undo, filter, sort, search), plus all earlier flows. Browser-checked the expense Summary against O's sheet numbers. Not checked: a real screen reader, `secure` cookie over real HTTPS, real touch devices |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Enabled modules        | todos (lists, tasks, views); expenses (summary, income, EMIs and loans, expenses, investments)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
 ## 1. What we are building
 
-A self-hosted personal life-management app that the owner (O) will use daily for a year or more. Version 0.1 covers **auth, a to-do/task manager, and the scaffolding for an expense tracker**. Later modules might include a calendar, notes, a goals dashboard, and a public portfolio, so the architecture must make adding modules cheap.
+A self-hosted personal life-management app that the owner (O) will use daily for a year or more. Version 0.1 covers **auth, a to-do/task manager, and an expense tracker**. Later modules might include a calendar, notes, a goals dashboard, and a public portfolio, so the architecture must make adding modules cheap.
 
 **Quality bar:** a proper app O is happy to use every day, not a throwaway MVP. Scope is deliberately small so it can be finished _well_ in about 5 days.
 
@@ -28,7 +28,7 @@ A self-hosted personal life-management app that the owner (O) will use daily for
 
 1. **Auth**: sign up, sign in, sign out, sessions, protected routes (§5).
 2. **To-do tracker**: the main deliverable, specified in §6.
-3. **Expense tracker**: **NOT SPECIFIED YET. Do not build it.** Only create the scaffolding described in §7. O will add the spec later.
+3. **Expense tracker**: income, EMIs and loans, expenses and investments with a monthly and yearly summary, modelled on O's Google Sheet. Specified in `docs/expenses-spec.md`; built in Phase 7 (§7).
 
 ### Non-goals for v0.1 (do not build, even if tempting)
 
@@ -45,7 +45,7 @@ Park any new idea in `docs/ideas.md` instead of building it.
 3. Work in small, reviewable steps. Before saying a task is done, run `pnpm typecheck && pnpm lint && pnpm test` and report the result honestly.
 4. **Do not invent library APIs.** Libraries move fast. Check the current official docs before using an API you are not sure about. Use the latest stable versions, pinned in `package.json`.
 5. Do not add a dependency without saying why. Prefer fewer dependencies.
-6. When something is ambiguous (especially anything about expenses), **ask**. Do not guess.
+6. When something is ambiguous (especially anything beyond `docs/expenses-spec.md`), **ask**. Do not guess.
 7. Do not expand scope. Anything not in §1 or §6 goes to `docs/ideas.md`.
 8. When a decision is made or changed, append it to `docs/decisions.md` (date, decision, reason).
 9. Keep `README.md` accurate: setup, env vars, run, deploy, backup and restore.
@@ -90,7 +90,7 @@ Next.js and Better Auth APIs change between versions. **Verify against current d
 package.json  pnpm-workspace.yaml  .npmrc  next.config.ts  eslint.config.mjs  .prettierrc.json
 vitest.config.mts  playwright.config.ts  drizzle.config.ts  components.json
 docker-compose.yml  docker-compose.dev.yml   # prod-like db / dev-only DB port override
-Dockerfile                                   # arrives in Phase 7
+Dockerfile                                   # arrives in Phase 9
 src/
   proxy.ts                  # optimistic cookie redirect only (not real auth)
   hooks/                    # shared React hooks (shadcn)
@@ -99,28 +99,29 @@ src/
     (app)/                  # authenticated shell (sidebar + content)
       inbox, today, upcoming, completed, all
       lists/[listId], tags/[tagId], search
-      expenses/             # placeholder only (§7)
+      expenses/             # layout (tabs + period picker), page (summary), income, emis, spending, investments (§7)
       settings/
     api/health, api/export  # health check, JSON/CSV export
   modules/
     auth/                   # sign-in/up forms, Zod schemas (client side of auth)
     todos/                  # components/ (list screen, views, task row, drawer, quick add, drag board, Trash, palette, shortcuts), actions/ (server actions), schema.ts (Zod), view-logic.ts, day-views.ts, view-settings.ts (pure, tested)
-    expenses/               # placeholder (§7)
+    expenses/               # components/ (tab bar, period picker, summary tiles and tables, entries view, entry dialog), actions.ts, schema.ts (Zod), categories.ts, periods.ts, summary.ts, emi-series.ts, context.ts (pure maths tested); see docs/expenses-spec.md
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
     auth.ts                 # Better Auth config
     env.ts                  # Zod-validated environment
     session.ts              # getSession() / requireUser() helpers
     user-defaults.ts        # ensureUserDefaults(): settings row + Inbox, run on sign-up
-    data/                   # data functions (lists, sections, tasks, tags, settings): every one takes userId
+    action-guard.ts         # guarded(): requireUser + Zod + typed result + revalidate, shared by todo and expense actions
+    data/                   # data functions (lists, sections, tasks, tags, settings, finance, trash): every one takes userId
   components/
     ui/                     # shadcn primitives
     shell/                  # app sidebar, page header, empty state, theme toggle, sign out
   config/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
-  lib/                      # shared utils: dates.ts (floating dates), ordering.ts (fractional index), result.ts, utils.ts
-docs/ decisions.md  ideas.md
+  lib/                      # shared utils: dates.ts (floating dates), money.ts (integer paise), ordering.ts (fractional index), result.ts, utils.ts
+docs/ decisions.md  ideas.md  expenses-spec.md
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
 tests/ e2e/  integration/  helpers/ (fast-users.ts, users.ts)  setup/  stubs/
 ```
@@ -233,16 +234,15 @@ Indexes: `(user_id, list_id, position)`, `(user_id, due_date)` where not deleted
 
 ---
 
-## 7. Expense tracker: scaffolding only (spec coming from O)
+## 7. Expense tracker (built in Phase 7)
 
-Do **not** implement features. Only:
+Full spec: **`docs/expenses-spec.md`**. In short:
 
-- Create `src/modules/expenses/` with a README stating "awaiting spec".
-- Register it in `src/config/modules.ts` with `enabled: false` (hidden from the sidebar until enabled).
-- Create `src/lib/money.ts`: money is stored as **integer minor units** (paise for INR), never floats. Include `formatMoney(minor, currency, locale)` and parse helpers with tests. Default currency `INR`, locale `en-IN`.
-- Add an empty `/expenses` route that renders "Coming soon" when enabled.
-
-When O provides the spec, plan first, then build in a separate branch.
+- One **Expenses** entry in the sidebar; inside it tabs **Summary · Income · EMIs & loans · Expenses · Investments**, and a month or year picker kept in the URL (`?y=&m=`).
+- Money is stored as **integer minor units** (paise for INR), never floats. `src/lib/money.ts` formats, parses and does percentages with integer maths. Currency and locale come from `user_settings`.
+- One table, `finance_entries` (`kind` + kind-specific nullable columns, CHECK constraints), soft delete through the same Trash as tasks. Fixed category lists live in `src/modules/expenses/categories.ts` (custom categories are parked in `docs/ideas.md`).
+- Summary maths (net savings, savings rate, EMIs counted by due date) is pure code in `summary.ts`, unit tested; every data function takes `userId`; ownership is integration-tested.
+- Anything beyond the spec (budgets, import, recurring entries, custom categories) goes to `docs/ideas.md` first; ask O before building it.
 
 ---
 
@@ -289,7 +289,7 @@ pnpm db:generate       # drizzle-kit generate migration
 pnpm db:migrate        # apply migrations
 pnpm db:studio         # drizzle studio
 pnpm db:seed           # demo user demo@ledge.test with sample data (dev only; refuses in production)
-docker compose up -d   # app + postgres (production-like; app service arrives in Phase 7)
+docker compose up -d   # app + postgres (production-like; app service arrives in Phase 9)
 ```
 
 Add a `db:seed` script that creates a demo user with realistic lists, tags, subtasks, and overdue and recurring tasks, so every view can be checked quickly. **Seed must refuse to run when `NODE_ENV=production`.**
@@ -364,9 +364,10 @@ This is the canonical plan. It expands the original suggested build order into p
 | 4   | Views (P0)                      | `[x]` done 2026-11-10 |
 | 5   | Safety (P0)                     | `[x]` done 2026-11-10 |
 | 6   | Polish                          | `[x]` done 2026-11-10 |
-| 7   | Deploy and backup               | `[ ]`                 |
-| 8   | P1 items (only if time remains) | `[ ]`                 |
-| 9   | Expenses scaffolding (§7)       | `[ ]`                 |
+| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11 |
+| 8   | Frontend redesign               | `[ ]`                 |
+| 9   | Deploy and backup               | `[ ]`                 |
+| 10  | P1 items (only if time remains) | `[ ]`                 |
 
 ### Phase 0: Scaffold
 
@@ -471,7 +472,36 @@ Goal: it is pleasant to use daily.
 
 Exit: the §15 definition of done holds for every shipped feature; all five E2E flows in §13 pass.
 
-### Phase 7: Deploy and backup
+### Phase 7: Expense tracker
+
+Goal: O's Google Sheet, replaced by a proper module (spec: `docs/expenses-spec.md`).
+
+- [x] Spec written from O's description and sheet screenshot: `docs/expenses-spec.md` (2026-11-11)
+- [x] `src/lib/money.ts` (format, parse, percent in integer maths) with tests (2026-11-11)
+- [x] `finance_entries` table, enums, CHECK constraints, indexes; migration 0006 (2026-11-11)
+- [x] Data functions and server actions (income, EMI, expense, investment) with Zod, ownership and typed results; EMI "repeat monthly" series (2026-11-11)
+- [x] Entries go to Trash, restore, delete forever and 30-day clean-up with tasks (2026-11-11)
+- [x] Summary tab: five tiles, invested and left-after-investing, expense breakdown, annual Jan to Dec trend with full-year total (2026-11-11)
+- [x] Income, EMIs and loans, Expenses and Investments tabs: add and edit dialog, delete with Undo, filter, sort, search, totals, empty states (2026-11-11)
+- [x] Period picker (month, whole year, arrows) in the URL (2026-11-11)
+- [x] Sidebar entry, command palette routes, seed data matching the sheet (2026-11-11)
+- [x] Unit, integration (incl. ownership) and Playwright tests; axe audit and phone checks of every new screen (2026-11-11)
+
+Exit: every tab works end to end; summary numbers equal the sheet for the same data; ownership test passes; the §15 definition of done holds.
+
+### Phase 8: Frontend redesign
+
+Goal: the whole app looks designed and intentional, not default. Use the `frontend-design` skill (Anthropic). Behaviour, data and keyboard flows must not change.
+
+- [ ] Audit the current look (sign-in, sign-up, app shell, task views, expenses) and agree a direction with O before restyling
+- [ ] Design tokens, typography and spacing refreshed in one place (CSS variables), light and dark
+- [ ] Sign-in and sign-up pages (and any landing page O wants) redesigned
+- [ ] App shell, task screens and expense screens restyled to the new direction; empty states and loading states included
+- [ ] All earlier tests (typecheck, lint, unit, e2e incl. axe and phone checks) still pass; contrast re-verified in both themes
+
+Exit: O has looked at it in a browser and approved the direction; no regression in the §15 definition of done.
+
+### Phase 9: Deploy and backup
 
 Goal: running on the home server, backed up, restorable.
 
@@ -487,28 +517,19 @@ Goal: running on the home server, backed up, restorable.
 
 Exit: app reachable over HTTPS; a backup was restored successfully into a scratch database.
 
-### Phase 8: P1 items (only if time remains)
+### Phase 10: P1 items (only if time remains)
 
-Do in this order, one at a time, each with tests and §15 done: natural-language quick add, board view, search, recurrence, export, bulk actions. Other P1 items in §6.2 (duplicate, move, list progress, extra shortcuts, sign out everywhere, delete account, Today header counts) may be slotted in after these, in O's order of preference.
+Do in this order, one at a time, each with tests and §15 done: natural-language quick add, board view, search, recurrence, export, bulk actions. Other P1 items in §6.2 (duplicate, move, list progress, extra shortcuts, sign out everywhere, delete account, Today header counts) may be slotted in after these, in O's order of preference. Exporting the expense data (JSON and CSV) belongs with the export item.
 
 - [ ] Natural-language quick add (chrono-node; chips; parser unit tests)
 - [ ] Board view
 - [ ] Search (Postgres full-text, `/`)
 - [ ] Recurrence (fixed and after_completion; next-date unit tests)
-- [ ] Export (JSON and CSV)
+- [ ] Export (JSON and CSV; tasks and expense entries)
 - [ ] Bulk actions
 - [ ] Remaining P1 items as chosen by O
 
 Exit: each shipped P1 item meets §15; unshipped ones are noted in `docs/ideas.md` or the status snapshot.
-
-### Phase 9: Expenses scaffolding (§7)
-
-- [ ] `src/modules/expenses/README.md` stating "awaiting spec"
-- [ ] Registered in `src/config/modules.ts` with `enabled: false`
-- [ ] `src/lib/money.ts` with `formatMoney` and parse helpers, with tests
-- [ ] Empty `/expenses` route rendering "Coming soon" when enabled
-
-Exit: scaffolding in place; nothing else built. When O supplies the spec, add a new phase here, plan first, and build on a separate branch.
 
 ---
 
@@ -530,8 +551,8 @@ Exit: scaffolding in place; nothing else built. When O supplies the spec, add a 
 
 Format when answered: replace the question's status with `ANSWERED YYYY-MM-DD: <answer>`, then apply the answer everywhere it matters (§17).
 
-1. Expense tracker spec (categories, accounts, budgets, recurring expenses, reports, import from bank or UPI exports?). **OPEN**
-2. Domain or hostname for the home server, and Cloudflare Tunnel vs Tailscale. **OPEN** (needed by Phase 7)
+1. Expense tracker spec (categories, accounts, budgets, recurring expenses, reports, import from bank or UPI exports?). **ANSWERED 2026-11-10:** O described it from his Google Sheet (tabs: summary, income, EMIs and loans, expenses, investments; month and year views); written up in `docs/expenses-spec.md` and built in Phase 7. Budgets, recurring entries, custom categories and import are parked in `docs/ideas.md`.
+2. Domain or hostname for the home server, and Cloudflare Tunnel vs Tailscale. **OPEN** (needed by Phase 9)
 3. Is this multi-user from day one, or single-user with `ALLOW_SIGNUP=false` after the first account? **OPEN**
 4. Final app name and branding. **OPEN** (working name: Ledge)
 
@@ -591,17 +612,18 @@ When any of these happens, update the listed places before finishing the task.
 
 ## 18. Change log for this file
 
-| Date       | Change                                                                                                                                                                                                                                         | Why                                                                                                                        |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-10 | Initial CLAUDE.md added to the repo. Added status snapshot, working-agreement items 11 and 12, "Versions in use", skeleton note in §4, §14 expanded into phases with exit criteria, §16 answer format, §17 self-maintenance protocol, this log | Make the plan trackable and keep the file true as the project changes                                                      |
-| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub)                                                                                                                                                        | Phase 0 first deliverable                                                                                                  |
-| 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                              | Phase 0 deliverable                                                                                                        |
-| 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo                                                                  |
-| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                                                                      |
-| 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind                                                            |
-| 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                               | Data model built and verified; keep this file equal to the repo                                                            |
-| 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                             | O asked for it                                                                                                             |
-| 2026-11-10 | Phase 3 completed. Status snapshot, §3 versions (date-fns), §4 layout, §14 ticks updated; decisions logged                                                                                                                                     | Lists, sections, tags, tasks, drawer and quick add built and verified                                                      |
-| 2026-11-10 | Phase 4 completed. Status snapshot, §3 versions (dnd-kit), §4 layout, §10 `test:e2e`, §14 ticks updated; decisions logged. Test speed-up recorded (fast user fixtures, shared worker)                                                          | Views, saved view settings, drag and drop and the first Playwright tests are built and verified                            |
-| 2026-11-10 | Phase 5 completed. Status snapshot, §3 versions (cmdk), §4 layout, §14 ticks updated; Trash clean-up question resolved in decisions                                                                                                            | Undo, Trash, optimistic updates, keyboard shortcuts and the command palette are built and verified; all P0 features are in |
-| 2026-11-10 | Phase 6 completed. Status snapshot, §10 `test:e2e`, §14 ticks updated; decisions logged                                                                                                                                                        | Accessibility audit, phone-width checks, reduced motion, sign-up/in and keyboard tests are in; all five §13 E2E flows pass |
+| Date       | Change                                                                                                                                                                                                                                                                                                                      | Why                                                                                                                              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-10 | Initial CLAUDE.md added to the repo. Added status snapshot, working-agreement items 11 and 12, "Versions in use", skeleton note in §4, §14 expanded into phases with exit criteria, §16 answer format, §17 self-maintenance protocol, this log                                                                              | Make the plan trackable and keep the file true as the project changes                                                            |
+| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub)                                                                                                                                                                                                                                     | Phase 0 first deliverable                                                                                                        |
+| 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                                                                                                           | Phase 0 deliverable                                                                                                              |
+| 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                                                                                                           | Scaffold and auth built; keep this file equal to the repo                                                                        |
+| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                                                                                                       | The tables do not exist until Phase 2                                                                                            |
+| 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list                                                                                        | O asked for non-technical documentation that never falls behind                                                                  |
+| 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                                                                                                            | Data model built and verified; keep this file equal to the repo                                                                  |
+| 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                                                                                                          | O asked for it                                                                                                                   |
+| 2026-11-10 | Phase 3 completed. Status snapshot, §3 versions (date-fns), §4 layout, §14 ticks updated; decisions logged                                                                                                                                                                                                                  | Lists, sections, tags, tasks, drawer and quick add built and verified                                                            |
+| 2026-11-10 | Phase 4 completed. Status snapshot, §3 versions (dnd-kit), §4 layout, §10 `test:e2e`, §14 ticks updated; decisions logged. Test speed-up recorded (fast user fixtures, shared worker)                                                                                                                                       | Views, saved view settings, drag and drop and the first Playwright tests are built and verified                                  |
+| 2026-11-10 | Phase 5 completed. Status snapshot, §3 versions (cmdk), §4 layout, §14 ticks updated; Trash clean-up question resolved in decisions                                                                                                                                                                                         | Undo, Trash, optimistic updates, keyboard shortcuts and the command palette are built and verified; all P0 features are in       |
+| 2026-11-10 | Phase 6 completed. Status snapshot, §10 `test:e2e`, §14 ticks updated; decisions logged                                                                                                                                                                                                                                     | Accessibility audit, phone-width checks, reduced motion, sign-up/in and keyboard tests are in; all five §13 E2E flows pass       |
+| 2026-11-11 | Expense tracker built as the new Phase 7; Frontend redesign inserted as Phase 8; Deploy and backup moved to Phase 9, P1 items to Phase 10; the old Phase 9 (expenses scaffolding) removed. §1 scope, §2 item 6, §4 layout, §7 (rewritten), §14 table and phases, §16 Q1 answered, status snapshot updated; decisions logged | O asked to finish the expense tracker before deploying, then redesign the frontend (O's instruction in chat counts as OK, §17.3) |

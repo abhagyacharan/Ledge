@@ -1,3 +1,4 @@
+import { AppMain } from "@/components/shell/app-main";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { APP_NAME } from "@/config/app";
@@ -27,9 +28,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <SidebarTrigger className="size-11" aria-label="Open navigation" />
             <span className="font-semibold tracking-tight">{APP_NAME}</span>
           </header>
-          <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:px-8 md:py-10">
-            {children}
-          </main>
+          <AppMain>{children}</AppMain>
         </SidebarInset>
         {enabledModules("primary").map((m) => (m.Global ? <m.Global key={m.id} /> : null))}
       </SidebarProvider>

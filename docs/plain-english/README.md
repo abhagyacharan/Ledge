@@ -10,13 +10,13 @@ Ledge is a private app for managing your own life. You run it on your own comput
 
 1. **Sign in.** A way to create your account and log in, so nobody else can see your things.
 2. **A to-do list.** The main part. Capture tasks, set due dates, group them in lists, tag them, and see them in views like "Today" and "Upcoming".
-3. **An expense tracker.** Not designed yet. Only an empty place for it is prepared, until you describe what you want.
+3. **An expense tracker.** Your Google Sheet, built in: income, EMIs and loans, expenses and investments, with a summary by month and by year.
 
 Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 ## How the work is split into phases
 
-The work is done in ten steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
+The work is done in eleven steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
 | Phase | Name                          | Status            | Read                                                       |
 | ----- | ----------------------------- | ----------------- | ---------------------------------------------------------- |
@@ -27,9 +27,10 @@ The work is done in ten steps, called phases, always in the same order. A phase 
 | 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                       |
 | 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                     |
 | 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                     |
-| 7     | Deploy and backup             | Next              | Written when the phase is done                             |
-| 8     | Extra features (if time)      | Not started       | Written when the phase is done                             |
-| 9     | Expenses placeholder          | Not started       | Written when the phase is done                             |
+| 7     | Expense tracker               | Done (2026-11-11) | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)   |
+| 8     | Frontend redesign             | Next              | Written when the phase is done                             |
+| 9     | Deploy and backup             | Not started       | Written when the phase is done                             |
+| 10    | Extra features (if time)      | Not started       | Written when the phase is done                             |
 
 ## Other pages
 
@@ -43,9 +44,10 @@ The work is done in ten steps, called phases, always in the same order. A phase 
 - **Phase 4: Views (done).** See [phase-4-views.md](phase-4-views.md).
 - **Phase 5: Safety (done).** See [phase-5-safety.md](phase-5-safety.md).
 - **Phase 6: Polish (done).** See [phase-6-polish.md](phase-6-polish.md).
-- **Phase 7: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.
-- **Phase 8: Extra features, only if time remains.** Type tasks in plain sentences ("pay rent tomorrow 5pm"), a board view, search, repeating tasks, export your data, and select many tasks at once.
-- **Phase 9: Expenses placeholder.** A hidden, empty spot for the expense tracker, plus the careful money-handling code it will need (money is stored as whole paise, never decimals, to avoid rounding mistakes). The real tracker waits for your description.
+- **Phase 7: Expense tracker (done).** See [phase-7-expense-tracker.md](phase-7-expense-tracker.md).
+- **Phase 8: Frontend redesign.** Make the whole app look designed rather than default: fonts, colours, spacing, the sign-in pages and the main screens, using Anthropic's front-end design guidance. Nothing about how it works changes, and all the checks must still pass. You will look at it and approve the direction first.
+- **Phase 9: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.
+- **Phase 10: Extra features, only if time remains.** Type tasks in plain sentences ("pay rent tomorrow 5pm"), a board view, search, repeating tasks, export your data (tasks and money), and select many tasks at once.
 
 ## The rule for keeping this folder up to date
 

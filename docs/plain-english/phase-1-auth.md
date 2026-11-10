@@ -47,7 +47,7 @@ It also builds the **frame** of the app (the side menu and the page layout) that
 
 - Sign-in and sign-up are limited to **5 attempts per minute** from the same internet address. After that the app answers "Too many attempts. Wait a minute and try again."
 - The counting is kept in the database so a restart of the app does not wipe it.
-- Note: when Ledge is placed behind the home-server tunnel in Phase 7, one setting must be added so the counter sees each visitor's real address (otherwise everyone looks like they come from the tunnel). This is recorded as a to-do.
+- Note: when Ledge is placed behind the home-server tunnel in Phase 9, one setting must be added so the counter sees each visitor's real address (otherwise everyone looks like they come from the tunnel). This is recorded as a to-do.
 
 ### 6. Closing sign-ups
 
@@ -101,7 +101,7 @@ It also builds the **frame** of the app (the side menu and the page layout) that
 
 ## What was not done or not checked
 
-- The **Secure** wristband setting was configured but not seen working over a real encrypted connection yet. That happens at deployment (Phase 7).
+- The **Secure** wristband setting was configured but not seen working over a real encrypted connection yet. That happens at deployment (Phase 9).
 - The automatic browser-clicking tests (Playwright) do not exist yet. The sign-in flow was checked by hand in a browser.
 - At the end of this phase a new account did not yet get an Inbox list and personal settings. That was added in Phase 2, along with the lists and tasks storage.
-- "Sign out everywhere" and "delete my account" are later optional features (Phase 8).
+- "Sign out everywhere" and "delete my account" are later optional features (Phase 10).

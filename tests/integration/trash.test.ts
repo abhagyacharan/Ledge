@@ -79,7 +79,7 @@ describe("listTrash", () => {
     await trashTask(b.id, task.id);
     const list = await createList(b.id, { name: "their list" });
     await trashList(b.id, list.id);
-    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [] });
+    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [], entries: [] });
   });
 
   it("restoring takes an item out of the Trash listing", async () => {
@@ -90,7 +90,7 @@ describe("listTrash", () => {
     await trashList(a.id, list.id);
     await restoreTask(a.id, task.id);
     await restoreList(a.id, list.id);
-    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [] });
+    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [], entries: [] });
   });
 });
 
@@ -124,7 +124,7 @@ describe("delete forever", () => {
     await trashList(a.id, list.id);
     expect(await deleteTrashedTaskForever(b.id, task.id)).toBe(false);
     expect(await deleteTrashedListForever(b.id, list.id)).toBe(false);
-    expect(await emptyTrash(b.id)).toEqual({ lists: 0, tasks: 0 });
+    expect(await emptyTrash(b.id)).toEqual({ lists: 0, tasks: 0, entries: 0 });
     expect((await listTrash(a.id)).tasks).toHaveLength(1);
   });
 
@@ -136,10 +136,10 @@ describe("delete forever", () => {
     await newTask(a, list.id, "in list");
     await trashTask(a.id, t1.id);
     await trashList(a.id, list.id);
-    expect(await emptyTrash(a.id)).toEqual({ lists: 1, tasks: 1 });
+    expect(await emptyTrash(a.id)).toEqual({ lists: 1, tasks: 1, entries: 0 });
     const left = await db.select().from(tasks).where(eq(tasks.userId, a.id));
     expect(left.map((t) => t.id)).toEqual([live.id]);
-    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [] });
+    expect(await listTrash(a.id)).toEqual({ lists: [], tasks: [], entries: [] });
   });
 });
 
@@ -157,7 +157,7 @@ describe("30-day clean-up", () => {
     await backdate("lists", oldList.id, 31);
     await backdate("lists", freshList.id, 29);
 
-    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 1, tasks: 1 });
+    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 1, tasks: 1, entries: 0 });
     const trash = await listTrash(a.id);
     expect(trash.tasks.map((t) => t.title)).toEqual(["fresh"]);
     expect(trash.lists.map((l) => l.name)).toEqual(["fresh list"]);
@@ -168,7 +168,7 @@ describe("30-day clean-up", () => {
     const task = await newTask(b, inbox.id, "old one");
     await trashTask(b.id, task.id);
     await backdate("tasks", task.id, 40);
-    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0 });
+    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 0 });
     expect((await listTrash(b.id)).tasks).toHaveLength(1);
   });
 
@@ -176,9 +176,13 @@ describe("30-day clean-up", () => {
     const inbox = await getInbox(a.id);
     const task = await newTask(a, inbox.id, "later");
     await trashTask(a.id, task.id);
-    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0 });
+    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 0 });
     const inThirtyOneDays = new Date(Date.now() + 31 * DAY);
-    expect(await purgeExpiredTrash(a.id, inThirtyOneDays)).toEqual({ lists: 0, tasks: 1 });
+    expect(await purgeExpiredTrash(a.id, inThirtyOneDays)).toEqual({
+      lists: 0,
+      tasks: 1,
+      entries: 0,
+    });
   });
 
   it("counts the days left", () => {

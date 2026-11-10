@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/shell/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
+import { formatDate } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
+import { KIND_LABELS } from "@/modules/expenses/categories";
+import { loadMoneyContext } from "@/modules/expenses/context";
 import { TrashList, type TrashItem } from "@/modules/todos/components/trash-list";
 import {
   daysLeftInTrash,
@@ -15,7 +19,10 @@ export const metadata: Metadata = { title: "Trash" };
 export default async function TrashPage() {
   const { userId } = await requireUser();
   await maybePurgeTrash(userId);
-  const { lists, tasks: trashedTasks } = await listTrash(userId);
+  const [{ lists, tasks: trashedTasks, entries }, money] = await Promise.all([
+    listTrash(userId),
+    loadMoneyContext(userId),
+  ]);
 
   const now = new Date();
   const items: (TrashItem & { at: number })[] = [
@@ -40,13 +47,22 @@ export default async function TrashPage() {
       daysLeft: daysLeftInTrash(t.deletedAt ?? now, now),
       at: t.deletedAt?.getTime() ?? 0,
     })),
+    ...entries.map((e) => ({
+      kind: "entry" as const,
+      id: e.id,
+      title: e.title,
+      icon: null,
+      detail: `${KIND_LABELS[e.kind].tab} entry, ${formatDate(e.entryDate, money.locale)}, ${formatMoney(e.amountMinor, money.currency, money.locale)}`,
+      daysLeft: daysLeftInTrash(e.deletedAt ?? now, now),
+      at: e.deletedAt?.getTime() ?? 0,
+    })),
   ].sort((a, b) => b.at - a.at);
 
   return (
     <>
       <PageHeader
         title="Trash"
-        description={`Deleted tasks and lists stay here for ${TRASH_RETENTION_DAYS} days, then they are erased for good.`}
+        description={`Deleted tasks, lists and money entries stay here for ${TRASH_RETENTION_DAYS} days, then they are erased for good.`}
       />
       {items.length === 0 ? (
         <EmptyState

@@ -36,6 +36,8 @@ export type AppModule = {
   section: "primary" | "modules";
   /** Extra links shown for this module. Defaults to a single item for `route`. */
   nav?: NavItem[];
+  /** Extra places the command palette can jump to (not shown in the sidebar). */
+  paletteRoutes?: { label: string; route: string }[];
   /** Extra sidebar group rendered under the module's links (for example "Lists"). */
   SidebarSection?: ComponentType;
   /** Always-mounted UI for the module, such as the quick-add button. Rendered in the app layout. */
@@ -66,8 +68,16 @@ export const modules: AppModule[] = [
     label: "Expenses",
     icon: Wallet,
     route: "/expenses",
-    enabled: false, // awaiting spec (CLAUDE.md §7)
+    enabled: true,
     section: "modules",
+    // The sidebar shows one "Expenses" entry; the tabs inside are reachable from the palette.
+    paletteRoutes: [
+      { label: "Expenses: Summary", route: "/expenses" },
+      { label: "Expenses: Income", route: "/expenses/income" },
+      { label: "Expenses: EMIs & loans", route: "/expenses/emis" },
+      { label: "Expenses: Expenses", route: "/expenses/spending" },
+      { label: "Expenses: Investments", route: "/expenses/investments" },
+    ],
   },
 ];
 

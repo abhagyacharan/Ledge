@@ -45,7 +45,7 @@ export const tasks = pgTable(
     dueDate: date("due_date", { mode: "string" }),
     /** Floating time of day, only meaningful together with `due_date`. */
     dueTime: time("due_time"),
-    /** RRULE subset (Phase 8). */
+    /** RRULE subset (Phase 10). */
     recurrenceRule: text("recurrence_rule"),
     recurrenceMode: text("recurrence_mode", { enum: RECURRENCE_MODES }).notNull().default("fixed"),
     /** For a completed snapshot of a recurring task: the task it came from. */

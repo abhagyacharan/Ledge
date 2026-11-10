@@ -26,7 +26,8 @@ async function main() {
   const { generateNKeysBetween } = await import("fractional-indexing");
   const { auth } = await import("@/server/auth");
   const { db } = await import("@/server/db/client");
-  const { lists, sections, tags, taskTags, tasks, user } = await import("@/server/db/schema");
+  const { financeEntries, lists, sections, tags, taskTags, tasks, user } =
+    await import("@/server/db/schema");
 
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: TIMEZONE }).format(new Date());
   const day = (offset: number): string => {
@@ -310,9 +311,167 @@ async function main() {
     }
   }
 
+  // Money entries. The current month matches the sample sheet: inflows 28,000.00, EMIs and loans
+  // 10,142.00, living expenses 4,600.00 (so net savings 13,258.00 and a savings rate of 47.4%).
+  // Earlier months of the same year get plausible numbers so the annual trend is not empty.
+  const year = Number(today.slice(0, 4));
+  const thisMonth = Number(today.slice(5, 7));
+  const on = (month: number, dom: number) =>
+    `${year}-${String(month).padStart(2, "0")}-${String(dom).padStart(2, "0")}`;
+  type Entry = typeof financeEntries.$inferInsert;
+  const money: Entry[] = [];
+  const add = (e: Omit<Entry, "userId">) => money.push({ userId, ...e });
+
+  add({
+    kind: "income",
+    entryDate: on(thisMonth, 1),
+    title: "Acme Corp salary",
+    category: "Salary",
+    amountMinor: 2_500_000,
+  });
+  add({
+    kind: "income",
+    entryDate: on(thisMonth, 15),
+    title: "Quarterly bonus",
+    category: "Bonus",
+    amountMinor: 300_000,
+    notes: "Q3 performance bonus",
+  });
+  add({
+    kind: "emi",
+    entryDate: on(thisMonth, 5),
+    title: "Home loan",
+    category: "Home loan",
+    lender: "HDFC Bank",
+    emiType: "Fixed EMI",
+    amountMinor: 650_000,
+    status: "paid",
+    paidOn: on(thisMonth, 5),
+  });
+  add({
+    kind: "emi",
+    entryDate: on(thisMonth, 10),
+    title: "Car loan",
+    category: "Vehicle loan",
+    lender: "SBI",
+    emiType: "Fixed EMI",
+    amountMinor: 264_200,
+    status: "paid",
+    paidOn: on(thisMonth, 10),
+  });
+  add({
+    kind: "emi",
+    entryDate: on(thisMonth, 28),
+    title: "Credit card bill",
+    category: "Credit card",
+    lender: "ICICI Bank",
+    emiType: "Credit card bill",
+    amountMinor: 100_000,
+    status: "scheduled",
+  });
+  add({
+    kind: "expense",
+    entryDate: on(thisMonth, 3),
+    title: "Metro pass and cabs",
+    category: "Transportation",
+    paymentMethod: "UPI",
+    amountMinor: 400_000,
+  });
+  add({
+    kind: "expense",
+    entryDate: on(thisMonth, 7),
+    title: "Netflix and iCloud",
+    category: "Subscriptions & Tech",
+    paymentMethod: "Credit card",
+    amountMinor: 60_000,
+    notes: "Monthly plans",
+  });
+  add({
+    kind: "investment",
+    entryDate: on(thisMonth, 6),
+    title: "Index fund SIP",
+    category: "Mutual fund",
+    platform: "Groww",
+    amountMinor: 500_000,
+  });
+
+  for (let m = 1; m < thisMonth; m++) {
+    add({
+      kind: "income",
+      entryDate: on(m, 1),
+      title: "Acme Corp salary",
+      category: "Salary",
+      amountMinor: 2_500_000,
+    });
+    if (m % 3 === 0) {
+      add({
+        kind: "income",
+        entryDate: on(m, 20),
+        title: "Freelance project",
+        category: "Freelance",
+        amountMinor: 400_000 + m * 10_000,
+      });
+    }
+    add({
+      kind: "emi",
+      entryDate: on(m, 5),
+      title: "Home loan",
+      category: "Home loan",
+      lender: "HDFC Bank",
+      emiType: "Fixed EMI",
+      amountMinor: 650_000,
+      status: "paid",
+      paidOn: on(m, 5),
+    });
+    add({
+      kind: "emi",
+      entryDate: on(m, 10),
+      title: "Car loan",
+      category: "Vehicle loan",
+      lender: "SBI",
+      emiType: "Fixed EMI",
+      amountMinor: 264_200,
+      status: "paid",
+      paidOn: on(m, 11),
+    });
+    add({
+      kind: "expense",
+      entryDate: on(m, 4),
+      title: "Groceries",
+      category: "Food & Groceries",
+      paymentMethod: "UPI",
+      amountMinor: 600_000 + m * 15_000,
+    });
+    add({
+      kind: "expense",
+      entryDate: on(m, 12),
+      title: "Electricity and internet",
+      category: "Housing & Utilities",
+      paymentMethod: "Net banking",
+      amountMinor: 220_000,
+    });
+    add({
+      kind: "expense",
+      entryDate: on(m, 18),
+      title: "Dinner out",
+      category: "Dining & Entertainment",
+      paymentMethod: "Credit card",
+      amountMinor: 180_000 + (m % 4) * 20_000,
+    });
+    add({
+      kind: "investment",
+      entryDate: on(m, 6),
+      title: "Index fund SIP",
+      category: "Mutual fund",
+      platform: "Groww",
+      amountMinor: 500_000,
+    });
+  }
+  await db.insert(financeEntries).values(money);
+
   console.log(`Seeded demo user ${DEMO_EMAIL} (password: ${DEMO_PASSWORD})`);
   console.log(
-    `  ${insertedLists.length + 1} lists, 3 sections, ${tagRows.length} tags, ${seeds.length} tasks`,
+    `  ${insertedLists.length + 1} lists, 3 sections, ${tagRows.length} tags, ${seeds.length} tasks, ${money.length} money entries`,
   );
   process.exit(0);
 }

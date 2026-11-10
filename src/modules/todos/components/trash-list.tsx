@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { restoreListAction } from "../actions/lists";
+import { deleteEntryForeverAction, restoreEntryAction } from "@/modules/expenses/actions";
 import { restoreTaskAction } from "../actions/tasks";
 import {
   deleteListForeverAction,
@@ -15,7 +16,7 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { run } from "./run-action";
 
 export type TrashItem = {
-  kind: "list" | "task";
+  kind: "list" | "task" | "entry";
   id: string;
   title: string;
   icon: string | null;
@@ -30,13 +31,23 @@ export function TrashList({ items }: { items: TrashItem[] }) {
   const [confirming, setConfirming] = useState<TrashItem | "all" | null>(null);
 
   async function restore(item: TrashItem) {
-    const action = item.kind === "list" ? restoreListAction : restoreTaskAction;
+    const action =
+      item.kind === "list"
+        ? restoreListAction
+        : item.kind === "entry"
+          ? restoreEntryAction
+          : restoreTaskAction;
     const result = await run(action({ id: item.id }));
     if (result.ok) toast.success(`Restored "${item.title}"`);
   }
 
   async function deleteForever(item: TrashItem) {
-    const action = item.kind === "list" ? deleteListForeverAction : deleteTaskForeverAction;
+    const action =
+      item.kind === "list"
+        ? deleteListForeverAction
+        : item.kind === "entry"
+          ? deleteEntryForeverAction
+          : deleteTaskForeverAction;
     await run(action({ id: item.id }), { success: `Deleted "${item.title}" for good` });
   }
 

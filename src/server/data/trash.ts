@@ -2,7 +2,14 @@ import "server-only";
 import { and, count, desc, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/server/db/client";
-import { lists, tasks, type List, type Task } from "@/server/db/schema";
+import {
+  financeEntries,
+  lists,
+  tasks,
+  type FinanceEntry,
+  type List,
+  type Task,
+} from "@/server/db/schema";
 
 /**
  * Trash (CLAUDE.md §6.2). Deleting a task or a list is a soft delete: it sets `deleted_at` and the
@@ -27,9 +34,12 @@ const parent = alias(tasks, "parent_task");
 
 export type TrashedList = List & { taskCount: number };
 
+/** What each Trash operation removed. */
+export type TrashCounts = { lists: number; tasks: number; entries: number };
+
 export async function listTrash(
   userId: string,
-): Promise<{ lists: TrashedList[]; tasks: TrashedTask[] }> {
+): Promise<{ lists: TrashedList[]; tasks: TrashedTask[]; entries: FinanceEntry[] }> {
   const trashedLists = await db
     .select()
     .from(lists)
@@ -77,7 +87,14 @@ export async function listTrash(
     )
     .orderBy(desc(tasks.deletedAt));
 
+  const entries = await db
+    .select()
+    .from(financeEntries)
+    .where(and(eq(financeEntries.userId, userId), isNotNull(financeEntries.deletedAt)))
+    .orderBy(desc(financeEntries.deletedAt));
+
   return {
+    entries,
     lists: trashedLists.map((l) => ({ ...l, taskCount: taskCounts.get(l.id) ?? 0 })),
     tasks: rows.map((r) => ({
       ...r.task,
@@ -114,8 +131,23 @@ export async function deleteTrashedListForever(userId: string, listId: string): 
   return rows.length > 0;
 }
 
+/** Permanently deletes a money entry that is in Trash. Live entries are never touched. */
+export async function deleteTrashedEntryForever(userId: string, entryId: string): Promise<boolean> {
+  const rows = await db
+    .delete(financeEntries)
+    .where(
+      and(
+        eq(financeEntries.userId, userId),
+        eq(financeEntries.id, entryId),
+        isNotNull(financeEntries.deletedAt),
+      ),
+    )
+    .returning({ id: financeEntries.id });
+  return rows.length > 0;
+}
+
 /** Erases everything in the user's Trash. Returns how many lists and tasks were removed. */
-export async function emptyTrash(userId: string): Promise<{ lists: number; tasks: number }> {
+export async function emptyTrash(userId: string): Promise<TrashCounts> {
   return db.transaction(async (tx) => {
     const removedLists = await tx
       .delete(lists)
@@ -125,7 +157,15 @@ export async function emptyTrash(userId: string): Promise<{ lists: number; tasks
       .delete(tasks)
       .where(and(eq(tasks.userId, userId), isNotNull(tasks.deletedAt)))
       .returning({ id: tasks.id });
-    return { lists: removedLists.length, tasks: removedTasks.length };
+    const removedEntries = await tx
+      .delete(financeEntries)
+      .where(and(eq(financeEntries.userId, userId), isNotNull(financeEntries.deletedAt)))
+      .returning({ id: financeEntries.id });
+    return {
+      lists: removedLists.length,
+      tasks: removedTasks.length,
+      entries: removedEntries.length,
+    };
   });
 }
 
@@ -136,7 +176,7 @@ export async function emptyTrash(userId: string): Promise<{ lists: number; tasks
 export async function purgeExpiredTrash(
   userId: string,
   now: Date = new Date(),
-): Promise<{ lists: number; tasks: number }> {
+): Promise<TrashCounts> {
   const cutoff = new Date(now.getTime() - TRASH_RETENTION_DAYS * DAY_MS);
   return db.transaction(async (tx) => {
     const removedLists = await tx
@@ -147,7 +187,21 @@ export async function purgeExpiredTrash(
       .delete(tasks)
       .where(and(eq(tasks.userId, userId), isNotNull(tasks.deletedAt), lt(tasks.deletedAt, cutoff)))
       .returning({ id: tasks.id });
-    return { lists: removedLists.length, tasks: removedTasks.length };
+    const removedEntries = await tx
+      .delete(financeEntries)
+      .where(
+        and(
+          eq(financeEntries.userId, userId),
+          isNotNull(financeEntries.deletedAt),
+          lt(financeEntries.deletedAt, cutoff),
+        ),
+      )
+      .returning({ id: financeEntries.id });
+    return {
+      lists: removedLists.length,
+      tasks: removedTasks.length,
+      entries: removedEntries.length,
+    };
   });
 }
 

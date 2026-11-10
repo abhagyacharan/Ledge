@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDaysIso,
   daysBetween,
+  formatDate,
   formatDue,
   formatDayHeading,
   formatDueDate,
@@ -190,5 +191,21 @@ describe("long dates and day headings", () => {
 
   it("adds the year when it is not this year", () => {
     expect(formatDayHeading("2027-01-01", today)).toBe("Friday · 1 Jan 2027");
+  });
+});
+
+describe("formatDate (short date with the year, for money entries)", () => {
+  it("writes day, short month and year", () => {
+    expect(formatDate("2026-11-10")).toBe("10 Nov 2026");
+    expect(formatDate("2026-01-01")).toBe("1 Jan 2026");
+  });
+
+  it("handles month ends and leap days without shifting the day", () => {
+    expect(formatDate("2026-12-31")).toBe("31 Dec 2026");
+    expect(formatDate("2028-02-29")).toBe("29 Feb 2028");
+  });
+
+  it("follows the locale order", () => {
+    expect(formatDate("2026-11-10", "en-US")).toBe("Nov 10, 2026");
   });
 });

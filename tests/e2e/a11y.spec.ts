@@ -38,6 +38,11 @@ for (const scheme of SCHEMES) {
       "/completed",
       "/trash",
       "/settings",
+      "/expenses",
+      "/expenses/income",
+      "/expenses/emis",
+      "/expenses/spending",
+      "/expenses/investments",
     ]) {
       test(`${path} has no accessibility violations`, async ({ page }) => {
         await page.goto(path);
@@ -55,6 +60,21 @@ for (const scheme of SCHEMES) {
       await page.getByRole("button", { name: /^View/ }).click();
       await expect(page.getByLabel("Sort by")).toBeVisible();
       await audit(page, `the View panel (${scheme})`);
+    });
+
+    test("the add-entry dialogs on the expense tabs", async ({ page }) => {
+      for (const [path, button] of [
+        ["/expenses/income", "Add income"],
+        ["/expenses/emis", "Add EMI or loan payment"],
+        ["/expenses/spending", "Add expense"],
+        ["/expenses/investments", "Add investment"],
+      ]) {
+        await page.goto(path);
+        await page.getByRole("button", { name: button, exact: true }).first().click();
+        await expect(page.getByRole("dialog")).toBeVisible();
+        await page.waitForTimeout(400); // the dialog zooms in; let it settle
+        await audit(page, `${button} dialog (${scheme})`);
+      }
     });
 
     test("the task drawer", async ({ page }) => {
