@@ -532,7 +532,7 @@ Do in this order, one at a time, each with tests and §15 done: natural-language
 
 - [x] Natural-language quick add (chrono-node; chips; parser unit tests) (2026-11-11)
 - [x] Board view (2026-11-11)
-- [ ] Search (Postgres full-text, `/`)
+- [x] Search (Postgres full-text, `/`) (2026-11-11)
 - [ ] Recurrence (fixed and after_completion; next-date unit tests)
 - [ ] Export (JSON and CSV; tasks and expense entries)
 - [ ] Bulk actions

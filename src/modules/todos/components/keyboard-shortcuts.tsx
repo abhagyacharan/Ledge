@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { OPEN_HELP_EVENT, OPEN_PALETTE_EVENT } from "./shortcuts";
 
@@ -57,6 +58,8 @@ function focusTitleWhenReady() {
  * dialogs and the task panel.
  */
 export function KeyboardShortcuts() {
+  const router = useRouter();
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -75,10 +78,14 @@ export function KeyboardShortcuts() {
           event.preventDefault();
           window.dispatchEvent(new Event(OPEN_HELP_EVENT));
           break;
-        case "/":
+        case "/": {
+          // Search lives on its own page: go there, or jump into its box if already there.
           event.preventDefault();
-          window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
+          const box = document.getElementById("search-input");
+          if (box instanceof HTMLInputElement) box.focus();
+          else router.push("/search");
           break;
+        }
         case "j":
           event.preventDefault();
           move(1);
@@ -119,7 +126,7 @@ export function KeyboardShortcuts() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [router]);
 
   return null;
 }

@@ -57,6 +57,8 @@ const SCREENS = [
   "/completed",
   "/trash",
   "/settings",
+  "/search",
+  "/search?q=call",
   "/expenses",
   "/expenses/income",
   "/expenses/emis",

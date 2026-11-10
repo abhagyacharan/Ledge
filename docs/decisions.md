@@ -338,6 +338,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Reason:** §6.2 (board view per list, columns = sections, choice remembered). Reusing the drag board keeps one implementation of ordering, Undo-free optimistic moves, rollback and screen-reader announcements.
 - **Found and fixed:** `sr-only` text inside far-right columns is absolutely positioned and was not contained by the scroll box, so the page scrolled sideways by about 120 px on a phone. The region is `position: relative`, which contains it. The main content area also got `min-w-0` so a wide child can never stretch it.
 
+## 2026-11-11: Search (Phase 10)
+
+- **Decision:** `/search?q=` is a server-rendered page with a plain GET form (it works without scripts). `searchTasks` in `src/server/data/views.ts` reduces the text to letters and digits, builds `to_tsquery('english', 'w1:* & w2:*')` (stems plus word starts, every word must match) against the generated `tasks.search` column, ORs in a plain `ILIKE` on the title (so a query of only stop words still finds things), ranks with `ts_rank`, and reuses the cross-list view query, so Trash, trashed and archived lists and other users are excluded exactly like the other views. `/` now goes to the search page (or focuses its box when already there); the command palette moves to Ctrl or Cmd + K only, and "Search" is a side-menu and palette entry.
+- **Reason:** §6.2 ("Search via Postgres full-text search, reachable with `/`"). Cutting the input to letters and digits means no part of it can act as query syntax or as a LIKE wildcard. English stemming only; other languages are out of scope for v0.1.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

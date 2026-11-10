@@ -38,6 +38,8 @@ for (const scheme of SCHEMES) {
       "/completed",
       "/trash",
       "/settings",
+      "/search",
+      "/search?q=call",
       "/expenses",
       "/expenses/income",
       "/expenses/emis",

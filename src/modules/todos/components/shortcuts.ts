@@ -5,7 +5,7 @@ export const OPEN_HELP_EVENT = "ledge:open-help";
 /** The keyboard shortcuts, shown in the help dialog (press ?). Keep in step with the handlers. */
 export const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["Ctrl", "K"], label: "Open the command palette (Cmd+K on a Mac)" },
-  { keys: ["/"], label: "Open the command palette to jump somewhere" },
+  { keys: ["/"], label: "Search your tasks" },
   { keys: ["q"], label: "Quick add a task" },
   { keys: ["j"], label: "Move down to the next task (or the Down arrow)" },
   { keys: ["k"], label: "Move up to the previous task (or the Up arrow)" },

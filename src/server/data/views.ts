@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gte, isNotNull, isNull, lte, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/server/db/client";
 import { lists, taskTags, tasks, type Task } from "@/server/db/schema";
@@ -63,6 +63,25 @@ async function fetchViewTasks(
     listIsInbox: r.listIsInbox,
     parentTitle: r.parentTitle,
   }));
+}
+
+/**
+ * Full-text search over titles and notes (CLAUDE.md §6.2). Words are matched by their stem
+ * ("pay" finds "paying") and as the start of a word while typing ("gro" finds "groceries"), all
+ * words must match, and titles are also matched as plain text so a stop word like "the" still
+ * finds something. Best matches first. Tasks in Trash, or in a list in Trash or archived, are
+ * never returned; the words are reduced to letters and digits before they reach the query.
+ */
+export function searchTasks(userId: string, text: string, limit = 100): Promise<ViewTask[]> {
+  const words = (text.match(/[\p{L}\p{N}]+/gu) ?? []).slice(0, 10);
+  if (words.length === 0) return Promise.resolve([]);
+  const query = sql`to_tsquery('english', ${words.map((w) => `${w}:*`).join(" & ")})`;
+  // Letters and digits only, so nothing in here is a LIKE wildcard.
+  const plain = `%${words.join(" ")}%`;
+  return fetchViewTasks(userId, or(sql`${tasks.search} @@ ${query}`, ilike(tasks.title, plain)), {
+    order: sql`ts_rank(${tasks.search}, ${query}) desc, ${tasks.updatedAt} desc`,
+    limit,
+  });
 }
 
 /** Open tasks due on or before `today` (overdue and today), subtasks included. */

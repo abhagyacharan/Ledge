@@ -72,3 +72,29 @@ Each column has its own "add a task" box, and a menu (rename, move, delete) for 
 
 - Checked: a browser test creates a list, adds a section and two tasks, switches to the board, drags a card to the other column with the keyboard, reloads and sees both the move and the board choice remembered, then switches back to the list view. Also: the accessibility inspector on a board in light and dark, the phone rule (no sideways page scroll, 44-pixel buttons, the box really scrolls), and an ownership test.
 - Not checked: dragging with a real finger on a real phone, and a screen reader hearing the announcements.
+
+## Search (done 2026-11-11)
+
+### What it does
+
+A new **Search** page, in the side menu and the command box, and reachable from anywhere by pressing **/** (the slash key). Type a word and press Enter: Ledge looks through the **titles and notes** of all your tasks and lists the matches, best match first, each showing which list it is in.
+
+- It understands **word forms**: searching "pay" also finds "paying" and "paid".
+- It understands **half-typed words**: "gro" finds "groceries".
+- With several words, **every word has to match** (in any order): "pull review" finds "Review pull requests".
+- Click a result to open it in the task panel, like anywhere else.
+- Tasks in the Trash never show up, and neither do tasks in a list you deleted or archived. **Nobody else's tasks can ever appear** (a test proves it).
+- If nothing matches you get a clear message, not a blank page.
+
+The slash key used to open the command box. It now opens Search. The command box is still on **Ctrl+K** (Cmd+K on a Mac), and Search is one of its entries too.
+
+### Behind the scenes
+
+- The database was already prepared for this since Phase 2: it keeps a hidden "search column" up to date by itself from every task's title and notes, with a special fast index. This phase only asks it questions.
+- What you type is cut down to letters and digits before it goes anywhere near the database, so punctuation or code-like text cannot cause trouble (a test tries it).
+- The search address is `/search?q=word`, so a search can be bookmarked and works with the browser's back button.
+
+### Checked, and not checked
+
+- Checked: 9 tests against the real database (titles, notes, word forms, half words, all-words-must-match, only-stop-words like "the", odd characters, ranking, other users, Trash and archived lists); a browser test that presses `/`, searches, opens a result and sees the "nothing found" message; the accessibility inspector in light and dark and the phone-size rule on the search page, empty and with results.
+- Not checked: very large collections (thousands of tasks should be fast because of the index, but this was not timed), or other languages (word forms are English only).

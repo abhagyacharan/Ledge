@@ -163,13 +163,19 @@ test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/upcoming/);
 
-  // / opens it as well, and it can jump to a list.
+  // The palette can also jump to a list.
   await page.locator("body").click({ position: { x: 5, y: 300 } });
-  await page.keyboard.press("/");
+  await page.keyboard.press("Control+k");
   await expect(page.getByRole("dialog", { name: "Command palette" })).toBeVisible();
   await page.keyboard.type("Keys list");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 1, name: "Keys list" })).toBeVisible();
+
+  // / goes to the search page with its box ready.
+  await page.locator("body").click({ position: { x: 5, y: 300 } });
+  await page.keyboard.press("/");
+  await expect(page).toHaveURL(/\/search/);
+  await expect(page.getByRole("searchbox", { name: "Search tasks" })).toBeFocused();
 });
 
 test("quick add understands a sentence: date, time, list, tag and priority", async ({ page }) => {
