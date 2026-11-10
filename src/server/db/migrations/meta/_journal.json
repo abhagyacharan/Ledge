@@ -29,6 +29,20 @@
       "when": 1794329072912,
       "tag": "0003_inbox_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794329979772,
+      "tag": "0004_nifty_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794330146415,
+      "tag": "0005_position_c_collation",
+      "breakpoints": true
     }
   ]
 }

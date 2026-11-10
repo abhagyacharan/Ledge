@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                           |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                      |
-| Current phase          | **Phase 3: Lists, tasks, tags CRUD** (Phases 0, 1 and 2 done)                                                                                                                                                                                                                                                                                   |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                 |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                          |
-| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (68 tests, real database). All migrations apply to a fresh database; `drizzle-kit generate` reports no drift; seed runs and refuses in production. Not checked: seeded data in the UI (views are placeholders until Phase 3 and 4), `secure` cookie over real HTTPS, Playwright e2e (none yet) |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                            |
-| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                                                                                   |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Current phase          | **Phase 4: Views (P0)** (Phases 0 to 3 done)                                                                                                                                                                                                                                                                                                                                                                   |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (179 tests, real database). Browser-checked on the seeded demo account: list and Inbox screens, quick add, inline add, detail drawer (notes autosave, due date, subtasks), new list, list to Trash, settings, phone width. Not checked: light theme visually, `secure` cookie over real HTTPS, Playwright e2e (none yet), keyboard-only run-through (Phase 6) |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
@@ -77,7 +77,7 @@ Park any new idea in `docs/ideas.md` instead of building it.
 
 Next.js and Better Auth APIs change between versions. **Verify against current docs before writing code.**
 
-**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, fractional-indexing 4.0.0, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
+**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, date-fns 4.4.0, fractional-indexing 4.0.0, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
 
 **Next.js 16 notes** (verified in `node_modules/next/dist/docs/`; `AGENTS.md` says to read them before writing Next code): `middleware` is now `proxy` (`src/proxy.ts`); `LayoutProps<"/">` types come from `next typegen`, which `pnpm typecheck` runs first; Cache Components is off (see `docs/decisions.md`).
 
@@ -104,7 +104,7 @@ src/
     api/health, api/export  # health check, JSON/CSV export
   modules/
     auth/                   # sign-in/up forms, Zod schemas (client side of auth)
-    todos/                  # components, actions, queries, schema, utils, tests
+    todos/                  # components/ (list screen, task row, drawer, quick add), actions/ (server actions), schema.ts (Zod)
     expenses/               # placeholder (§7)
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
@@ -112,14 +112,14 @@ src/
     env.ts                  # Zod-validated environment
     session.ts              # getSession() / requireUser() helpers
     user-defaults.ts        # ensureUserDefaults(): settings row + Inbox, run on sign-up
-    data/                   # data functions (lists.ts, tasks.ts): every one takes userId
+    data/                   # data functions (lists, sections, tasks, tags, settings): every one takes userId
   components/
     ui/                     # shadcn primitives
     shell/                  # app sidebar, page header, empty state, theme toggle, sign out
   config/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
-  lib/                      # shared utils (dates, ids, money)
+  lib/                      # shared utils: dates.ts (floating dates), ordering.ts (fractional index), result.ts, utils.ts
 docs/ decisions.md  ideas.md
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
 tests/ e2e/  integration/  helpers/  setup/  stubs/
@@ -360,7 +360,7 @@ This is the canonical plan. It expands the original suggested build order into p
 | 0   | Scaffold                        | `[x]` done 2026-11-10 |
 | 1   | Auth                            | `[x]` done 2026-11-10 |
 | 2   | Data model                      | `[x]` done 2026-11-10 |
-| 3   | Lists, tasks, tags CRUD (P0)    | `[ ]`                 |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10 |
 | 4   | Views (P0)                      | `[ ]`                 |
 | 5   | Safety (P0)                     | `[ ]`                 |
 | 6   | Polish                          | `[ ]`                 |
@@ -418,16 +418,16 @@ Exit: fresh database migrates cleanly; sign-up creates settings and Inbox; seed 
 
 Goal: you can capture and manage tasks end to end.
 
-- [ ] Every server action and data function calls `requireUser()`, takes `userId`, validates with Zod, returns a typed result
-- [ ] Lists: create, rename, recolor, reorder, archive, delete (confirmation; tasks go to Trash)
-- [ ] Sections: create, rename, reorder, delete (tasks move to "no section")
-- [ ] Tags: create inline while editing, rename, delete, color
-- [ ] Tasks: quick-add (`q`, field stays open), inline add, complete and uncomplete (`completed_at`), edit all fields
-- [ ] Detail drawer (right side desktop, full-screen sheet mobile) with autosave on blur and `?task=<id>` in the URL
-- [ ] Subtasks, one level, with "2/5" progress; completing all subtasks does not complete the parent
-- [ ] Date picker with quick options and typed-date field; overdue shown with color and label
-- [ ] Unit tests: date and timezone helpers (DST, month-end); fractional ordering helpers
-- [ ] Integration tests: list and task CRUD against a real database
+- [x] Every server action and data function calls `requireUser()`, takes `userId`, validates with Zod, returns a typed result (2026-11-10)
+- [x] Lists: create, rename, recolor, reorder, archive, delete (confirmation; tasks go to Trash) (2026-11-10)
+- [x] Sections: create, rename, reorder, delete (tasks move to "no section") (2026-11-10)
+- [x] Tags: create inline while editing, rename, delete, color (2026-11-10)
+- [x] Tasks: quick-add (`q`, field stays open), inline add, complete and uncomplete (`completed_at`), edit all fields (2026-11-10)
+- [x] Detail drawer (right side desktop, full-screen sheet mobile) with autosave on blur and `?task=<id>` in the URL (2026-11-10)
+- [x] Subtasks, one level, with "2/5" progress; completing all subtasks does not complete the parent (2026-11-10)
+- [x] Date picker with quick options and typed-date field; overdue shown with color and label (2026-11-10)
+- [x] Unit tests: date and timezone helpers (DST, month-end); fractional ordering helpers (2026-11-10)
+- [x] Integration tests: list and task CRUD against a real database (2026-11-10)
 
 Exit: all P0 items under "Capture", "Task fields and detail", "Lists, sections, tags" and "Dates" in §6.2 work; tests pass.
 
@@ -601,3 +601,4 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind       |
 | 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                               | Data model built and verified; keep this file equal to the repo       |
 | 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                             | O asked for it                                                        |
+| 2026-11-10 | Phase 3 completed. Status snapshot, §3 versions (date-fns), §4 layout, §14 ticks updated; decisions logged                                                                                                                                     | Lists, sections, tags, tasks, drawer and quick add built and verified |

@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { EmptyState } from "@/components/shell/empty-state";
-import { PageHeader } from "@/components/shell/page-header";
+import { ListScreen } from "@/modules/todos/components/list-screen";
+import { getInbox } from "@/server/data/lists";
 import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Inbox" };
 
-export default async function InboxPage() {
-  await requireUser();
+export default async function InboxPage({ searchParams }: PageProps<"/inbox">) {
+  const { userId } = await requireUser();
+  const [inbox, { task }] = await Promise.all([getInbox(userId), searchParams]);
   return (
-    <>
-      <PageHeader title="Inbox" />
-      <EmptyState title="Your inbox is empty" hint="Adding tasks arrives in the next phase." />
-    </>
+    <ListScreen
+      userId={userId}
+      list={inbox}
+      taskParam={typeof task === "string" ? task : undefined}
+    />
   );
 }

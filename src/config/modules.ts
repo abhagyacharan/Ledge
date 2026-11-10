@@ -1,4 +1,7 @@
 import { CalendarDays, Inbox, ListChecks, Sun, Wallet, type LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
+import { QuickAdd } from "@/modules/todos/components/quick-add";
+import { TodoSidebarSection } from "@/modules/todos/components/sidebar-section";
 
 /**
  * Module registry (CLAUDE.md §4). The sidebar renders from this list, so adding a module
@@ -23,6 +26,10 @@ export type AppModule = {
   section: "primary" | "modules";
   /** Extra links shown for this module. Defaults to a single item for `route`. */
   nav?: NavItem[];
+  /** Extra sidebar group rendered under the module's links (for example "Lists"). */
+  SidebarSection?: ComponentType;
+  /** Always-mounted UI for the module, such as the quick-add button. Rendered in the app layout. */
+  Global?: ComponentType;
 };
 
 export const modules: AppModule[] = [
@@ -38,6 +45,8 @@ export const modules: AppModule[] = [
       { label: "Today", route: "/today", icon: Sun },
       { label: "Upcoming", route: "/upcoming", icon: CalendarDays },
     ],
+    SidebarSection: TodoSidebarSection,
+    Global: QuickAdd,
   },
   {
     id: "expenses",

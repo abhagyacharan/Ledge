@@ -8,6 +8,10 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **App Router.** The way Next.js decides which page to show for which web address, based on how folders are arranged.
 
+**Archive.** Putting a list away without deleting it. Archived lists leave the side menu and can be brought back from Settings.
+
+**Autosave.** Saving a change automatically, without a Save button. In Ledge, text saves when you click away; choices save when you make them.
+
 **Backup.** A saved copy of the database, kept so you can recover from a disaster.
 
 **Better Auth.** The ready-made login system used for sign-in, sign-up, and sessions.
@@ -17,6 +21,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Cascade.** When deleting one record automatically deletes the records that depend on it, for example deleting a list deletes its tasks.
 
 **Check constraint.** A rule built into a database table that rejects bad values, for example a priority above 3.
+
+**Collation.** The rule a database uses to decide alphabetical order, for example whether capital letters count the same as small ones.
 
 **Commit.** A saved snapshot of the project in git, with a short note about what changed.
 
@@ -31,6 +37,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Dependency.** An outside tool or library the app relies on instead of writing it from scratch.
 
 **Design tokens.** A single list of named colours, sizes and spacing that the whole app draws from, so the look can be changed in one place.
+
+**Detail drawer.** The panel that slides in from the side (full screen on a phone) when you open a task, to see and change everything about it.
 
 **Docker / Docker Compose.** A tool for running programs in containers, and a file format for describing which containers to run together.
 
@@ -52,11 +60,15 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Git / GitHub.** Git remembers every version of the project. GitHub is a website that stores a copy online.
 
+**Goal.** In Ledge, a list that has a target date. The list heading shows how many days are left.
+
 **Hashing.** Scrambling a password in a one-way process so that the original cannot be recovered from the stored result.
 
 **HttpOnly.** A cookie rule: scripts on a web page are not allowed to read the cookie.
 
 **HTTPS.** The encrypted version of web traffic. Needed for the "Secure" cookie rule. It shows as a padlock in the browser.
+
+**Inbox.** The list every account has from the start. New tasks land here unless you choose another list. It cannot be deleted.
 
 **Index (database).** A shortcut the database keeps so it can find records quickly, like an index at the back of a book.
 
@@ -76,6 +88,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Optimistic update.** Showing the result of your action instantly, before the server confirms it, and quietly undoing it if the server says no.
 
+**Overdue.** A task whose due date has passed, or whose due time today has passed. Shown with an icon, red text and the word "Overdue".
+
 **Password minimum.** The shortest password allowed. In Ledge it is 10 characters.
 
 **Phase.** One numbered stage of the build plan.
@@ -88,6 +102,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Proxy.** The quick doorman at the front of the app. In Ledge it only checks that a login wristband exists.
 
+**Quick add.** The round "+" button (or the `q` key) that opens a small box for adding tasks one after another.
+
 **Radix.** A set of building blocks for interface parts such as menus and dialogs that work well with keyboards and screen readers.
 
 **Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
@@ -97,6 +113,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
 
 **Scaffold.** The starting skeleton of a project, with the tools and folders in place but little content.
+
+**Section.** A heading inside a list that groups tasks, for example "Now", "Next" and "Later".
 
 **Secure (cookie).** A cookie rule: only send the cookie over HTTPS.
 
@@ -114,19 +132,29 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Strict mode (TypeScript).** The most careful setting of TypeScript's mistake-catching.
 
+**Subtask.** A small step under a task. Only one level is allowed. Ticking all subtasks does not tick the parent.
+
 **Table.** One drawer in the database, holding one kind of thing, such as tasks.
+
+**Tag.** A label you create and stick on tasks, such as "bills". Names ignore capital letters.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 
 **Test database.** A second, throwaway database used only by automated tests, so tests never touch your real data.
 
+**Toast.** A short message that pops up briefly, for example "Added to Home", sometimes with an Undo button.
+
 **Transaction.** A group of database changes that either all happen or none do.
+
+**Trash.** Where deleted tasks and lists wait before they are erased for good, so a mistake can be undone.
 
 **Trigger.** A small rule stored in the database that runs automatically whenever something is added or changed, and can refuse the change.
 
 **Type checking.** The mistake-finding pass that TypeScript performs on all the code.
 
 **TypeScript.** The web language used for the code, with extra checks for mistakes.
+
+**Undo.** A button in a toast that reverses what you just did, for a few seconds.
 
 **UUID.** A long random identifier (like `3f2b8c1e-…`) used instead of 1, 2, 3, so IDs cannot be guessed.
 

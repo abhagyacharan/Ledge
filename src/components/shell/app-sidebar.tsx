@@ -63,7 +63,10 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
             <NavLinks items={primary} />
           </SidebarGroupContent>
         </SidebarGroup>
-        {/* Lists and Tags groups arrive with Phase 3. */}
+        {/* Each module may add its own groups (the tasks module adds "Lists"). */}
+        {enabledModules("primary").map((m) =>
+          m.SidebarSection ? <m.SidebarSection key={m.id} /> : null,
+        )}
         {others.length > 0 ? (
           <SidebarGroup>
             <SidebarGroupLabel>Modules</SidebarGroupLabel>

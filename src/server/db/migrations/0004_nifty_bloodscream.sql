@@ -1,0 +1,2 @@
+ALTER TABLE "lists" ADD COLUMN "deleted_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "lists" ADD CONSTRAINT "lists_inbox_not_trashed_check" CHECK (not ("lists"."is_inbox" and "lists"."deleted_at" is not null));

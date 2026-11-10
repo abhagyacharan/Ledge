@@ -114,15 +114,47 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** `saveExact: true` now lives in `pnpm-workspace.yaml` (pnpm 12 ignored `.npmrc` for this), and every dependency in `package.json` is an exact version.
 - **Reason:** Phase 0 wrote that versions were pinned, but packages added afterwards had `^` ranges. The lockfile held the real versions, so nothing changed at runtime.
 
-## Pending decisions (log here when made)
-
-- **Phase 3, deleting a list:** §6.2 says deleting a list "moves tasks to Trash", but lists have no soft-delete column and the foreign key currently deletes a list's tasks with it. Decide: add `lists.deleted_at` (list itself goes to Trash), or soft-delete the tasks and keep an archived list. Needs O's input before building list deletion.
-- **Phase 3, moving a task to another list:** the trigger requires a subtask to be in the same list as its parent, checked row by row. Moving a parent that has subtasks therefore has to detach the subtasks, move the parent, move the subtasks, and reattach, all in one transaction (or the rule must be changed to a deferred check).
-
-- Trash auto-purge mechanism: scheduled job vs on-load cleanup (Phase 5).
-- Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 7).
-
 ## 2026-11-10: Plain-English documentation folder
 
 - **Decision:** `docs/plain-english/` holds a layman write-up per phase plus a glossary. It is updated in the same change as anything it describes (CLAUDE.md §2 item 13, §15, §17.2).
 - **Reason:** O wants to understand what is being built without technical language, and the write-ups must never fall behind the project.
+
+## 2026-11-10: Deleting a list moves the list itself to Trash (O's decision)
+
+- **Decision:** Lists have a `deleted_at` column. Deleting a list sets it; the list and all its tasks disappear together (reads skip tasks whose list is trashed) and come back together on restore. The Inbox cannot be trashed (a check constraint). Permanent deletion (`deleteListForever`) stays for the Trash view's "delete forever" (Phase 5). The sidebar toast offers Undo for a few seconds.
+- **Reason:** §6.2 says deleting a list "moves tasks to Trash". Before this, deleting a list removed its tasks for good. O chose "list goes to Trash" over "archive the list, trash only its tasks".
+
+## 2026-11-10: Subtasks go to Trash and come back with their parent
+
+- **Decision:** Trashing a task also trashes its subtasks with the same timestamp. Restoring brings back the parent and exactly the subtasks trashed at that moment, so a subtask trashed earlier stays in Trash.
+- **Reason:** A subtask without its parent would be invisible in the list. The shared timestamp makes restore precise.
+
+## 2026-11-10: Moving a task with subtasks
+
+- **Decision:** `moveTaskToList` detaches the subtasks, moves the parent, then reattaches the subtasks in the new list, all in one transaction. Subtasks cannot be moved on their own. Moving clears the section unless one in the target list is chosen.
+- **Reason:** The subtask trigger checks the parent's list row by row, so a plain update of parent and children would be rejected halfway. This resolves the earlier pending question.
+
+## 2026-11-10: Position columns use the "C" collation
+
+- **Decision:** Migration `0005` sets `COLLATE "C"` on `lists.position`, `sections.position` and `tasks.position`.
+- **Reason:** Fractional-index keys mix upper and lower case and only sort correctly byte by byte. The default database collation sorts case-insensitively, so `ORDER BY position` could disagree with the JavaScript library. Tests cover this.
+
+## 2026-11-10: Phase 3 interface choices
+
+- **Decision:** Reordering lists and sections uses "Move up / Move down" menu items; drag-and-drop arrives with Phase 4. Tag management (rename, recolor, delete) lives in Settings, and tags are created inline in the task drawer. Archived lists are managed in Settings. The date picker is quick buttons plus the browser's own date and time inputs (no calendar library). The task detail is loaded from `?task=<id>` on the server with an ownership check. Sign-in-gated data for the sidebar and quick add is loaded once in the app layout and shared through a small context.
+- **Reason:** Fewer dependencies (§2.5), keyboard- and phone-friendly controls, and the URL stays the single source of truth for the open task.
+
+## 2026-11-10: Modules own their sidebar section and always-on UI
+
+- **Decision:** `AppModule` in `src/config/modules.ts` gained optional `SidebarSection` and `Global` components. The tasks module uses them for the "Lists" group and the quick-add button.
+- **Reason:** §4 says adding a module should not require touching the shell. The shell now just renders whatever each enabled module provides.
+
+## 2026-11-10: Server action pattern
+
+- **Decision:** Every action goes through `guarded()` (`src/modules/todos/actions/guard.ts`): `requireUser()`, Zod validation with field errors, the authenticated `userId` passed to the handler, unexpected errors logged and returned as a friendly message. Actions return `Result<T>` and never throw for expected failures. After a change they revalidate the whole app layout.
+- **Reason:** §5 and §9. One place to get the security-critical steps right.
+
+## Pending decisions (log here when made)
+
+- Trash auto-purge mechanism: scheduled job vs on-load cleanup (Phase 5).
+- Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 7).

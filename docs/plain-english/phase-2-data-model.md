@@ -70,7 +70,7 @@ A rule written only in the app can be forgotten by a mistake. A rule built into 
 
 **Cleaning up.**
 
-- Deleting a list removes its sections and tasks. (There is an open question about this; see "What is not decided yet".)
+- Deleting a list removes its sections and tasks permanently. (In Phase 3 the normal "Delete" button was changed to send the list to Trash instead, so it can be restored; see the Phase 3 write-up.)
 - Deleting a tag removes only the sticker, never the task.
 - Deleting an account removes all of its data.
 
@@ -139,10 +139,10 @@ Also checked by hand: all migrations (the numbered database change files) run cl
 
 The task screens themselves (Inbox, Today and so on) still show "nothing here" until Phase 3 and Phase 4, because nothing reads the data yet.
 
-## What is not decided yet (and needs your input before Phase 3)
+## Questions that were open at the end of this phase (both answered in Phase 3)
 
-- **Deleting a list.** The plan says deleting a list should move its tasks to Trash, so you can undo it. But right now a list is removed for real, and its tasks go with it. There are two ways to fix this: (a) give lists their own Trash status, so a deleted list and its tasks can be restored together; or (b) keep the list in an "archived" state and send only its tasks to Trash. Option (a) feels more natural. This will be raised again at the start of Phase 3.
-- **Moving a task with subtasks to another list.** Because subtasks must stay in the same list as their parent, moving a parent needs a careful multi-step move behind the scenes. It is solvable; it is just noted so it is not forgotten.
+- **Deleting a list (answered: the list goes to Trash, with its tasks).** The plan says deleting a list should move its tasks to Trash, so you can undo it. But right now a list is removed for real, and its tasks go with it. There are two ways to fix this: (a) give lists their own Trash status, so a deleted list and its tasks can be restored together; or (b) keep the list in an "archived" state and send only its tasks to Trash. Option (a) feels more natural. This will be raised again at the start of Phase 3.
+- **Moving a task with subtasks to another list (answered: done as one safe multi-step move).** Because subtasks must stay in the same list as their parent, moving a parent needs a careful multi-step move behind the scenes. It is solvable; it is just noted so it is not forgotten.
 
 ## What was not done or not checked
 

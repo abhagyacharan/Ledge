@@ -7,6 +7,7 @@ import {
   jsonb,
   pgTable,
   text,
+  timestamp,
   unique,
   uniqueIndex,
   uuid,
@@ -38,6 +39,8 @@ export const lists = pgTable(
     viewMode: text("view_mode", { enum: VIEW_MODES }).notNull().default("list"),
     /** Sort, group and filter choices for this list (CLAUDE.md §6.2). */
     viewSettings: jsonb("view_settings").notNull().default({}),
+    /** Soft delete: set means the list (and, with it, its tasks) is in Trash. */
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -52,6 +55,7 @@ export const lists = pgTable(
     check("lists_name_check", sql`char_length(${t.name}) between 1 and 100`),
     check("lists_view_mode_check", sql`${t.viewMode} in ('list', 'board')`),
     check("lists_inbox_not_archived_check", sql`not (${t.isInbox} and ${t.isArchived})`),
+    check("lists_inbox_not_trashed_check", sql`not (${t.isInbox} and ${t.deletedAt} is not null)`),
   ],
 );
 

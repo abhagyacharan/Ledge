@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { deleteList, getList, listLists, renameList } from "@/server/data/lists";
+import { deleteListForever, getList, listLists, renameList } from "@/server/data/lists";
 import {
   deleteTaskForever,
   getTask,
@@ -78,7 +78,7 @@ describe("user B cannot update user A's data", () => {
 
 describe("user B cannot delete user A's data", () => {
   it("cannot delete A's list", async () => {
-    expect(await deleteList(b.id, aList.id)).toBe(false);
+    expect(await deleteListForever(b.id, aList.id)).toBe(false);
     expect(await getList(a.id, aList.id)).not.toBeNull();
   });
 
@@ -109,7 +109,7 @@ describe("Trash and the Inbox", () => {
   it("deleting the Inbox through the data layer is refused by the database", async () => {
     const inbox = (await listLists(a.id)).find((l) => l.isInbox);
     expect(inbox).toBeDefined();
-    const error = await dbError(deleteList(a.id, inbox!.id)); // inbox checked just above
+    const error = await dbError(deleteListForever(a.id, inbox!.id)); // inbox checked just above
     expect(error.code).toBe(PG.checkViolation);
   });
 });

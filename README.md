@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 (scaffold), 1 (auth) and 2 (data model) are done; the app has sign-up, sign-in, sign-out, an empty app shell, and a full database for lists and tasks (no task screens yet). See [CLAUDE.md](CLAUDE.md) for the spec, phases and current status, and [docs/decisions.md](docs/decisions.md) for decisions.
+**Status:** Phases 0 to 3 are done: sign-in, the database, and a working task manager with lists, sections, tags, subtasks, a detail drawer and quick add. The Today, Upcoming and other views arrive in Phase 4.
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 

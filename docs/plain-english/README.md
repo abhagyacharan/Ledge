@@ -18,23 +18,23 @@ Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 The work is done in ten steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
-| Phase | Name                          | Status            | Read                                           |
-| ----- | ----------------------------- | ----------------- | ---------------------------------------------- |
-| 0     | Scaffold (the empty workshop) | Done (2026-11-10) | [phase-0-scaffold.md](phase-0-scaffold.md)     |
-| 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)             |
-| 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md) |
-| 3     | Lists, tasks and tags         | Next              | Written when the phase is done                 |
-| 4     | Views (Today, Upcoming...)    | Not started       | Written when the phase is done                 |
-| 5     | Safety (undo, trash, keys)    | Not started       | Written when the phase is done                 |
-| 6     | Polish                        | Not started       | Written when the phase is done                 |
-| 7     | Deploy and backup             | Not started       | Written when the phase is done                 |
-| 8     | Extra features (if time)      | Not started       | Written when the phase is done                 |
-| 9     | Expenses placeholder          | Not started       | Written when the phase is done                 |
+| Phase | Name                          | Status            | Read                                                       |
+| ----- | ----------------------------- | ----------------- | ---------------------------------------------------------- |
+| 0     | Scaffold (the empty workshop) | Done (2026-11-10) | [phase-0-scaffold.md](phase-0-scaffold.md)                 |
+| 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)                         |
+| 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md)             |
+| 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md) |
+| 4     | Views (Today, Upcoming...)    | Next              | Written when the phase is done                             |
+| 5     | Safety (undo, trash, keys)    | Not started       | Written when the phase is done                             |
+| 6     | Polish                        | Not started       | Written when the phase is done                             |
+| 7     | Deploy and backup             | Not started       | Written when the phase is done                             |
+| 8     | Extra features (if time)      | Not started       | Written when the phase is done                             |
+| 9     | Expenses placeholder          | Not started       | Written when the phase is done                             |
 
 ## What each future phase will do, in one paragraph
 
 - **Phase 2: Data model (done).** See [phase-2-data-model.md](phase-2-data-model.md).
-- **Phase 3: Lists, tasks and tags.** The first time you can actually use it. Add a task quickly, tick it off, open it to edit every detail, break it into sub-steps, give it a due date and a priority, group tasks into lists and sections, and label them with tags.
+- **Phase 3: Lists, tasks and tags (done).** See [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md).
 - **Phase 4: Views.** Ready-made ways of looking at your tasks: Inbox, Today (overdue first), Upcoming (next two weeks), All, Completed, each list and each tag. You can sort, group and filter them, and drag tasks to reorder.
 - **Phase 5: Safety.** Nothing gets lost by accident. An "Undo" message after you complete or delete something, a Trash you can restore from (emptied after 30 days), instant-feeling updates, and keyboard shortcuts plus a search-everything command box.
 - **Phase 6: Polish.** Go through every screen to make it pleasant: empty screens that say what to do next, loading placeholders, error messages in friendly words, phone-size layout, dark mode, and use with a keyboard only.
