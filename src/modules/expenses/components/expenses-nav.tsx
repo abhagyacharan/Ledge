@@ -65,7 +65,7 @@ export function ExpensesTabs() {
                 className={cn(
                   "-mb-px flex min-h-11 items-center border-b-2 px-3 text-sm font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-9",
                   active
-                    ? "border-foreground text-foreground"
+                    ? "border-primary text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -135,7 +135,9 @@ export function PeriodPicker({ fallback }: { fallback: Period }) {
         }
       >
         <SelectTrigger aria-label="Month" className="h-11 w-40 md:h-8">
-          <SelectValue />
+          <SelectValue>
+            {period.month === "all" ? "Whole year" : MONTH_NAMES[period.month - 1]}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL_MONTHS}>Whole year</SelectItem>
@@ -152,7 +154,7 @@ export function PeriodPicker({ fallback }: { fallback: Period }) {
         onValueChange={(v) => go({ year: Number(v), month: period.month })}
       >
         <SelectTrigger aria-label="Year" className="h-11 w-28 md:h-8">
-          <SelectValue />
+          <SelectValue>{period.year}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {years.map((y) => (

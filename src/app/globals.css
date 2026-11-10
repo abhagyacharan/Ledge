@@ -8,8 +8,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-bricolage);
+  --font-heading: var(--font-bricolage);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +40,9 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-inflow: var(--inflow);
+  --color-outflow: var(--outflow);
+  --color-brass: var(--brass);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,73 +52,105 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Design tokens (CLAUDE.md §8, Phase 8). The idea is a modern account book: pale ledger paper,
+ * dark ink, a cloth-green spine for the sidebar, and "margin red" kept for what needs attention
+ * (overdue, outflow, delete). Every pair below was checked against WCAG AA by the axe audit.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(0.955 0.012 150); /* ledger paper */
+  --foreground: oklch(0.25 0.025 175); /* ink */
+  --card: oklch(0.985 0.006 150);
+  --card-foreground: oklch(0.25 0.025 175);
+  --popover: oklch(0.985 0.006 150);
+  --popover-foreground: oklch(0.25 0.025 175);
+  --primary: oklch(0.42 0.075 168); /* ledger green */
+  --primary-foreground: oklch(0.975 0.01 150);
+  --secondary: oklch(0.925 0.014 150);
+  --secondary-foreground: oklch(0.25 0.025 175);
+  --muted: oklch(0.935 0.012 150);
+  --muted-foreground: oklch(0.46 0.03 170);
+  --accent: oklch(0.915 0.028 160);
+  --accent-foreground: oklch(0.25 0.025 175);
+  --destructive: oklch(0.5 0.19 27); /* margin red */
+  --border: oklch(0.875 0.018 150);
+  --input: oklch(0.83 0.02 150);
+  --ring: oklch(0.55 0.09 168);
+  --inflow: oklch(0.45 0.09 160);
+  --outflow: oklch(0.52 0.17 30);
+  --brass: oklch(0.72 0.12 85);
+  --chart-1: oklch(0.45 0.09 160);
+  --chart-2: oklch(0.52 0.17 30);
+  --chart-3: oklch(0.72 0.12 85);
+  --chart-4: oklch(0.46 0.03 170);
+  --chart-5: oklch(0.25 0.025 175);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.27 0.04 172); /* the cloth spine of the book */
+  --sidebar-foreground: oklch(0.95 0.012 150);
+  --sidebar-primary: oklch(0.82 0.12 165);
+  --sidebar-primary-foreground: oklch(0.22 0.035 170);
+  --sidebar-accent: oklch(0.34 0.05 170);
+  --sidebar-accent-foreground: oklch(0.98 0.01 150);
+  --sidebar-border: oklch(1 0 0 / 14%);
+  --sidebar-ring: oklch(0.82 0.12 165);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.2 0.012 170);
+  --foreground: oklch(0.94 0.01 150);
+  --card: oklch(0.245 0.015 170);
+  --card-foreground: oklch(0.94 0.01 150);
+  --popover: oklch(0.26 0.016 170);
+  --popover-foreground: oklch(0.94 0.01 150);
+  --primary: oklch(0.8 0.11 165);
+  --primary-foreground: oklch(0.2 0.03 170);
+  --secondary: oklch(0.3 0.018 170);
+  --secondary-foreground: oklch(0.94 0.01 150);
+  --muted: oklch(0.28 0.016 170);
+  --muted-foreground: oklch(0.74 0.025 160);
+  --accent: oklch(0.32 0.035 170);
+  --accent-foreground: oklch(0.96 0.01 150);
+  --destructive: oklch(0.72 0.17 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.7 0.09 165);
+  --inflow: oklch(0.8 0.11 165);
+  --outflow: oklch(0.74 0.15 30);
+  --brass: oklch(0.8 0.12 85);
+  --chart-1: oklch(0.8 0.11 165);
+  --chart-2: oklch(0.74 0.15 30);
+  --chart-3: oklch(0.8 0.12 85);
+  --chart-4: oklch(0.74 0.025 160);
+  --chart-5: oklch(0.94 0.01 150);
+  --sidebar: oklch(0.165 0.02 172);
+  --sidebar-foreground: oklch(0.94 0.012 150);
+  --sidebar-primary: oklch(0.8 0.11 165);
+  --sidebar-primary-foreground: oklch(0.2 0.03 170);
+  --sidebar-accent: oklch(0.26 0.03 170);
+  --sidebar-accent-foreground: oklch(0.97 0.01 150);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.8 0.11 165);
+}
+
+/*
+ * The sidebar is always a dark panel, even in the light theme. Components inside it (tags, theme
+ * button, sign out) use the ordinary tokens, so inside the panel those tokens are re-pointed at the
+ * sidebar palette. Menus that open in a portal sit outside the panel and keep the page theme.
+ */
+[data-sidebar="sidebar"] {
+  --foreground: var(--sidebar-foreground);
+  --muted-foreground: oklch(0.8 0.02 160);
+  --accent: var(--sidebar-accent);
+  --accent-foreground: var(--sidebar-accent-foreground);
+  --secondary: var(--sidebar-accent);
+  --secondary-foreground: var(--sidebar-accent-foreground);
+  --muted: var(--sidebar-accent);
+  --border: var(--sidebar-border);
+  --input: oklch(1 0 0 / 20%);
+  --ring: var(--sidebar-ring);
+  --destructive: oklch(0.78 0.15 25);
+  --primary: var(--sidebar-primary);
+  --primary-foreground: var(--sidebar-primary-foreground);
 }
 
 @layer base {
@@ -126,6 +162,36 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Page titles use the display face; everything else stays in the quiet body face. */
+  h1 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+  }
+}
+
+@layer components {
+  /*
+   * The accountant's mark for a final total: a single rule above and a double rule below. It is
+   * used only where a number really is the bottom line (net savings, full-year totals, totals of
+   * a list), so the double line always carries meaning.
+   */
+  .rule-double {
+    border-bottom: 4px double currentColor;
+  }
+  /* Small uppercase labels for column heads and tile names, like the heads of a cash book. */
+  .label-caps {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* Money and dates line up in columns. */
+  .figures {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 }
 

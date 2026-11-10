@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { APP_NAME } from "@/config/app";
+import { Brand } from "./brand";
 import { enabledModules, navItemsFor, type NavItem } from "@/config/modules";
 import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
@@ -33,7 +33,7 @@ function NavLinks({ items }: { items: NavItem[] }) {
             <SidebarMenuButton
               asChild
               isActive={active}
-              className="h-11 md:h-8"
+              className="h-11 md:h-8 data-active:shadow-[inset_3px_0_0_var(--sidebar-primary)]"
               onClick={() => isMobile && setOpenMobile(false)}
             >
               <Link href={route} aria-current={active ? "page" : undefined}>
@@ -55,7 +55,7 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
   return (
     <Sidebar>
       <SidebarHeader>
-        <p className="px-2 py-1 text-base font-semibold tracking-tight">{APP_NAME}</p>
+        <Brand className="px-2 py-1.5" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

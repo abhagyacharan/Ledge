@@ -12,8 +12,8 @@ export default async function SignUpPage() {
 
   if (!isSignupAllowed()) {
     return (
-      <div className="text-center">
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight">Sign-ups are closed</h1>
+      <div>
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight">Sign-ups are closed</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           This instance is not accepting new accounts.
         </p>
@@ -26,7 +26,10 @@ export default async function SignUpPage() {
 
   return (
     <>
-      <h1 className="mb-6 text-center text-2xl font-semibold tracking-tight">Create account</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Create account</h1>
+      <p className="mt-2 mb-8 text-sm text-muted-foreground">
+        Start your book. It stays on this server.
+      </p>
       <SignUpForm />
     </>
   );

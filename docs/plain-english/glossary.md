@@ -46,7 +46,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Detail drawer.** The panel that slides in from the side (full screen on a phone) when you open a task, to see and change everything about it.
 
+**Display face.** The typeface used for big titles and big numbers. Ledge uses Bricolage Grotesque for these and a plainer face for ordinary text.
+
 **Docker / Docker Compose.** A tool for running programs in containers, and a file format for describing which containers to run together.
+
+**Double rule.** Two thin lines drawn under a final total, the accountant's way of saying "this is the bottom line". Ledge uses it under net savings and totals, and in its logo.
 
 **Drag handle.** The grip (six dots) on the left of a task. You grab it to move the task, with a mouse, a finger or the keyboard.
 

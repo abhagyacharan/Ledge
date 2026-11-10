@@ -10,28 +10,47 @@ type Fmt = { currency: string; locale: string };
 const money = (minor: number, f: Fmt) => formatMoney(minor, f.currency, f.locale);
 const amount = (minor: number, f: Fmt) => formatAmount(minor, f.currency, f.locale);
 
+type Emphasis = "plain" | "good" | "bad";
+
 function Tile({
   label,
   value,
   caption,
-  tone,
+  emphasis = "plain",
+  bottomLine = false,
   children,
 }: {
   label: string;
   value: string;
   caption: string;
-  tone: string;
+  emphasis?: Emphasis;
+  /** The figure is a final total, so it gets the accountant's double rule. */
+  bottomLine?: boolean;
   children?: ReactNode;
 }) {
-  // Captions are darker than the usual muted grey so they stay readable on the tinted tiles.
+  const filled = emphasis !== "plain";
   return (
-    <div className={cn("flex flex-col gap-1 rounded-xl border p-4", tone)}>
-      <dt className="text-xs font-medium tracking-wide text-foreground/70 uppercase">{label}</dt>
-      <dd className="flex flex-col gap-1">
-        <span className="text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">
+    <div
+      className={cn(
+        "flex flex-col gap-1.5 rounded-lg border p-4",
+        emphasis === "plain" && "bg-card",
+        emphasis === "good" && "border-transparent bg-primary text-primary-foreground",
+        emphasis === "bad" && "border-transparent bg-destructive text-white",
+      )}
+    >
+      <dt className={cn("label-caps", filled ? "opacity-90" : "text-muted-foreground")}>{label}</dt>
+      <dd className="flex flex-col gap-1.5">
+        <span
+          className={cn(
+            "self-start font-display text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl",
+            bottomLine && "rule-double",
+          )}
+        >
           {value}
         </span>
-        <span className="text-xs text-foreground/70">{caption}</span>
+        <span className={cn("text-xs", filled ? "opacity-90" : "text-muted-foreground")}>
+          {caption}
+        </span>
         {children}
       </dd>
     </div>
@@ -55,16 +74,14 @@ export function SummaryTiles({
         label="Total inflows"
         value={money(totals.income, fmt)}
         caption="Salary, bonuses and other income"
-        tone="bg-emerald-50 dark:bg-emerald-950/30"
       />
       <Tile
         label="Total EMIs & loans"
         value={money(totals.emi, fmt)}
         caption="Fixed debt obligations"
-        tone="bg-rose-50 dark:bg-rose-950/30"
       >
         {totals.emi > 0 ? (
-          <span className="flex flex-wrap items-center gap-x-2 text-xs text-foreground/70">
+          <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <CheckCircle2 className="size-3.5" aria-hidden />
               {money(emi.paidMinor, fmt)} paid
@@ -82,20 +99,16 @@ export function SummaryTiles({
           </span>
         ) : null}
       </Tile>
-      <Tile
-        label="Living expenses"
-        value={money(totals.expense, fmt)}
-        caption="Monthly outflows"
-        tone="bg-amber-50 dark:bg-amber-950/30"
-      />
+      <Tile label="Living expenses" value={money(totals.expense, fmt)} caption="Monthly outflows" />
       <Tile
         label="Net savings"
+        emphasis={overspent ? "bad" : "good"}
+        bottomLine
         value={money(totals.netSavings, fmt)}
         caption={overspent ? "Overspent: you spent more than you earned" : "Retained cash flow"}
-        tone="bg-emerald-50 dark:bg-emerald-950/30"
       >
         {overspent ? (
-          <span className="flex items-center gap-1 text-xs font-medium text-destructive">
+          <span className="flex items-center gap-1 text-xs font-medium">
             <AlertTriangle className="size-3.5" aria-hidden />
             Overspent
           </span>
@@ -105,7 +118,6 @@ export function SummaryTiles({
         label="Savings rate"
         value={formatPercent(totals.savingsRate, fmt.locale)}
         caption={totals.savingsRate === null ? "No income recorded yet" : "Efficiency ratio"}
-        tone="bg-sky-50 dark:bg-sky-950/30"
       />
     </dl>
   );
@@ -119,13 +131,11 @@ export function InvestingTiles({ totals, fmt }: { totals: PeriodTotals; fmt: Fmt
         label="Invested"
         value={money(totals.investment, fmt)}
         caption="Money put into investments"
-        tone="bg-violet-50 dark:bg-violet-950/30"
       />
       <Tile
         label="Left after investing"
         value={money(totals.leftAfterInvesting, fmt)}
         caption="Net savings minus invested"
-        tone="bg-muted/50"
       />
     </dl>
   );
@@ -138,16 +148,15 @@ function ScrollRegion({ label, children }: { label: string; children: ReactNode 
       role="region"
       aria-label={label}
       tabIndex={0}
-      className="overflow-x-auto rounded-xl border outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="overflow-x-auto rounded-lg border bg-card outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       {children}
     </div>
   );
 }
 
-const th =
-  "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground";
-const num = "px-3 py-2 text-right tabular-nums";
+const th = "label-caps px-3 py-2 text-left text-muted-foreground";
+const num = "figures px-3 py-2 text-right";
 
 /** Spending by category, with a bar for the share. Categories with no spending stay in the list. */
 export function BreakdownTable({
@@ -163,7 +172,7 @@ export function BreakdownTable({
     <ScrollRegion label="Expense breakdown by category">
       <table className="w-full min-w-[22rem] text-sm">
         <caption className="sr-only">Expense breakdown by category for the chosen period</caption>
-        <thead className="bg-muted/50">
+        <thead className="bg-muted">
           <tr>
             <th scope="col" className={th}>
               Expense category
@@ -202,12 +211,12 @@ export function BreakdownTable({
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t bg-muted/50 font-semibold">
+        <tfoot className="border-t bg-muted font-semibold">
           <tr>
             <th scope="row" className="px-3 py-2 text-left">
               Total living expenses
             </th>
-            <td className={num}>{amount(total.amountMinor, fmt)}</td>
+            <td className={cn(num, "rule-double")}>{amount(total.amountMinor, fmt)}</td>
             <td className={num}>{total.amountMinor > 0 ? "100.0%" : formatPercent(null)}</td>
             <td className="hidden sm:table-cell" />
             <td className={cn(num, "hidden sm:table-cell")}>{total.count}</td>
@@ -236,7 +245,7 @@ export function TrendTable({
     <ScrollRegion label={`Annual cash flow trend for ${year}`}>
       <table className="w-full min-w-[36rem] text-sm">
         <caption className="sr-only">Cash flow for each month of {year}</caption>
-        <thead className="bg-muted/50">
+        <thead className="bg-muted">
           <tr>
             <th scope="col" className={th}>
               Month
@@ -286,16 +295,18 @@ export function TrendTable({
             );
           })}
         </tbody>
-        <tfoot className="border-t bg-muted/50 font-semibold">
+        <tfoot className="border-t bg-muted font-semibold">
           <tr>
             <th scope="row" className="px-3 py-2 text-left">
               Full year total
             </th>
-            <td className={num}>{amount(total.income, fmt)}</td>
-            <td className={num}>{amount(total.emi, fmt)}</td>
-            <td className={num}>{amount(total.expense, fmt)}</td>
-            <td className={num}>{amount(total.netSavings, fmt)}</td>
-            <td className={num}>{formatPercent(total.savingsRate, fmt.locale)}</td>
+            <td className={cn(num, "rule-double")}>{amount(total.income, fmt)}</td>
+            <td className={cn(num, "rule-double")}>{amount(total.emi, fmt)}</td>
+            <td className={cn(num, "rule-double")}>{amount(total.expense, fmt)}</td>
+            <td className={cn(num, "rule-double")}>{amount(total.netSavings, fmt)}</td>
+            <td className={cn(num, "rule-double")}>
+              {formatPercent(total.savingsRate, fmt.locale)}
+            </td>
           </tr>
         </tfoot>
       </table>
@@ -316,7 +327,7 @@ export function CashFlowChart({
 }) {
   const peak = Math.max(1, ...months.map((m) => Math.max(m.income, m.emi + m.expense)));
   return (
-    <figure aria-hidden className="rounded-xl border p-4">
+    <figure aria-hidden className="rounded-lg border bg-card p-4">
       <div className="flex h-36 items-end gap-1 sm:gap-2">
         {months.map((m) => {
           const out = m.emi + m.expense;
@@ -330,11 +341,11 @@ export function CashFlowChart({
             >
               <div className="flex h-full w-full items-end justify-center gap-0.5">
                 <div
-                  className="w-1/2 max-w-3 rounded-t-sm bg-emerald-600 dark:bg-emerald-400"
+                  className="w-1/2 max-w-3 rounded-t-sm bg-inflow"
                   style={{ height: `${(m.income / peak) * 100}%` }}
                 />
                 <div
-                  className="w-1/2 max-w-3 rounded-t-sm bg-rose-600 dark:bg-rose-400"
+                  className="w-1/2 max-w-3 rounded-t-sm bg-outflow"
                   style={{ height: `${(out / peak) * 100}%` }}
                 />
               </div>
@@ -347,10 +358,10 @@ export function CashFlowChart({
       </div>
       <figcaption className="mt-3 flex gap-4 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-emerald-600 dark:bg-emerald-400" /> Inflow
+          <span className="size-2.5 rounded-sm bg-inflow" /> Inflow
         </span>
         <span className="inline-flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-rose-600 dark:bg-rose-400" /> EMIs and expenses
+          <span className="size-2.5 rounded-sm bg-outflow" /> EMIs and expenses
         </span>
       </figcaption>
     </figure>

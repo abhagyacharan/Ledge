@@ -68,7 +68,7 @@ export function SignUpForm() {
       <Button type="submit" className="h-11" disabled={pending}>
         {pending ? "Creating account…" : "Create account"}
       </Button>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/sign-in" className="font-medium text-foreground underline underline-offset-4">
           Sign in

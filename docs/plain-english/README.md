@@ -28,8 +28,8 @@ The work is done in eleven steps, called phases, always in the same order. A pha
 | 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                     |
 | 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                     |
 | 7     | Expense tracker               | Done (2026-11-11) | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)   |
-| 8     | Frontend redesign             | Next              | Written when the phase is done                             |
-| 9     | Deploy and backup             | Not started       | Written when the phase is done                             |
+| 8     | Frontend redesign             | Done (2026-11-11) | [phase-8-redesign.md](phase-8-redesign.md)                 |
+| 9     | Deploy and backup             | Next              | Written when the phase is done                             |
 | 10    | Extra features (if time)      | Not started       | Written when the phase is done                             |
 
 ## Other pages
@@ -45,7 +45,7 @@ The work is done in eleven steps, called phases, always in the same order. A pha
 - **Phase 5: Safety (done).** See [phase-5-safety.md](phase-5-safety.md).
 - **Phase 6: Polish (done).** See [phase-6-polish.md](phase-6-polish.md).
 - **Phase 7: Expense tracker (done).** See [phase-7-expense-tracker.md](phase-7-expense-tracker.md).
-- **Phase 8: Frontend redesign.** Make the whole app look designed rather than default: fonts, colours, spacing, the sign-in pages and the main screens, using Anthropic's front-end design guidance. Nothing about how it works changes, and all the checks must still pass. You will look at it and approve the direction first.
+- **Phase 8: Frontend redesign (done).** See [phase-8-redesign.md](phase-8-redesign.md).
 - **Phase 9: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.
 - **Phase 10: Extra features, only if time remains.** Type tasks in plain sentences ("pay rent tomorrow 5pm"), a board view, search, repeating tasks, export your data (tasks and money), and select many tasks at once.
 

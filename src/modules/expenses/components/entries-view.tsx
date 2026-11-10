@@ -109,7 +109,7 @@ function StatusBadge({
   if (entry.status === "paid") {
     return (
       <span className="inline-flex items-center gap-1 text-sm">
-        <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-400" aria-hidden />
+        <CheckCircle2 className="size-4 text-inflow" aria-hidden />
         Paid
         {entry.paidOn ? (
           <span className="text-xs text-muted-foreground">

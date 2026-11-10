@@ -13,9 +13,9 @@ import { PRIORITY_LABELS, type DateContext, type TagsById } from "./types";
 
 const PRIORITY_STYLE = [
   "",
-  "text-sky-700 dark:text-sky-400",
-  "text-amber-700 dark:text-amber-400",
-  "text-red-700 dark:text-red-400",
+  "text-primary",
+  "text-[oklch(0.46_0.1_75)] dark:text-brass",
+  "text-destructive",
 ];
 
 /**

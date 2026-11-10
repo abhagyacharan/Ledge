@@ -66,7 +66,7 @@ export function SignInForm({ signUpOpen }: { signUpOpen: boolean }) {
         {pending ? "Signing in…" : "Sign in"}
       </Button>
       {signUpOpen ? (
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           New here?{" "}
           <Link
             href="/sign-up"

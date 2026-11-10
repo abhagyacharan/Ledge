@@ -10,7 +10,8 @@ export default async function SignInPage() {
   if (await getSession()) redirect("/inbox");
   return (
     <>
-      <h1 className="mb-6 text-center text-2xl font-semibold tracking-tight">Sign in</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
+      <p className="mt-2 mb-8 text-sm text-muted-foreground">Open your book.</p>
       <SignInForm signUpOpen={isSignupAllowed()} />
     </>
   );
