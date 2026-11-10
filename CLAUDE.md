@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field | Value |
-|---|---|
-| Last updated | 2026-11-10 |
-| Current phase | **Phase 0: Scaffold** (repo skeleton created; app not scaffolded yet) |
-| Start date | _not recorded; set when Phase 0 begins (the §14 stop line is relative to it)_ |
-| Versions in use | _filled in at Phase 0 (see §3)_ |
-| Last verified test run | _none yet_ |
-| Open blockers | none |
-| Enabled modules | none yet |
+| Field                  | Value                                                                                                                                                                                                                                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                |
+| Current phase          | **Phase 2: Data model** (Phases 0 and 1 done)                                                                                                                                                                                                                                             |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                           |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                    |
+| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (14 tests, incl. real-DB auth tests). Browser-checked sign-up, sign-in, sign-out, rate limit, mobile sheet. `pnpm build` passes. Not checked: `secure` cookie over real HTTPS, Playwright e2e (none written yet, browsers not installed) |
+| Open blockers          | none                                                                                                                                                                                                                                                                                      |
+| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                             |
 
 ---
 
@@ -22,14 +22,16 @@ _Updated by Claude per §17. If this block disagrees with the repo (git log, fil
 
 A self-hosted personal life-management app that the owner (O) will use daily for a year or more. Version 0.1 covers **auth, a to-do/task manager, and the scaffolding for an expense tracker**. Later modules might include a calendar, notes, a goals dashboard, and a public portfolio, so the architecture must make adding modules cheap.
 
-**Quality bar:** a proper app O is happy to use every day, not a throwaway MVP. Scope is deliberately small so it can be finished *well* in about 5 days.
+**Quality bar:** a proper app O is happy to use every day, not a throwaway MVP. Scope is deliberately small so it can be finished _well_ in about 5 days.
 
 ### v0.1 scope
+
 1. **Auth**: sign up, sign in, sign out, sessions, protected routes (§5).
 2. **To-do tracker**: the main deliverable, specified in §6.
 3. **Expense tracker**: **NOT SPECIFIED YET. Do not build it.** Only create the scaffolding described in §7. O will add the spec later.
 
 ### Non-goals for v0.1 (do not build, even if tempting)
+
 Social features, blogs, public profile or portfolio, calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features, file attachments, i18n, rich-text editor, team or shared workspaces, billing.
 
 Park any new idea in `docs/ideas.md` instead of building it.
@@ -55,35 +57,42 @@ Park any new idea in `docs/ideas.md` instead of building it.
 
 ## 3. Tech stack (decided; do not swap without logging a reason)
 
-| Concern | Choice | Why |
-|---|---|---|
-| Framework | **Next.js** (App Router) + **TypeScript (strict)** | Same stack as O's other projects, so this doubles as practice |
-| Styling | **Tailwind CSS** + **shadcn/ui** (Radix primitives) | Fast, accessible, easy to restyle |
-| Database | **PostgreSQL** | Reliable, and works with pgvector later |
-| ORM / migrations | **Drizzle ORM** + drizzle-kit | Typed, SQL-close, light |
-| Auth | **Better Auth** (email and password, DB sessions) | Do not hand-roll auth |
-| Validation | **Zod** at every boundary | One schema for client and server |
-| Data fetching / mutations | Server Components + Server Actions; TanStack Query only where optimistic client state needs it | Keep it simple |
-| Dates | **date-fns** + **chrono-node** (natural-language dates) | Avoid hand-written date math |
-| Drag and drop | **dnd-kit** | Accessible reordering |
-| Command palette | **cmdk** | Standard |
-| Ordering | **fractional-indexing** (string `position` column) | Reorder without rewriting rows |
-| Tests | **Vitest** (unit and integration), **Playwright** (3 to 5 critical flows) | |
-| Package manager | **pnpm** | |
-| Deploy | **Docker Compose** on the home server, exposed via **Cloudflare Tunnel or Tailscale** | Cookies need HTTPS |
+| Concern                   | Choice                                                                                         | Why                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Framework                 | **Next.js** (App Router) + **TypeScript (strict)**                                             | Same stack as O's other projects, so this doubles as practice |
+| Styling                   | **Tailwind CSS** + **shadcn/ui** (Radix primitives)                                            | Fast, accessible, easy to restyle                             |
+| Database                  | **PostgreSQL**                                                                                 | Reliable, and works with pgvector later                       |
+| ORM / migrations          | **Drizzle ORM** + drizzle-kit                                                                  | Typed, SQL-close, light                                       |
+| Auth                      | **Better Auth** (email and password, DB sessions)                                              | Do not hand-roll auth                                         |
+| Validation                | **Zod** at every boundary                                                                      | One schema for client and server                              |
+| Data fetching / mutations | Server Components + Server Actions; TanStack Query only where optimistic client state needs it | Keep it simple                                                |
+| Dates                     | **date-fns** + **chrono-node** (natural-language dates)                                        | Avoid hand-written date math                                  |
+| Drag and drop             | **dnd-kit**                                                                                    | Accessible reordering                                         |
+| Command palette           | **cmdk**                                                                                       | Standard                                                      |
+| Ordering                  | **fractional-indexing** (string `position` column)                                             | Reorder without rewriting rows                                |
+| Tests                     | **Vitest** (unit and integration), **Playwright** (3 to 5 critical flows)                      |                                                               |
+| Package manager           | **pnpm**                                                                                       |                                                               |
+| Deploy                    | **Docker Compose** on the home server, exposed via **Cloudflare Tunnel or Tailscale**          | Cookies need HTTPS                                            |
 
 Next.js and Better Auth APIs change between versions. **Verify against current docs before writing code.**
 
-**Versions in use:** _not recorded yet. At Phase 0, list the exact installed versions of Next.js, React, Better Auth, Drizzle, Tailwind, shadcn/ui, Zod and Postgres here, and update on any major bump._
+**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
+
+**Next.js 16 notes** (verified in `node_modules/next/dist/docs/`; `AGENTS.md` says to read them before writing Next code): `middleware` is now `proxy` (`src/proxy.ts`); `LayoutProps<"/">` types come from `next typegen`, which `pnpm typecheck` runs first; Cache Components is off (see `docs/decisions.md`).
 
 ---
 
 ## 4. Project structure
 
 ```
-.env.example  .gitignore  README.md  CLAUDE.md
-package.json  Dockerfile  docker-compose.yml     # arrive in Phase 0 and Phase 7
+.env.example  .gitignore  README.md  CLAUDE.md  AGENTS.md (Next.js agent notes)
+package.json  pnpm-workspace.yaml  .npmrc  next.config.ts  eslint.config.mjs  .prettierrc.json
+vitest.config.mts  playwright.config.ts  drizzle.config.ts  components.json
+docker-compose.yml  docker-compose.dev.yml   # prod-like db / dev-only DB port override
+Dockerfile                                   # arrives in Phase 7
 src/
+  proxy.ts                  # optimistic cookie redirect only (not real auth)
+  hooks/                    # shared React hooks (shadcn)
   app/                      # routes (App Router)
     (auth)/sign-in, sign-up
     (app)/                  # authenticated shell (sidebar + content)
@@ -93,19 +102,23 @@ src/
       settings/
     api/health, api/export  # health check, JSON/CSV export
   modules/
+    auth/                   # sign-in/up forms, Zod schemas (client side of auth)
     todos/                  # components, actions, queries, schema, utils, tests
     expenses/               # placeholder (§7)
   server/
-    db/ (client, schema, migrations)
+    db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
     auth.ts                 # Better Auth config
-    session.ts              # requireUser() helper
-  components/ui/            # shadcn primitives
+    env.ts                  # Zod-validated environment
+    session.ts              # getSession() / requireUser() helpers
+  components/
+    ui/                     # shadcn primitives
+    shell/                  # app sidebar, page header, empty state, theme toggle, sign out
   config/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
   lib/                      # shared utils (dates, ids, money)
 docs/ decisions.md  ideas.md
-tests/ e2e/
+tests/ e2e/  integration/  helpers/  setup/  stubs/
 ```
 
 **Module registry:** every feature module registers itself in `src/config/modules.ts` (id, label, icon, route, enabled). The sidebar renders from this registry. Adding a module later should not require touching the shell.
@@ -134,6 +147,7 @@ tests/ e2e/
 The reference points are Todoist, Things, TickTick, and Notion tasks: fast capture, clear views, keyboard-first, calm UI. Priorities: **P0 = must ship v0.1, P1 = should ship v0.1 if time allows, P2 = later (do not build now).**
 
 ### 6.1 Core objects
+
 - **Task**: title, notes, priority, due date and optional time, tags, subtasks, recurrence, list, section.
 - **List**: a named container (color, emoji icon, description). Every user has an undeletable **Inbox**. A list may have an optional `target_date` and description; **this is how goals are modeled in v0.1** (for example the list "Open source", "Freelance").
 - **Section**: a heading inside a list that groups tasks and acts as a board column.
@@ -142,11 +156,13 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 ### 6.2 Features
 
 **Capture**
+
 - P0: Quick-add input always reachable (button and `q` shortcut). Enter creates the task, and the field stays open for the next one.
 - P0: Inline add at the bottom of any list and view.
 - P1: **Natural-language parsing** in quick-add: "pay rent tomorrow 5pm #home @bills p1". Date and time via chrono-node, `#list`, `@tag`, `p1` to `p3` (p1 = high, p2 = medium, p3 = low). Show parsed tokens as removable chips before submit.
 
 **Task fields and detail**
+
 - P0: Title (1 to 500 chars), notes (plain text or basic markdown rendering), priority (none, low, medium, high), due date, optional due time, list, tags.
 - P0: Complete and uncomplete with a checkbox. Completing sets `completed_at`.
 - P0: Click a task to open a **detail drawer** (right side on desktop, full-screen sheet on mobile) with all fields editable. Autosave on blur, no Save button. The URL reflects the open task (`?task=<id>`).
@@ -155,12 +171,14 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 - P1: Task count and "completed this week" in the Today header.
 
 **Lists, sections, tags**
+
 - P0: Create, rename, recolor, reorder, archive, and delete lists. Deleting a list with tasks requires confirmation and moves tasks to Trash.
 - P0: Tags: create inline while editing a task, rename, delete, color. Case-insensitive unique per user.
 - P0: Sections inside a list: create, rename, reorder, delete (tasks move to "no section").
 - P1: List progress bar (done and total).
 
 **Views (sidebar)**
+
 - P0: **Inbox**, **Today** (overdue block first, then today, sorted by time then priority), **Upcoming** (next 14 days grouped by day, with undated tasks excluded), **All tasks**, **Completed** (grouped by completion day), each **List**, each **Tag**.
 - P0: **List view** (default) for every list.
 - P1: **Board view** per list (columns = sections, drag cards between columns). Choice is remembered per list.
@@ -168,18 +186,21 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 - P2: Calendar (week and month) view. Do not build.
 
 **Organization**
+
 - P0: Manual ordering by drag and drop in list view (fractional-index `position`).
 - P0: Sort options: manual, due date, priority, created. Group by: none, due date, priority, tag. Filter: tag, priority, has due date, show or hide completed. Store these per list in `lists.view_settings` (jsonb).
 - P1: Bulk select (shift-click or checkbox mode) with bulk complete, move, tag, set date, delete.
 - P2: Saved filters, custom views.
 
 **Dates, reminders, recurrence**
+
 - P0: Date picker with quick options (Today, Tomorrow, Next week, No date) and a typed-date field.
 - P0: Overdue tasks are visually distinct (color and label, never color alone).
 - P1: **Recurring tasks**: daily, weekly (choose weekdays), monthly, yearly, "every N days/weeks/months". Two modes: `fixed` (next date follows the schedule) and `after_completion` (next date counts from completion). On completing a recurring task: insert a completed snapshot (`status=done`, `recurrence_origin_id` points to the original) and advance the original's due date.
 - P2: Reminders and notifications. Do not build.
 
 **Safety and ergonomics**
+
 - P0: **Undo toast** (about 5 seconds) after complete, delete, and move.
 - P0: Delete moves to **Trash** (soft delete, `deleted_at`). A Trash view allows restore or delete forever. Auto-purge after 30 days via a scheduled job or on-load cleanup.
 - P0: Optimistic UI for toggling complete, reordering, and inline edits, with rollback and a toast on failure.
@@ -187,6 +208,7 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 - P1: Delete account (with a typed confirmation) removes all data.
 
 **Keyboard and command palette**
+
 - P0: `Cmd/Ctrl+K` command palette (jump to list, tag, or view; run actions). `?` opens the shortcuts help.
 - P0: `q` quick add, `/` search, `j`/`k` or arrow keys move selection, `Enter` open detail, `x` toggle complete, `e` edit title, `Esc` close drawer or dialog.
 - P1: `d` set due date, `p` set priority, `g` then `i`, `t`, or `u` go to Inbox, Today, or Upcoming.
@@ -210,6 +232,7 @@ Indexes: `(user_id, list_id, position)`, `(user_id, due_date)` where not deleted
 ## 7. Expense tracker: scaffolding only (spec coming from O)
 
 Do **not** implement features. Only:
+
 - Create `src/modules/expenses/` with a README stating "awaiting spec".
 - Register it in `src/config/modules.ts` with `enabled: false` (hidden from the sidebar until enabled).
 - Create `src/lib/money.ts`: money is stored as **integer minor units** (paise for INR), never floats. Include `formatMoney(minor, currency, locale)` and parse helpers with tests. Default currency `INR`, locale `en-IN`.
@@ -252,15 +275,17 @@ When O provides the spec, plan first, then build in a separate branch.
 ```
 pnpm dev               # run locally
 pnpm build && pnpm start
-pnpm typecheck         # tsc --noEmit
+pnpm typecheck         # next typegen && tsc --noEmit
 pnpm lint
-pnpm test              # vitest
-pnpm test:e2e          # playwright
+pnpm format            # prettier --write . (format:check to verify)
+pnpm test              # vitest (needs the dev DB: pnpm db:up)
+pnpm test:e2e          # playwright (no tests yet; run `pnpm exec playwright install` once)
+pnpm db:up             # start Postgres on 127.0.0.1:5433 (compose + dev override)
 pnpm db:generate       # drizzle-kit generate migration
 pnpm db:migrate        # apply migrations
 pnpm db:studio         # drizzle studio
-pnpm db:seed           # demo data for development only
-docker compose up -d   # app + postgres (production-like)
+pnpm db:seed           # demo data for development only (not yet wired, Phase 2)
+docker compose up -d   # app + postgres (production-like; app service arrives in Phase 7)
 ```
 
 Add a `db:seed` script that creates a demo user with realistic lists, tags, subtasks, and overdue and recurring tasks, so every view can be checked quickly. **Seed must refuse to run when `NODE_ENV=production`.**
@@ -279,11 +304,14 @@ ALLOW_SIGNUP=true
 TZ=Asia/Kolkata
 ```
 
+Also listed in `.env.example` for the Postgres container: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (must match `DATABASE_URL`). Local `DATABASE_URL` uses port 5433. Tests use `TEST_DATABASE_URL` if set, else `ledge_test` on the same server.
+
 ---
 
 ## 12. Deployment, backup, security
 
 **Deploy (home server)**
+
 - Multi-stage `Dockerfile` using Next.js standalone output, running as a non-root user.
 - `docker-compose.yml`: `app` and `db` (pinned current stable Postgres major, named volume, healthcheck). The DB port is **not** published to the host or internet.
 - Expose via **Cloudflare Tunnel or Tailscale**, never by opening router ports. HTTPS is required because cookies are `secure`.
@@ -291,11 +319,13 @@ TZ=Asia/Kolkata
 - Migrations run on deploy (a one-shot command or an entrypoint step), never automatically on every request.
 
 **Backup**
+
 - Nightly `pg_dump` (gzip, dated filename) via cron or a sidecar container. Keep 14 daily and 8 weekly.
 - Copy dumps **off the machine** (second disk, `rclone`, or a cloud bucket). A backup on the same disk is not a backup.
 - Document the restore command in the README and **test a restore once** before relying on it.
 
 **Security checklist**
+
 - Ownership check on every query (§5). Tested.
 - Zod validation on every action and route.
 - Security headers (CSP, `X-Content-Type-Options`, `Referrer-Policy`), and no secrets in client bundles (only `NEXT_PUBLIC_*` is public).
@@ -321,49 +351,55 @@ This is the canonical plan. It expands the original suggested build order into p
 
 **Stop line:** if it is Saturday evening and P0 is not done, drop all P1 work. If it is Sunday night, deploy what exists and freeze. After that, maintenance is capped at about 2 hours per week so the main plan is not starved. When the stop line triggers, record it in the status snapshot.
 
-| # | Phase | Status |
-|---|---|---|
-| 0 | Scaffold | `[~]` in progress |
-| 1 | Auth | `[ ]` |
-| 2 | Data model | `[ ]` |
-| 3 | Lists, tasks, tags CRUD (P0) | `[ ]` |
-| 4 | Views (P0) | `[ ]` |
-| 5 | Safety (P0) | `[ ]` |
-| 6 | Polish | `[ ]` |
-| 7 | Deploy and backup | `[ ]` |
-| 8 | P1 items (only if time remains) | `[ ]` |
-| 9 | Expenses scaffolding (§7) | `[ ]` |
+| #   | Phase                           | Status                |
+| --- | ------------------------------- | --------------------- |
+| 0   | Scaffold                        | `[x]` done 2026-11-10 |
+| 1   | Auth                            | `[x]` done 2026-11-10 |
+| 2   | Data model                      | `[ ]`                 |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[ ]`                 |
+| 4   | Views (P0)                      | `[ ]`                 |
+| 5   | Safety (P0)                     | `[ ]`                 |
+| 6   | Polish                          | `[ ]`                 |
+| 7   | Deploy and backup               | `[ ]`                 |
+| 8   | P1 items (only if time remains) | `[ ]`                 |
+| 9   | Expenses scaffolding (§7)       | `[ ]`                 |
 
 ### Phase 0: Scaffold
+
 Goal: an empty app that runs, with all tooling in place.
+
 - [x] Repo skeleton: folders per §4, `docs/`, `.env.example`, `.gitignore`, README stub (2026-11-10)
 - [x] `git init` and first commit (Conventional Commits) (2026-11-10)
-- [ ] Next.js (App Router) + TypeScript strict. If `create-next-app` refuses the non-empty folder, scaffold in a temp folder and move the files in; merge its `.gitignore` with ours, keeping `.env` ignored
-- [ ] Tailwind CSS + shadcn/ui initialised; design tokens as CSS variables; light and dark theme
-- [ ] Lint and format tooling (ESLint + Prettier or Biome; log the choice in `docs/decisions.md`)
-- [ ] Vitest configured with one real passing test; Playwright installed and configured
-- [ ] `docker-compose.yml` with Postgres (pinned major, named volume, healthcheck). Local development needs DB access: decide how (for example a dev-only override bound to `127.0.0.1`) and log it; the production compose never publishes the DB port
-- [ ] All §10 scripts exist in `package.json` (stubs allowed, marked "(not yet wired)")
-- [ ] `.env.example` matches §11; README setup section is accurate
-- [ ] Exact versions recorded in §3 and the status snapshot
+- [x] Next.js (App Router) + TypeScript strict. If `create-next-app` refuses the non-empty folder, scaffold in a temp folder and move the files in; merge its `.gitignore` with ours, keeping `.env` ignored (2026-11-10)
+- [x] Tailwind CSS + shadcn/ui initialised; design tokens as CSS variables; light and dark theme (2026-11-10)
+- [x] Lint and format tooling (ESLint + Prettier or Biome; log the choice in `docs/decisions.md`) (2026-11-10)
+- [x] Vitest configured with one real passing test; Playwright installed and configured (2026-11-10)
+- [x] `docker-compose.yml` with Postgres (pinned major, named volume, healthcheck). Local development needs DB access: decide how (for example a dev-only override bound to `127.0.0.1`) and log it; the production compose never publishes the DB port (2026-11-10)
+- [x] All §10 scripts exist in `package.json` (stubs allowed, marked "(not yet wired)") (2026-11-10)
+- [x] `.env.example` matches §11; README setup section is accurate (2026-11-10)
+- [x] Exact versions recorded in §3 and the status snapshot (2026-11-10)
 
 Exit: `pnpm dev` serves a page; `pnpm typecheck && pnpm lint && pnpm test` pass; `docker compose up -d` brings up a healthy Postgres.
 
 ### Phase 1: Auth
+
 Goal: only a signed-in user reaches the app shell.
-- [ ] Drizzle client and `drizzle-kit` config; connection from `DATABASE_URL`
-- [ ] Better Auth configured (`src/server/auth.ts`); its tables generated with its CLI, not hand-written; first migration applied
-- [ ] Sign-up and sign-in pages; sign out; clear errors; no account-enumeration hints; password minimum 10
-- [ ] `ALLOW_SIGNUP` flag honoured on server (not just hidden in UI)
-- [ ] Rate limiting on sign-in and sign-up
-- [ ] `requireUser()` in `src/server/session.ts`; protected `(app)` routes
-- [ ] App shell: collapsible sidebar (sheet on mobile) rendered from `src/config/modules.ts`
-- [ ] Ownership test scaffold: real test database, two-user fixture. The list and task assertions land with Phases 2 and 3 once those tables exist (logged in `docs/decisions.md`)
+
+- [x] Drizzle client and `drizzle-kit` config; connection from `DATABASE_URL` (2026-11-10)
+- [x] Better Auth configured (`src/server/auth.ts`); its tables generated with its CLI, not hand-written; first migration applied (2026-11-10)
+- [x] Sign-up and sign-in pages; sign out; clear errors; no account-enumeration hints; password minimum 10 (2026-11-10)
+- [x] `ALLOW_SIGNUP` flag honoured on server (not just hidden in UI) (2026-11-10)
+- [x] Rate limiting on sign-in and sign-up (2026-11-10)
+- [x] `requireUser()` in `src/server/session.ts`; protected `(app)` routes (2026-11-10)
+- [x] App shell: collapsible sidebar (sheet on mobile) rendered from `src/config/modules.ts` (2026-11-10)
+- [x] Ownership test scaffold: real test database, two-user fixture. The list and task assertions land with Phases 2 and 3 once those tables exist (logged in `docs/decisions.md`) (2026-11-10)
 
 Exit: sign up, sign in, sign out work in a browser on desktop and phone width; protected routes redirect when signed out; cookies are `httpOnly`, `secure` (over HTTPS), `sameSite=lax`.
 
 ### Phase 2: Data model
+
 Goal: the full §6.3 schema, migrated and seedable.
+
 - [ ] Drizzle schema for `user_settings`, `lists`, `sections`, `tasks`, `tags`, `task_tags` with the indexes in §6.3
 - [ ] DB constraint enforcing subtask depth of 1; case-insensitive unique tag names per user
 - [ ] Generated `search` tsvector column and GIN index
@@ -375,7 +411,9 @@ Goal: the full §6.3 schema, migrated and seedable.
 Exit: fresh database migrates cleanly; sign-up creates settings and Inbox; seed runs; ownership test passes.
 
 ### Phase 3: Lists, tasks, tags CRUD (P0)
+
 Goal: you can capture and manage tasks end to end.
+
 - [ ] Every server action and data function calls `requireUser()`, takes `userId`, validates with Zod, returns a typed result
 - [ ] Lists: create, rename, recolor, reorder, archive, delete (confirmation; tasks go to Trash)
 - [ ] Sections: create, rename, reorder, delete (tasks move to "no section")
@@ -390,7 +428,9 @@ Goal: you can capture and manage tasks end to end.
 Exit: all P0 items under "Capture", "Task fields and detail", "Lists, sections, tags" and "Dates" in §6.2 work; tests pass.
 
 ### Phase 4: Views (P0)
+
 Goal: every view in §6.2 renders correctly.
+
 - [ ] Inbox, Today (overdue block, then today, by time then priority), Upcoming (next 14 days by day, undated excluded), All, Completed (grouped by completion day)
 - [ ] List view and Tag view
 - [ ] Sort (manual, due date, priority, created), group by (none, due date, priority, tag), filters; stored per list in `lists.view_settings`
@@ -401,7 +441,9 @@ Goal: every view in §6.2 renders correctly.
 Exit: every P0 view is correct against the seed data; reorder survives reload.
 
 ### Phase 5: Safety (P0)
+
 Goal: nothing is lost by accident; the app feels instant.
+
 - [ ] Undo toast (about 5 seconds) after complete, delete, move
 - [ ] Soft delete (`deleted_at`), Trash view with restore and delete forever, 30-day auto-purge (scheduled job or on-load cleanup)
 - [ ] Optimistic UI for toggle complete, reorder, inline edits, with rollback and toast on failure
@@ -413,7 +455,9 @@ Exit: all P0 items under "Safety and ergonomics" and "Keyboard and command palet
 **P0 checkpoint:** when Phase 5 exits, all of P0 is complete. If this is after the Saturday-evening stop line, P1 is dropped (see Stop line above).
 
 ### Phase 6: Polish
+
 Goal: it is pleasant to use daily.
+
 - [ ] Empty, loading and error states reviewed everywhere
 - [ ] Responsive pass at phone width (tap targets at least 44px, one-handed use)
 - [ ] Dark mode pass; WCAG AA contrast
@@ -424,7 +468,9 @@ Goal: it is pleasant to use daily.
 Exit: the §15 definition of done holds for every shipped feature; all five E2E flows in §13 pass.
 
 ### Phase 7: Deploy and backup
+
 Goal: running on the home server, backed up, restorable.
+
 - [ ] Multi-stage `Dockerfile` (standalone output, non-root)
 - [ ] Production `docker-compose.yml` (DB not published, healthcheck, named volume)
 - [ ] `GET /api/health` returns 200 only when the DB is reachable
@@ -438,7 +484,9 @@ Goal: running on the home server, backed up, restorable.
 Exit: app reachable over HTTPS; a backup was restored successfully into a scratch database.
 
 ### Phase 8: P1 items (only if time remains)
+
 Do in this order, one at a time, each with tests and §15 done: natural-language quick add, board view, search, recurrence, export, bulk actions. Other P1 items in §6.2 (duplicate, move, list progress, extra shortcuts, sign out everywhere, delete account, Today header counts) may be slotted in after these, in O's order of preference.
+
 - [ ] Natural-language quick add (chrono-node; chips; parser unit tests)
 - [ ] Board view
 - [ ] Search (Postgres full-text, `/`)
@@ -450,6 +498,7 @@ Do in this order, one at a time, each with tests and §15 done: natural-language
 Exit: each shipped P1 item meets §15; unshipped ones are noted in `docs/ideas.md` or the status snapshot.
 
 ### Phase 9: Expenses scaffolding (§7)
+
 - [ ] `src/modules/expenses/README.md` stating "awaiting spec"
 - [ ] Registered in `src/config/modules.ts` with `enabled: false`
 - [ ] `src/lib/money.ts` with `formatMoney` and parse helpers, with tests
@@ -486,43 +535,48 @@ Format when answered: replace the question's status with `ANSWERED YYYY-MM-DD: <
 ## 17. Self-maintenance protocol (how this file rewrites itself)
 
 ### 17.1 Principle
+
 This file is the project's source of truth for future sessions. Claude updates it in the same change that makes it stale, not later. Keep it short, factual and current.
 
 ### 17.2 Triggers: when to update this file
+
 When any of these happens, update the listed places before finishing the task.
 
-| Event | Update |
-|---|---|
-| A deliverable is finished, or a phase starts or ends | Tick the box in §14, update the phase table and the status snapshot (date, current phase) |
-| A test run is made at the end of a task | Status snapshot: "Last verified test run" (date and result) |
-| A decision is made or changed (library, pattern, convention, behaviour) | Append to `docs/decisions.md`; fix any section here that it contradicts |
-| The stack changes or a major version is bumped | §3 table and "Versions in use"; `docs/decisions.md` (needs O's OK, §17.3) |
-| A script is added, renamed or removed | §10 (keep equal to `package.json`) |
-| An env var is added, renamed or removed | §11, `.env.example`, README |
-| A folder or file layout in §4 changes, or a module is added | §4 (and the module registry note) |
-| A module is enabled or disabled | Status snapshot "Enabled modules"; §7 if it is expenses |
-| An open question in §16 is answered | Mark it `ANSWERED` with date; propagate (for example the expense spec becomes `docs/expenses-spec.md` plus a new phase in §14; the hostname goes to §12 and README) |
-| O corrects Claude's behaviour or states a lasting preference | Add it as a rule in §2 or §9, with the reason if known |
-| A rule here turns out wrong, impossible or outdated (for example an API changed) | Fix the rule; record why in `docs/decisions.md` |
-| The stop line triggers, or a priority changes (P1 dropped, P2 pulled in) | Status snapshot and §14 |
-| Scope would change (new feature, new non-goal) | Do not build it. Put the idea in `docs/ideas.md`; change §1 or §6 only with O's OK |
-| Deployment facts become known (host, tunnel, backup location) | §12 and README |
+| Event                                                                            | Update                                                                                                                                                              |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A deliverable is finished, or a phase starts or ends                             | Tick the box in §14, update the phase table and the status snapshot (date, current phase)                                                                           |
+| A test run is made at the end of a task                                          | Status snapshot: "Last verified test run" (date and result)                                                                                                         |
+| A decision is made or changed (library, pattern, convention, behaviour)          | Append to `docs/decisions.md`; fix any section here that it contradicts                                                                                             |
+| The stack changes or a major version is bumped                                   | §3 table and "Versions in use"; `docs/decisions.md` (needs O's OK, §17.3)                                                                                           |
+| A script is added, renamed or removed                                            | §10 (keep equal to `package.json`)                                                                                                                                  |
+| An env var is added, renamed or removed                                          | §11, `.env.example`, README                                                                                                                                         |
+| A folder or file layout in §4 changes, or a module is added                      | §4 (and the module registry note)                                                                                                                                   |
+| A module is enabled or disabled                                                  | Status snapshot "Enabled modules"; §7 if it is expenses                                                                                                             |
+| An open question in §16 is answered                                              | Mark it `ANSWERED` with date; propagate (for example the expense spec becomes `docs/expenses-spec.md` plus a new phase in §14; the hostname goes to §12 and README) |
+| O corrects Claude's behaviour or states a lasting preference                     | Add it as a rule in §2 or §9, with the reason if known                                                                                                              |
+| A rule here turns out wrong, impossible or outdated (for example an API changed) | Fix the rule; record why in `docs/decisions.md`                                                                                                                     |
+| The stop line triggers, or a priority changes (P1 dropped, P2 pulled in)         | Status snapshot and §14                                                                                                                                             |
+| Scope would change (new feature, new non-goal)                                   | Do not build it. Put the idea in `docs/ideas.md`; change §1 or §6 only with O's OK                                                                                  |
+| Deployment facts become known (host, tunnel, backup location)                    | §12 and README                                                                                                                                                      |
 
 ### 17.3 Who may change what
+
 - **Claude may edit freely** (facts and status): the status snapshot, §14 checkboxes and phase table, §3 "Versions in use", §4 layout, §10 commands, §11 env vars, §16 answered markers, §18 changelog.
 - **Claude must get O's explicit OK first** (propose the exact change in chat): §1 scope and non-goals, §3 stack choices, §5 auth rules, §6 spec and priorities, §8 UX principles, §12 security checklist, the order or scope of phases in §14, the stop line, and this §17. Never silently delete or weaken a P0 item or a security rule.
 - A change O dictates in chat counts as OK. Record it as a decision.
 
 ### 17.4 How to rewrite
+
 - Edit in place with small, targeted edits. Do not regenerate the whole file.
 - Keep section numbers stable (other docs and code comments refer to them). Add new sections at the end or as sub-sections; do not renumber.
-- Put the *why* in `docs/decisions.md`; keep this file to the current rules and state.
+- Put the _why_ in `docs/decisions.md`; keep this file to the current rules and state.
 - Add one line to §18 for every non-trivial edit: date, what changed, why.
 - Commit the file change together with the code change that caused it, or as `docs:`.
 - Do not record: transient task notes, things readable from the code, secrets, personal data, or guesses.
 - Keep it lean. If this file passes roughly 500 lines or a section is rarely needed, ask O before moving detail to `docs/` with the `compact-context` skill, leaving a one-line pointer behind.
 
 ### 17.5 Session start and end checks
+
 - **Start:** read this file and `docs/decisions.md`. Compare the status snapshot with reality (file tree, `package.json` scripts, git log). If they disagree, correct the snapshot and tell O.
 - **End:** walk the §17.2 table, apply what is due, and say in the final message what changed in this file (or that nothing needed to).
 
@@ -530,9 +584,10 @@ When any of these happens, update the listed places before finishing the task.
 
 ## 18. Change log for this file
 
-| Date | Change | Why |
-|---|---|---|
+| Date       | Change                                                                                                                                                                                                                                         | Why                                                                   |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | 2026-11-10 | Initial CLAUDE.md added to the repo. Added status snapshot, working-agreement items 11 and 12, "Versions in use", skeleton note in §4, §14 expanded into phases with exit criteria, §16 answer format, §17 self-maintenance protocol, this log | Make the plan trackable and keep the file true as the project changes |
-| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub) | Phase 0 first deliverable |
-| 2026-11-10 | Git repo initialised on `main`; first commit made | Phase 0 deliverable |
-| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3 | The tables do not exist until Phase 2 |
+| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub)                                                                                                                                                        | Phase 0 first deliverable                                             |
+| 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                              | Phase 0 deliverable                                                   |
+| 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo             |
+| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                 |

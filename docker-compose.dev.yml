@@ -1,0 +1,7 @@
+# Dev-only override: publishes Postgres on 127.0.0.1:5433 (5432 is often taken by other local projects) so `pnpm dev` and tests can reach it.
+# Never use this file in production (CLAUDE.md §12: the DB port is not published).
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db
+services:
+  db:
+    ports:
+      - "127.0.0.1:5433:5432"
