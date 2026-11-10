@@ -10,7 +10,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { enabledModules, navItemsFor } from "@/config/modules";
 import { authClient } from "@/lib/auth-client";
@@ -102,7 +101,6 @@ export function CommandPalette() {
             </CommandItem>
           </CommandGroup>
 
-          <CommandSeparator />
           <CommandGroup heading="Go to">
             {views.map((v) => (
               <CommandItem key={v.route} value={`go ${v.label}`} onSelect={() => go(v.route)}>
@@ -113,7 +111,6 @@ export function CommandPalette() {
 
           {lists.some((l) => !l.isInbox) ? (
             <>
-              <CommandSeparator />
               <CommandGroup heading="Lists">
                 {lists
                   .filter((l) => !l.isInbox)
@@ -133,7 +130,6 @@ export function CommandPalette() {
 
           {tags.length > 0 ? (
             <>
-              <CommandSeparator />
               <CommandGroup heading="Tags">
                 {tags.map((t) => (
                   <CommandItem

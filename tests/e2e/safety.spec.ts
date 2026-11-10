@@ -97,9 +97,9 @@ test("a deleted task can be undone, then restored or erased from the Trash scree
   await page.getByRole("link", { name: /^Trash me/ }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Move to Trash" }).click();
   await page.goto("/trash");
-  await page.getByRole("button", { name: "Delete Trash me forever" }).click();
+  await page.getByRole("button", { name: "Delete forever: Trash me" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete forever" }).click();
-  await expect(page.getByRole("button", { name: "Delete Trash me forever" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Delete forever: Trash me" })).toHaveCount(0);
 });
 
 test("seeded Trash item can be restored", async ({ page }) => {
@@ -115,7 +115,7 @@ test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   // Own list with two tasks, so nothing depends on the seed.
   await page.goto("/inbox");
   await page.getByRole("button", { name: "New list" }).click();
-  await page.getByLabel("Name").fill("Keys list");
+  await page.getByLabel("Name", { exact: true }).fill("Keys list");
   await page.getByRole("button", { name: "Create list" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Keys list" })).toBeVisible();
   const add = page.getByLabel("Add a task");

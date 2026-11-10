@@ -26,8 +26,8 @@ The work is done in ten steps, called phases, always in the same order. A phase 
 | 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md) |
 | 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                       |
 | 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                     |
-| 6     | Polish                        | Next              | Written when the phase is done                             |
-| 7     | Deploy and backup             | Not started       | Written when the phase is done                             |
+| 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                     |
+| 7     | Deploy and backup             | Next              | Written when the phase is done                             |
 | 8     | Extra features (if time)      | Not started       | Written when the phase is done                             |
 | 9     | Expenses placeholder          | Not started       | Written when the phase is done                             |
 
@@ -42,7 +42,7 @@ The work is done in ten steps, called phases, always in the same order. A phase 
 - **Phase 3: Lists, tasks and tags (done).** See [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md).
 - **Phase 4: Views (done).** See [phase-4-views.md](phase-4-views.md).
 - **Phase 5: Safety (done).** See [phase-5-safety.md](phase-5-safety.md).
-- **Phase 6: Polish.** Go through every screen to make it pleasant: empty screens that say what to do next, loading placeholders, error messages in friendly words, phone-size layout, dark mode, and use with a keyboard only.
+- **Phase 6: Polish (done).** See [phase-6-polish.md](phase-6-polish.md).
 - **Phase 7: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.
 - **Phase 8: Extra features, only if time remains.** Type tasks in plain sentences ("pay rent tomorrow 5pm"), a board view, search, repeating tasks, export your data, and select many tasks at once.
 - **Phase 9: Expenses placeholder.** A hidden, empty spot for the expense tracker, plus the careful money-handling code it will need (money is stored as whole paise, never decimals, to avoid rounding mistakes). The real tracker waits for your description.

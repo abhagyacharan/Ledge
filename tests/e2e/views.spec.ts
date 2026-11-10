@@ -55,7 +55,7 @@ test("create a list, then drag-reorder its tasks with the keyboard", async ({ pa
 
   // Create the list.
   await page.getByRole("button", { name: "New list" }).click();
-  await page.getByLabel("Name").fill("E2E list");
+  await page.getByLabel("Name", { exact: true }).fill("E2E list");
   await page.getByRole("button", { name: "Create list" }).click();
   await expect(page).toHaveURL(/\/lists\/[0-9a-f-]{36}/);
   await expect(page.getByRole("heading", { level: 1, name: "E2E list" })).toBeVisible();

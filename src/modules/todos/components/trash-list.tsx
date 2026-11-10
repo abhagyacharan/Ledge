@@ -87,7 +87,7 @@ export function TrashList({ items }: { items: TrashItem[] }) {
               type="button"
               variant="outline"
               className="h-11 gap-1 text-destructive md:h-8"
-              aria-label={`Delete ${item.title} forever`}
+              aria-label={`Delete forever: ${item.title}`}
               onClick={() => setConfirming(item)}
             >
               <Trash2 /> Delete forever

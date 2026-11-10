@@ -190,7 +190,7 @@ export function TaskRow({
         href={hrefFor(task.id)}
         data-task-link
         scroll={false}
-        className="min-w-0 flex-1 rounded-md py-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:py-1"
+        className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-md py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-0"
       >
         <span className={cn("block break-words", done && "text-muted-foreground line-through")}>
           {task.title}

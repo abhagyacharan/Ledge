@@ -33,8 +33,16 @@ export default defineConfig({
     {
       name: "desktop",
       testMatch: /.*\.spec\.ts/,
+      testIgnore: /.*\.mobile\.spec\.ts/,
       dependencies: ["setup"],
       use: { ...devices["Desktop Chrome"], channel: "chrome", storageState: AUTH_FILE },
+    },
+    {
+      // A phone-sized screen with touch: checks tap targets, overflow and the full-screen drawer.
+      name: "mobile",
+      testMatch: /.*\.mobile\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { ...devices["Pixel 7"], channel: "chrome", storageState: AUTH_FILE },
     },
   ],
   webServer: {

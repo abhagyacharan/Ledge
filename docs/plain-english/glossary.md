@@ -2,6 +2,8 @@
 
 Plain meanings of words that appear in this project. Terms are in alphabetical order. New words are added whenever they first appear in a phase write-up.
 
+**Accessibility audit.** An automatic inspection of each screen against the international rules (WCAG) for contrast, names for screen readers, structure and more.
+
 **Accessible.** Usable by everyone, including people who use only a keyboard or a screen reader, or who have trouble seeing low-contrast text.
 
 **API.** A doorway that programs use to talk to each other. A web address that returns data instead of a page.
@@ -32,6 +34,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Container.** A sealed box in which a program runs, so it cannot interfere with the rest of the computer. Made by Docker.
 
+**Contrast.** How different the colour of text is from its background. Too little makes text hard to read, especially for people with low vision.
+
 **Cookie.** A small piece of data a website stores in your browser, like a wristband that proves you are signed in.
 
 **Demo user.** The made-up account created by the seed command so every screen has something to show.
@@ -57,6 +61,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Filter.** Hiding tasks that do not match your choice, for example only tasks with the tag "bills".
 
 **Floating date and time.** A date or time stored without a time zone, read in the owner's time zone. Avoids daylight-saving mistakes.
+
+**Focus ring.** The visible outline around the control that currently has the keyboard cursor, so you can see where you are when using Tab.
 
 **Foreign key.** A link from one record to another, for example from a task to its list. The database refuses links to things that do not exist.
 
@@ -120,6 +126,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
 
+**Reduced motion.** A setting on your computer or phone that asks apps not to animate. Ledge obeys it.
+
 **requireUser().** A small helper run at the start of every private page and action. It confirms who you are, or sends you to Sign in.
 
 **Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
@@ -127,6 +135,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
 
 **Scaffold.** The starting skeleton of a project, with the tools and folders in place but little content.
+
+**Screen reader.** Software that reads a screen aloud for people who cannot see it well. It relies on every control having a proper name.
 
 **Section.** A heading inside a list that groups tasks, for example "Now", "Next" and "Later".
 
@@ -159,6 +169,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Tag.** A label you create and stick on tasks, such as "bills". Names ignore capital letters.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
+
+**Tap target.** The area you can press with a finger. It should be at least 44 pixels square so it is easy to hit.
 
 **Test database.** A second, throwaway database used only by automated tests, so tests never touch your real data.
 

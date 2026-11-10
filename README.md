@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 5 are done: sign-in, the database, and a full task manager with lists, sections, tags, subtasks, a detail drawer, quick add, six views, sorting, grouping, filtering, drag-and-drop, Undo, a Trash with 30-day clean-up, instant updates, keyboard shortcuts and a command palette. Polish (Phase 6) is next.
+**Status:** Phases 0 to 6 are done: sign-in, the database, and a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), polished and audited for accessibility on phone and desktop in light and dark. Deployment and backups (Phase 7) are next.
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 
@@ -55,7 +55,7 @@ pnpm typecheck && pnpm lint && pnpm test
 
 `pnpm test` needs the dev database running (`pnpm db:up`). It creates a separate `ledge_test` database and migrates it automatically; your dev data is never touched.
 
-End-to-end tests drive a real browser:
+End-to-end tests drive a real browser (desktop and phone sizes, including an accessibility audit):
 
 ```bash
 pnpm test:e2e

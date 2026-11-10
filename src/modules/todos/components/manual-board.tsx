@@ -8,7 +8,9 @@ import {
   useDroppable,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
+  type ScreenReaderInstructions,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -68,6 +70,31 @@ export function ManualBoard({ listId, sections, tasks, subtasksOf, tagsById, ctx
   );
 
   const byId = new Map(tasks.map((t) => [t.id, t]));
+  // Screen readers hear task titles and places, not the internal ids dnd-kit would otherwise read.
+  const titleOf = (id: string | number) => byId.get(String(id))?.title ?? "task";
+  const placeOf = (id: string | number) => {
+    const key = containerOf(String(id));
+    if (!key) return "";
+    const index = ids[key].indexOf(String(id)) + 1;
+    const where =
+      key === NO_SECTION ? "the list" : `section ${sections.find((s) => s.id === key)?.name}`;
+    return `position ${index} of ${ids[key].length} in ${where}`;
+  };
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => `Picked up ${titleOf(active.id)}, ${placeOf(active.id)}.`,
+    onDragOver: ({ active, over }) =>
+      over && over.id !== active.id
+        ? `${titleOf(active.id)} is over ${over.id.toString().startsWith(CONTAINER_PREFIX) ? "an empty section" : titleOf(over.id)}.`
+        : undefined,
+    onDragEnd: ({ active, over }) =>
+      over ? `Dropped ${titleOf(active.id)}.` : `${titleOf(active.id)} was not moved.`,
+    onDragCancel: ({ active }) => `Move cancelled. ${titleOf(active.id)} is back where it was.`,
+  };
+  const instructions: ScreenReaderInstructions = {
+    draggable:
+      "To move a task, press Space to pick it up, use the arrow keys to move it, then press Space to drop it, or Escape to cancel.",
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -182,6 +209,7 @@ export function ManualBoard({ listId, sections, tasks, subtasksOf, tagsById, ctx
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={onDragEnd}
+      accessibility={{ announcements, screenReaderInstructions: instructions }}
     >
       {containers.map(renderContainer)}
     </DndContext>
