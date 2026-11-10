@@ -171,3 +171,49 @@ test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 1, name: "Keys list" })).toBeVisible();
 });
+
+test("quick add understands a sentence: date, time, list, tag and priority", async ({ page }) => {
+  await page.goto("/inbox");
+  await page.keyboard.press("q");
+  const input = page.getByLabel("Task", { exact: true });
+  await input.fill("NL pay rent tomorrow 5pm #home @bills p1");
+
+  // The chips show what was understood, and the words leave the title.
+  const chips = page.getByRole("list", { name: "Understood from your text" });
+  await expect(chips).toContainText("Tomorrow, 5:00 pm");
+  await expect(chips).toContainText("List: Home");
+  await expect(chips).toContainText("Tag: bills");
+  await expect(chips).toContainText("Priority: High");
+
+  // A removed chip puts its words back into the task and stops applying.
+  await chips.getByRole("button", { name: "Remove Priority: High" }).click();
+  await expect(chips).not.toContainText("Priority: High");
+
+  await input.press("Enter");
+  await expect(
+    page
+      .locator("[data-sonner-toast]", { hasText: "Added to Home, due tomorrow, 5:00 pm" })
+      .first(),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // It is in the Home list with its date and tag, and the title is clean (and keeps "p1").
+  await page.goto("/upcoming");
+  const row = page.getByRole("link", { name: /^NL pay rent p1/ });
+  await expect(row).toBeVisible();
+  await expect(row).toContainText("5:00 pm");
+  await expect(row).toContainText("bills");
+});
+
+test("quick add with a tag nobody has used creates it", async ({ page }) => {
+  await page.goto("/inbox");
+  await page.keyboard.press("q");
+  await page.getByLabel("Task", { exact: true }).fill("NL brand new tag @freshtag");
+  await expect(page.getByRole("list", { name: "Understood from your text" })).toContainText(
+    "New tag: freshtag",
+  );
+  await page.getByLabel("Task", { exact: true }).press("Enter");
+  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("link", { name: /^NL brand new tag/ })).toContainText("freshtag");
+});

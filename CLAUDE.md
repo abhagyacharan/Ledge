@@ -530,7 +530,7 @@ Exit: app reachable over HTTPS; a backup was restored successfully into a scratc
 
 Do in this order, one at a time, each with tests and §15 done: natural-language quick add, board view, search, recurrence, export, bulk actions. Other P1 items in §6.2 (duplicate, move, list progress, extra shortcuts, sign out everywhere, delete account, Today header counts) may be slotted in after these, in O's order of preference. Exporting the expense data (JSON and CSV) belongs with the export item.
 
-- [ ] Natural-language quick add (chrono-node; chips; parser unit tests)
+- [x] Natural-language quick add (chrono-node; chips; parser unit tests) (2026-11-11)
 - [ ] Board view
 - [ ] Search (Postgres full-text, `/`)
 - [ ] Recurrence (fixed and after_completion; next-date unit tests)

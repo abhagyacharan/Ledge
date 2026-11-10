@@ -117,6 +117,16 @@ test("quick add button is always reachable and the dialog fits", async ({ page }
   expect(await smallTargets(page)).toEqual([]);
 });
 
+test("quick add chips have big enough tap targets", async ({ page }) => {
+  await page.goto("/inbox");
+  await page.getByRole("button", { name: /Quick add task/ }).tap();
+  await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home @bills p1");
+  await expect(page.getByRole("list", { name: "Understood from your text" })).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+});
+
 test("the expense dialog fits a phone and has big enough tap targets", async ({ page }) => {
   await page.goto("/expenses/emis");
   await page.getByRole("button", { name: "Add EMI or loan payment", exact: true }).first().tap();

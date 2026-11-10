@@ -77,6 +77,15 @@ for (const scheme of SCHEMES) {
       }
     });
 
+    test("quick add with understood chips", async ({ page }) => {
+      await page.goto("/inbox");
+      await page.keyboard.press("q");
+      await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home @bills p1");
+      await expect(page.getByRole("list", { name: "Understood from your text" })).toBeVisible();
+      await page.waitForTimeout(400); // the dialog zooms in; let it settle
+      await audit(page, `quick add with chips (${scheme})`);
+    });
+
     test("the task drawer", async ({ page }) => {
       await page.goto("/today");
       await page.getByRole("link", { name: /^Call mom/ }).click();

@@ -327,6 +327,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** Phase 9 is marked built-and-verified-locally. Items that need O's Cloudflare account, domain, server and storage are listed separately and left unticked. O told Claude to continue with the next phases, so Phase 10 starts while those wait.
 - **Reason:** Honesty about what was and was not checked: the Docker pieces, health check, headers, migrations, backup and restore were run on a development machine over plain http on a production build. The tunnel, HTTPS cookies and the off-site copy were not.
 
+## 2026-11-11: Natural-language quick add (Phase 10)
+
+- **Decision:** The sentence is read in the browser by `src/modules/todos/quick-add-parser.ts` (pure, 23 unit tests), not on the server. `chrono-node` 2.10.3 reads dates and times (its British parser for `en-IN` so `5/12` is 5 December, forward-looking so "friday" is the next one); `#list`, `@tag` and `p1` to `p3` are read by small patterns. Only words that were really understood become chips, and removing a chip adds its key (`kind:text`) to an ignore set so the words return to the title. Unknown `@tags` are created when the task is added. The app layout now also gives the browser the user's timezone and locale so "today" is computed the way the server does.
+- **Reason:** §6.2 (chips before submit). Client-side parsing gives instant chips; the server still validates everything with Zod when the task is created, so the browser is not trusted.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.
