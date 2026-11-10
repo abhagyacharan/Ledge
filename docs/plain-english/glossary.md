@@ -14,11 +14,19 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Build.** Turning the code into the finished, optimised version that actually runs for daily use.
 
+**Cascade.** When deleting one record automatically deletes the records that depend on it, for example deleting a list deletes its tasks.
+
+**Check constraint.** A rule built into a database table that rejects bad values, for example a priority above 3.
+
 **Commit.** A saved snapshot of the project in git, with a short note about what changed.
+
+**Composite foreign key.** A link between two records that must match on two things at once. Ledge uses it so a task can only be linked to a list owned by the same person.
 
 **Container.** A sealed box in which a program runs, so it cannot interfere with the rest of the computer. Made by Docker.
 
 **Cookie.** A small piece of data a website stores in your browser, like a wristband that proves you are signed in.
+
+**Demo user.** The made-up account created by the seed command so every screen has something to show.
 
 **Dependency.** An outside tool or library the app relies on instead of writing it from scratch.
 
@@ -34,25 +42,35 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **ESLint.** A tool that scans code for risky or sloppy patterns.
 
+**Floating date and time.** A date or time stored without a time zone, read in the owner's time zone. Avoids daylight-saving mistakes.
+
+**Foreign key.** A link from one record to another, for example from a task to its list. The database refuses links to things that do not exist.
+
+**Fractional index.** A short piece of text used to keep items in order. A new item dropped between two others gets text that sorts between them, so nothing else has to be renumbered.
+
+**Full-text search.** Searching for words inside text, including word forms, rather than matching exact letters.
+
 **Git / GitHub.** Git remembers every version of the project. GitHub is a website that stores a copy online.
 
 **Hashing.** Scrambling a password in a one-way process so that the original cannot be recovered from the stored result.
 
+**HttpOnly.** A cookie rule: scripts on a web page are not allowed to read the cookie.
+
 **HTTPS.** The encrypted version of web traffic. Needed for the "Secure" cookie rule. It shows as a padlock in the browser.
 
-**HttpOnly.** A cookie rule: scripts on a web page are not allowed to read the cookie.
+**Index (database).** A shortcut the database keeps so it can find records quickly, like an index at the back of a book.
 
 **Integration test.** A test that checks several pieces working together, here including a real database.
 
-**Localhost.** The name for "this very computer". `http://localhost:3000` is the app running on your own computer.
-
 **Lint.** Running ESLint.
+
+**Localhost.** The name for "this very computer". `http://localhost:3000` is the app running on your own computer.
 
 **Migration.** A small numbered file describing one change to the database's structure. Running all of them in order builds the database from nothing.
 
-**Module.** One self-contained part of the app, such as tasks or expenses.
-
 **Module list (registry).** The single file listing all modules, from which the side menu is built.
+
+**Module.** One self-contained part of the app, such as tasks or expenses.
 
 **Next.js.** The toolkit used to build the app's pages and server side.
 
@@ -70,9 +88,9 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Proxy.** The quick doorman at the front of the app. In Ledge it only checks that a login wristband exists.
 
-**Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
-
 **Radix.** A set of building blocks for interface parts such as menus and dialogs that work well with keyboards and screen readers.
+
+**Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
 
 **requireUser().** A small helper run at the start of every private page and action. It confirms who you are, or sends you to Sign in.
 
@@ -84,21 +102,31 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Seed data.** Sample records created on purpose so every screen can be tried out with something to show.
 
+**Seed.** The command (`pnpm db:seed`) that fills the app with sample data for development.
+
 **Server action.** A function that runs on the server when you do something in the page (such as adding a task).
 
 **Session.** The server's record that you are signed in. Your cookie points to it.
 
 **shadcn/ui.** A collection of ready-made interface parts (buttons, menus, and so on) that can be restyled.
 
+**Soft delete.** Marking something as deleted without erasing it, so it can be restored from Trash.
+
 **Strict mode (TypeScript).** The most careful setting of TypeScript's mistake-catching.
+
+**Table.** One drawer in the database, holding one kind of thing, such as tasks.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 
 **Test database.** A second, throwaway database used only by automated tests, so tests never touch your real data.
 
-**TypeScript.** The web language used for the code, with extra checks for mistakes.
+**Transaction.** A group of database changes that either all happen or none do.
+
+**Trigger.** A small rule stored in the database that runs automatically whenever something is added or changed, and can refuse the change.
 
 **Type checking.** The mistake-finding pass that TypeScript performs on all the code.
+
+**TypeScript.** The web language used for the code, with extra checks for mistakes.
 
 **UUID.** A long random identifier (like `3f2b8c1e-…`) used instead of 1, 2, 3, so IDs cannot be guessed.
 

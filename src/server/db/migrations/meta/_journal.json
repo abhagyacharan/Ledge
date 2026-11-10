@@ -8,6 +8,27 @@
       "when": 1794327039291,
       "tag": "0000_dapper_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794329024094,
+      "tag": "0001_mature_absorbing_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794329031713,
+      "tag": "0002_task_integrity_trigger",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794329072912,
+      "tag": "0003_inbox_protection",
+      "breakpoints": true
     }
   ]
 }

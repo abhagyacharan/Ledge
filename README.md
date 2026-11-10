@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 (scaffold) and 1 (auth) are done; the app currently has sign-up, sign-in, sign-out and an empty app shell. See [CLAUDE.md](CLAUDE.md) for the spec, phases and current status, and [docs/decisions.md](docs/decisions.md) for decisions.
+**Status:** Phases 0 (scaffold), 1 (auth) and 2 (data model) are done; the app has sign-up, sign-in, sign-out, an empty app shell, and a full database for lists and tasks (no task screens yet). See [CLAUDE.md](CLAUDE.md) for the spec, phases and current status, and [docs/decisions.md](docs/decisions.md) for decisions.
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 
@@ -17,6 +17,7 @@ pnpm install
 cp .env.example .env        # then set BETTER_AUTH_SECRET (e.g. openssl rand -base64 32)
 pnpm db:up                  # Postgres 18 on 127.0.0.1:5433
 pnpm db:migrate             # apply migrations
+pnpm db:seed                # optional: demo data (demo@ledge.test / demo-password-123, dev only)
 pnpm dev                    # http://localhost:3000
 ```
 

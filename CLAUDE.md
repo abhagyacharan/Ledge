@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                     |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                |
-| Current phase          | **Phase 2: Data model** (Phases 0 and 1 done)                                                                                                                                                                                                                                             |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                           |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                    |
-| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (14 tests, incl. real-DB auth tests). Browser-checked sign-up, sign-in, sign-out, rate limit, mobile sheet. `pnpm build` passes. Not checked: `secure` cookie over real HTTPS, Playwright e2e (none written yet, browsers not installed) |
-| Open blockers          | none                                                                                                                                                                                                                                                                                      |
-| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                             |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                      |
+| Current phase          | **Phase 3: Lists, tasks, tags CRUD** (Phases 0, 1 and 2 done)                                                                                                                                                                                                                                                                                   |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                 |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                          |
+| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (68 tests, real database). All migrations apply to a fresh database; `drizzle-kit generate` reports no drift; seed runs and refuses in production. Not checked: seeded data in the UI (views are placeholders until Phase 3 and 4), `secure` cookie over real HTTPS, Playwright e2e (none yet) |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                            |
+| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -77,7 +77,7 @@ Park any new idea in `docs/ideas.md` instead of building it.
 
 Next.js and Better Auth APIs change between versions. **Verify against current docs before writing code.**
 
-**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
+**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, fractional-indexing 4.0.0, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
 
 **Next.js 16 notes** (verified in `node_modules/next/dist/docs/`; `AGENTS.md` says to read them before writing Next code): `middleware` is now `proxy` (`src/proxy.ts`); `LayoutProps<"/">` types come from `next typegen`, which `pnpm typecheck` runs first; Cache Components is off (see `docs/decisions.md`).
 
@@ -111,6 +111,8 @@ src/
     auth.ts                 # Better Auth config
     env.ts                  # Zod-validated environment
     session.ts              # getSession() / requireUser() helpers
+    user-defaults.ts        # ensureUserDefaults(): settings row + Inbox, run on sign-up
+    data/                   # data functions (lists.ts, tasks.ts): every one takes userId
   components/
     ui/                     # shadcn primitives
     shell/                  # app sidebar, page header, empty state, theme toggle, sign out
@@ -267,7 +269,7 @@ When O provides the spec, plan first, then build in a separate branch.
 - Timestamps are `timestamptz` in UTC. Due dates and times are floating (see §6.3). Convert using the user's `timezone` setting. Never use `new Date()` string parsing for user dates.
 - IDs are UUIDs. Never expose sequential ids.
 - Small files, small functions, named exports. Colocate tests as `*.test.ts`.
-- Commits follow **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`). One logical change per commit.
+- Commits follow **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`). One logical change per commit. **No `Co-Authored-By` or other attribution lines** in commit messages (O's explicit preference).
 - Lint and format with ESLint and Prettier (or Biome if chosen; log it in `docs/decisions.md`).
 
 ---
@@ -286,7 +288,7 @@ pnpm db:up             # start Postgres on 127.0.0.1:5433 (compose + dev overrid
 pnpm db:generate       # drizzle-kit generate migration
 pnpm db:migrate        # apply migrations
 pnpm db:studio         # drizzle studio
-pnpm db:seed           # demo data for development only (not yet wired, Phase 2)
+pnpm db:seed           # demo user demo@ledge.test with sample data (dev only; refuses in production)
 docker compose up -d   # app + postgres (production-like; app service arrives in Phase 7)
 ```
 
@@ -357,7 +359,7 @@ This is the canonical plan. It expands the original suggested build order into p
 | --- | ------------------------------- | --------------------- |
 | 0   | Scaffold                        | `[x]` done 2026-11-10 |
 | 1   | Auth                            | `[x]` done 2026-11-10 |
-| 2   | Data model                      | `[ ]`                 |
+| 2   | Data model                      | `[x]` done 2026-11-10 |
 | 3   | Lists, tasks, tags CRUD (P0)    | `[ ]`                 |
 | 4   | Views (P0)                      | `[ ]`                 |
 | 5   | Safety (P0)                     | `[ ]`                 |
@@ -402,13 +404,13 @@ Exit: sign up, sign in, sign out work in a browser on desktop and phone width; p
 
 Goal: the full §6.3 schema, migrated and seedable.
 
-- [ ] Drizzle schema for `user_settings`, `lists`, `sections`, `tasks`, `tags`, `task_tags` with the indexes in §6.3
-- [ ] DB constraint enforcing subtask depth of 1; case-insensitive unique tag names per user
-- [ ] Generated `search` tsvector column and GIN index
-- [ ] Migrations generated with `pnpm db:generate` and applied with `pnpm db:migrate`
-- [ ] On first sign-up: create `user_settings` (defaults) and an undeletable Inbox list
-- [ ] `pnpm db:seed`: demo user, lists, tags, subtasks, overdue and recurring tasks; refuses when `NODE_ENV=production`
-- [ ] Ownership integration test (user B cannot read, update or delete user A's lists or tasks) against a real database
+- [x] Drizzle schema for `user_settings`, `lists`, `sections`, `tasks`, `tags`, `task_tags` with the indexes in §6.3 (2026-11-10)
+- [x] DB constraint enforcing subtask depth of 1; case-insensitive unique tag names per user (2026-11-10)
+- [x] Generated `search` tsvector column and GIN index (2026-11-10)
+- [x] Migrations generated with `pnpm db:generate` and applied with `pnpm db:migrate` (2026-11-10)
+- [x] On first sign-up: create `user_settings` (defaults) and an undeletable Inbox list (2026-11-10)
+- [x] `pnpm db:seed`: demo user, lists, tags, subtasks, overdue and recurring tasks; refuses when `NODE_ENV=production` (2026-11-10)
+- [x] Ownership integration test (user B cannot read, update or delete user A's lists or tasks) against a real database (2026-11-10)
 
 Exit: fresh database migrates cleanly; sign-up creates settings and Inbox; seed runs; ownership test passes.
 
@@ -597,3 +599,5 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo             |
 | 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                 |
 | 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind       |
+| 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                               | Data model built and verified; keep this file equal to the repo       |
+| 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                             | O asked for it                                                        |

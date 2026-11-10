@@ -78,7 +78,46 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** Vitest's global setup creates `ledge_test` (the name must end in `_test`), applies the migrations, and tests run one file at a time. `TEST_DATABASE_URL` overrides the default derived from `DATABASE_URL`.
 - **Reason:** §13 wants real-database integration tests; dev data must never be truncated by a test run.
 
+## 2026-11-10: Phase 2 schema follows §6.3, with these adaptations
+
+- **Decision:** All tables use `uuid` ids and `timestamptz`. `user_settings` is keyed by `user_id` as the spec says. `task_tags` also carries `user_id` (the spec lists only `task_id` and `tag_id`). `week_starts_on` is an ISO weekday number (1 = Monday). Search uses Postgres's `english` text configuration. `recurrence_mode` defaults to `fixed` even when a task has no rule.
+- **Reason:** §6.3 says every user-owned table has `user_id`; storing it on `task_tags` lets the database enforce ownership there too (next entry). `english` stemming helps ("paying" finds "pay"); revisit if search results disappoint.
+
+## 2026-11-10: The database enforces ownership and task rules, not just the app
+
+- **Decision:** Lists, sections, tasks and `task_tags` reference their parents through composite foreign keys on `(id, user_id)`, so a row can never point at another user's list, task or tag. A trigger (`tasks_validate`) rejects subtasks deeper than one level, a task that has subtasks becoming a subtask, a subtask in another list or user than its parent, a section from another list, and a recurrence origin from another user. Check constraints cover title length (1 to 500), priority (0 to 3), status vs `completed_at` always agreeing, and `due_time` needing a `due_date`. Both triggers live in custom migrations (`0002`, `0003`).
+- **Reason:** §5 and §6.2 say to enforce critical rules "in code and DB constraint". If an application bug ever forgot a `user_id` filter, the database would still refuse to link or leak across users. Costs: a few extra unique indexes and some trigger code.
+
+## 2026-11-10: The Inbox is protected by the database
+
+- **Decision:** A partial unique index allows one Inbox per user. A trigger blocks deleting an Inbox (unless its owner is being deleted) and blocks changing `is_inbox` after creation. A check forbids archiving it.
+- **Reason:** §6.1 says the Inbox is undeletable; this makes that true even for buggy code.
+
+## 2026-11-10: Settings and Inbox are created by a sign-up hook
+
+- **Decision:** `ensureUserDefaults()` runs from Better Auth's "user created" hook, in one transaction, and is safe to call twice.
+- **Reason:** §5 requires both rows on first sign-up.
+- **Known gap:** the hook runs just after the user row is saved, not in the same transaction. If it ever fails, the account exists without its defaults and sign-up reports an error. Phase 3 reads the Inbox through a function that can call `ensureUserDefaults()` again if the Inbox is missing.
+
+## 2026-11-10: A small data layer arrives in Phase 2
+
+- **Decision:** `src/server/data/lists.ts` and `tasks.ts` hold the first data functions (read, rename or retitle, trash, delete). Each takes `userId` and filters by it. Phase 3 builds the rest on top of them.
+- **Reason:** The Phase 2 ownership test must exercise real app functions, not just raw queries. Someone else's row returns "not found", never "forbidden", so ids cannot be probed.
+
+## 2026-11-10: Seed script design
+
+- **Decision:** `pnpm db:seed` (`scripts/seed.ts`, run with `tsx --conditions=react-server`) creates `demo@ledge.test` through the real sign-up path, so the hook creates its Inbox. Re-running deletes and recreates that one user. It exits immediately when `NODE_ENV=production` and only loads the database code after that check. Dates are computed in the `Asia/Kolkata` timezone.
+- **Reason:** §10. Using real sign-up proves the hook and gives the demo user a working password. The `react-server` condition lets the `server-only` marker import cleanly outside Next.js.
+
+## 2026-11-10: Dependency pinning fixed
+
+- **Decision:** `saveExact: true` now lives in `pnpm-workspace.yaml` (pnpm 12 ignored `.npmrc` for this), and every dependency in `package.json` is an exact version.
+- **Reason:** Phase 0 wrote that versions were pinned, but packages added afterwards had `^` ranges. The lockfile held the real versions, so nothing changed at runtime.
+
 ## Pending decisions (log here when made)
+
+- **Phase 3, deleting a list:** §6.2 says deleting a list "moves tasks to Trash", but lists have no soft-delete column and the foreign key currently deletes a list's tasks with it. Decide: add `lists.deleted_at` (list itself goes to Trash), or soft-delete the tasks and keep an archived list. Needs O's input before building list deletion.
+- **Phase 3, moving a task to another list:** the trigger requires a subtask to be in the same list as its parent, checked row by row. Moving a parent that has subtasks therefore has to detach the subtasks, move the parent, move the subtasks, and reattach, all in one transaction (or the rule must be changed to a deferred check).
 
 - Trash auto-purge mechanism: scheduled job vs on-load cleanup (Phase 5).
 - Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 7).

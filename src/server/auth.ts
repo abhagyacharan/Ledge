@@ -7,6 +7,7 @@ import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/config/app";
 import { db } from "@/server/db/client";
 import * as schema from "@/server/db/schema";
 import { getEnv, isSignupAllowed } from "@/server/env";
+import { ensureUserDefaults } from "@/server/user-defaults";
 
 const env = getEnv();
 const isProduction = process.env.NODE_ENV === "production";
@@ -43,6 +44,16 @@ export const auth = betterAuth({
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
       "/sign-up/email": { window: 60, max: 5 },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        // Every new account gets its settings row and its Inbox (CLAUDE.md §5).
+        after: async (createdUser) => {
+          await ensureUserDefaults(createdUser.id);
+        },
+      },
     },
   },
   hooks: {

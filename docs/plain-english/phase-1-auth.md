@@ -103,5 +103,5 @@ It also builds the **frame** of the app (the side menu and the page layout) that
 
 - The **Secure** wristband setting was configured but not seen working over a real encrypted connection yet. That happens at deployment (Phase 7).
 - The automatic browser-clicking tests (Playwright) do not exist yet. The sign-in flow was checked by hand in a browser.
-- When a new account is created it does **not** yet get an Inbox list and personal settings. That is Phase 2, along with the lists and tasks storage.
+- At the end of this phase a new account did not yet get an Inbox list and personal settings. That was added in Phase 2, along with the lists and tasks storage.
 - "Sign out everywhere" and "delete my account" are later optional features (Phase 8).
