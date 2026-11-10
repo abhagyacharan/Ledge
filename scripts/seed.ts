@@ -161,6 +161,8 @@ async function main() {
       dueTime: "18:00",
       tags: ["errands"],
     },
+    // Due today with no time: always in the Today block, never overdue (the e2e tests rely on it).
+    { key: "callmom", listId: home.id, title: "Call mom", dueDate: day(0) },
     {
       key: "tap",
       listId: home.id,

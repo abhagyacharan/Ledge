@@ -14,12 +14,18 @@ export function InlineAdd({
   listId,
   sectionId = null,
   parentId = null,
+  dueDate = null,
+  tagIds,
   label = "Add a task",
 }: {
   listId: string;
   sectionId?: string | null;
   /** Set to add a subtask under this task. */
   parentId?: string | null;
+  /** Give new tasks this due date (used by Today and Upcoming). */
+  dueDate?: string | null;
+  /** Give new tasks these tags (used by the Tag view). */
+  tagIds?: string[];
   label?: string;
 }) {
   const [title, setTitle] = useState("");
@@ -31,7 +37,9 @@ export function InlineAdd({
     const value = title.trim();
     if (!value) return;
     startTransition(async () => {
-      const result = await run(createTaskAction({ listId, sectionId, parentId, title: value }));
+      const result = await run(
+        createTaskAction({ listId, sectionId, parentId, dueDate, tagIds, title: value }),
+      );
       if (result.ok) setTitle("");
       inputRef.current?.focus();
     });

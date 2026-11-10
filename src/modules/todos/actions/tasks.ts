@@ -5,6 +5,7 @@ import { setTaskTags } from "@/server/data/tags";
 import {
   createTask,
   moveTaskToList,
+  reorderTask,
   restoreTask,
   setTaskDone,
   trashTask,
@@ -14,6 +15,7 @@ import {
 import {
   createTaskSchema,
   moveTaskSchema,
+  reorderTaskSchema,
   setTaskDoneSchema,
   setTaskTagsSchema,
   taskIdSchema,
@@ -22,9 +24,10 @@ import {
 import { guarded, NOT_FOUND, refresh } from "./guard";
 
 export async function createTaskAction(input: unknown) {
-  return guarded(createTaskSchema, input, async (data, userId) => {
+  return guarded(createTaskSchema, input, async ({ tagIds, ...data }, userId) => {
     const task = await createTask(userId, data);
     if (!task) return fail("Couldn't add that task. The list or parent no longer exists.");
+    if (tagIds && tagIds.length > 0) await setTaskTags(userId, task.id, tagIds);
     refresh();
     return ok({ id: task.id });
   });
@@ -78,6 +81,16 @@ export async function restoreTaskAction(input: unknown) {
 export async function setTaskTagsAction(input: unknown) {
   return guarded(setTaskTagsSchema, input, async ({ id, tagIds }, userId) => {
     if (!(await setTaskTags(userId, id, tagIds))) return fail(NOT_FOUND);
+    refresh();
+    return ok();
+  });
+}
+
+/** Drag and drop: put a task between two neighbours, optionally in another section. */
+export async function reorderTaskAction(input: unknown) {
+  return guarded(reorderTaskSchema, input, async ({ id, afterId, beforeId, sectionId }, userId) => {
+    const move = { afterId, beforeId, ...(sectionId === undefined ? {} : { sectionId }) };
+    if (!(await reorderTask(userId, id, move))) return fail("Couldn't move that task.");
     refresh();
     return ok();
   });

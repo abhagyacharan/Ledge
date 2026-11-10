@@ -134,3 +134,36 @@ export function formatDue(
   const day = formatDueDate(dueDate, today, locale);
   return dueTime ? `${day}, ${formatTime(dueTime, locale)}` : day;
 }
+
+/** "Tuesday, 10 November" for a floating date, in the user's locale. */
+export function formatLongDate(iso: IsoDate, locale = "en-IN"): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(parseIsoDate(iso));
+}
+
+/**
+ * Heading for a day in a list of days: "Tomorrow · 11 Nov", "Friday · 13 Nov",
+ * "Monday · 23 Nov 2027" (year only when it differs from this year).
+ */
+export function formatDayHeading(iso: IsoDate, today: IsoDate, locale = "en-IN"): string {
+  const diff = daysBetween(today, iso);
+  const date = parseIsoDate(iso);
+  const sameYear = iso.slice(0, 4) === today.slice(0, 4);
+  const short = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+  }).format(date);
+  const first =
+    diff === 0
+      ? "Today"
+      : diff === 1
+        ? "Tomorrow"
+        : diff === -1
+          ? "Yesterday"
+          : new Intl.DateTimeFormat(locale, { weekday: "long" }).format(date);
+  return `${first} · ${short}`;
+}

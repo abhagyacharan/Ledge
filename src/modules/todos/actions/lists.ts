@@ -6,6 +6,7 @@ import {
   getList,
   moveList,
   restoreList,
+  setListViewSettings,
   setListArchived,
   trashList,
   updateList,
@@ -14,6 +15,7 @@ import {
   archiveListSchema,
   createListSchema,
   listIdSchema,
+  listViewSettingsSchema,
   moveSchema,
   updateListSchema,
 } from "../schema";
@@ -76,6 +78,15 @@ export async function trashListAction(input: unknown) {
 export async function restoreListAction(input: unknown) {
   return guarded(listIdSchema, input, async ({ id }, userId) => {
     if (!(await restoreList(userId, id))) return fail(NOT_FOUND);
+    refresh();
+    return ok();
+  });
+}
+
+/** Remembers how this list is sorted, grouped and filtered. */
+export async function setListViewSettingsAction(input: unknown) {
+  return guarded(listViewSettingsSchema, input, async ({ id, settings }, userId) => {
+    if (!(await setListViewSettings(userId, id, settings))) return fail(NOT_FOUND);
     refresh();
     return ok();
   });

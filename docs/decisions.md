@@ -154,6 +154,43 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** Every action goes through `guarded()` (`src/modules/todos/actions/guard.ts`): `requireUser()`, Zod validation with field errors, the authenticated `userId` passed to the handler, unexpected errors logged and returned as a friendly message. Actions return `Result<T>` and never throw for expected failures. After a change they revalidate the whole app layout.
 - **Reason:** §5 and §9. One place to get the security-critical steps right.
 
+## 2026-11-10: Tests got about 3.5 times faster
+
+- **Decision:** Tests that only need a user id use `createUser` (`tests/helpers/fast-users.ts`), which inserts the user row directly and runs the same defaults as sign-up. Only the sign-in and session tests use `createTestUser` (real sign-up and sign-in). Vitest now reuses one worker for every file (`isolate: false`). Result: about 52 s down to about 15 s for 237 tests.
+- **Reason:** Almost all the time was password hashing, which is deliberately slow and ran four times per test. `fast-users.ts` must not import `@/server/auth`, because loading Better Auth was the next biggest cost. Sharing a worker is safe because test files already run one at a time against one database and each test wipes its own data.
+
+## 2026-11-10: How the views are defined
+
+- **Decision:**
+  - **Today:** open tasks due today or earlier. A task due today whose time has passed counts as overdue, matching its label.
+  - **Upcoming:** tomorrow through today + 14 days; undated tasks are left out.
+  - **All tasks:** every task in every list, with subtasks counted as progress on their parent.
+  - **Completed:** the 200 most recently finished tasks, grouped by the day finished in the user's timezone.
+  - **Tag:** every task with that tag, in every list.
+  - Subtasks with their own due date appear as rows in Today and Upcoming, labelled "Subtask of ...".
+  - Tasks in archived or trashed lists never appear in any cross-list view.
+- **Reason:** §6.2 describes the views in a line each; these are the exact readings. Archiving means "put away", so its tasks leave the views too.
+
+## 2026-11-10: Sort, group and filter storage
+
+- **Decision:** Lists (including the Inbox) save their choices in `lists.view_settings`. The All and Tag views keep theirs in the URL (`?sort=due&group=tag&tag=...&priority=2&due=yes&done=1`), starting from "sorted by due date". Sort options: manual, due date, priority, newest first. Group: none, due date, priority, tag. Filters: tag, exact priority, has/has no due date, show completed. "Manual" is only offered where it makes sense (lists). Sections and dragging only show with manual order and no grouping; any other choice shows a flat grouped list with a one-click way back.
+- **Reason:** §6.2 says to store these per list. Views that mix lists have no list to save on, and a URL can be bookmarked.
+
+## 2026-11-10: Drag and drop
+
+- **Decision:** dnd-kit with a dedicated drag handle on each row (mouse, touch and keyboard: Space to pick up, arrow keys to move, Space to drop). A task can move within its section or to another section. The client sends the ids of the tasks that end up directly before and after it; the server checks both are the user's, in the same list with the same parent, and places the task between them with a fractional index. If two neighbours are tied or out of order it places the task after the first. The new order shows at once and is rolled back with an error message if saving fails.
+- **Reason:** §6.2 and §8 (accessible reordering). A handle keeps scrolling on phones working. Sending neighbours instead of a position means the client cannot invent positions.
+
+## 2026-11-10: Navigation and quick additions
+
+- **Decision:** "All tasks" and "Completed" were added to the sidebar under Inbox, Today and Upcoming. A "Tags" group lists every tag and opens the Tag view. Inline add exists on Today (due today), Upcoming (due tomorrow), All and Tag views (into the Inbox; the Tag view also applies the tag). Completed has none, because adding a finished task makes no sense. Empty states offer one action that opens quick add.
+- **Reason:** §6.2 lists these views but §8's sidebar order names only three; they need a way in. "Inline add at the bottom of any list and view" is a P0 item.
+
+## 2026-11-10: End-to-end tests
+
+- **Decision:** Playwright runs against its own database (`ledge_e2e`, migrated and re-seeded on every run, rate-limit counters cleared) and its own dev server on port 3100 (build folder `.next-e2e`, chosen with `NEXT_DIST_DIR`), so it never touches dev data or an already-running `pnpm dev`. It uses the Chrome installed on this machine (`channel: "chrome"`), so no browser download is needed. A setup step signs in once and saves the session. One worker, desktop only for now. The seed gained a task due today with no time, so the Today test never depends on the clock.
+- **Reason:** §13 wants 3 to 5 critical flows. Phase 4 covers Today and drag-reorder (plus Upcoming and "list remembers its sort"); sign-in, quick add with undo and the drawer edit come with Phases 5 and 6.
+
 ## Pending decisions (log here when made)
 
 - Trash auto-purge mechanism: scheduled job vs on-load cleanup (Phase 5).

@@ -32,6 +32,9 @@ export default defineConfig({
     globalSetup: ["./tests/setup/global.ts"],
     // Integration tests share one database, so run test files one at a time.
     fileParallelism: false,
+    // Reuse one worker (and its loaded modules) for every file. Safe here: files already run one at
+    // a time against one database, and each test resets its own data.
+    isolate: false,
     env: {
       DATABASE_URL: testUrl,
       BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",

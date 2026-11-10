@@ -4,15 +4,20 @@ import { APP_NAME } from "@/config/app";
 import { enabledModules } from "@/config/modules";
 import { TodosProvider } from "@/modules/todos/components/todos-provider";
 import { getInbox, listLists } from "@/server/data/lists";
+import { listTags } from "@/server/data/tags";
 import { requireUser } from "@/server/session";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Real auth check (the proxy only looks for a cookie).
   const { userId, user } = await requireUser();
-  const [inbox, lists] = await Promise.all([getInbox(userId), listLists(userId)]);
+  const [inbox, lists, tags] = await Promise.all([
+    getInbox(userId),
+    listLists(userId),
+    listTags(userId),
+  ]);
 
   return (
-    <TodosProvider value={{ lists, inboxId: inbox.id }}>
+    <TodosProvider value={{ lists, inboxId: inbox.id, tags }}>
       <SidebarProvider>
         <AppSidebar user={{ name: user.name, email: user.email }} />
         <SidebarInset>

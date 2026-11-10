@@ -24,18 +24,23 @@ The work is done in ten steps, called phases, always in the same order. A phase 
 | 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)                         |
 | 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md)             |
 | 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md) |
-| 4     | Views (Today, Upcoming...)    | Next              | Written when the phase is done                             |
-| 5     | Safety (undo, trash, keys)    | Not started       | Written when the phase is done                             |
+| 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                       |
+| 5     | Safety (undo, trash, keys)    | Next              | Written when the phase is done                             |
 | 6     | Polish                        | Not started       | Written when the phase is done                             |
 | 7     | Deploy and backup             | Not started       | Written when the phase is done                             |
 | 8     | Extra features (if time)      | Not started       | Written when the phase is done                             |
 | 9     | Expenses placeholder          | Not started       | Written when the phase is done                             |
 
+## Other pages
+
+- [How the tests work](how-tests-work.md): where test data comes from, why tests were slow, and how they were sped up.
+- [Glossary](glossary.md): plain meanings of technical words.
+
 ## What each future phase will do, in one paragraph
 
 - **Phase 2: Data model (done).** See [phase-2-data-model.md](phase-2-data-model.md).
 - **Phase 3: Lists, tasks and tags (done).** See [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md).
-- **Phase 4: Views.** Ready-made ways of looking at your tasks: Inbox, Today (overdue first), Upcoming (next two weeks), All, Completed, each list and each tag. You can sort, group and filter them, and drag tasks to reorder.
+- **Phase 4: Views (done).** See [phase-4-views.md](phase-4-views.md).
 - **Phase 5: Safety.** Nothing gets lost by accident. An "Undo" message after you complete or delete something, a Trash you can restore from (emptied after 30 days), instant-feeling updates, and keyboard shortcuts plus a search-everything command box.
 - **Phase 6: Polish.** Go through every screen to make it pleasant: empty screens that say what to do next, loading placeholders, error messages in friendly words, phone-size layout, dark mode, and use with a keyboard only.
 - **Phase 7: Deploy and backup.** Put the app on the home server so you can use it every day, reachable safely from outside. Set up an automatic nightly backup, copy it to another place, and prove once that a backup can really be restored. Then close sign-ups so only your account exists.

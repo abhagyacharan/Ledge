@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isIsoDate, isIsoTime, trimTime } from "@/lib/dates";
+import { viewSettingsSchema } from "./view-settings";
 
 /** Zod schemas shared by the server actions and the forms (CLAUDE.md §9). */
 
@@ -83,6 +84,7 @@ export const createTaskSchema = z.object({
   priority: priority.optional(),
   dueDate: isoDate.nullable().optional(),
   dueTime: isoTime.nullable().optional(),
+  tagIds: z.array(id).max(50).optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -102,6 +104,16 @@ export const moveTaskSchema = z.object({
   sectionId: id.nullable().optional(),
 });
 export const taskIdSchema = z.object({ id });
+export const reorderTaskSchema = z.object({
+  id,
+  /** The task that should end up right before this one (null at the top). */
+  afterId: id.nullable().optional(),
+  /** The task that should end up right after this one (null at the bottom). */
+  beforeId: id.nullable().optional(),
+  /** Omit to keep the section; null means "no section". */
+  sectionId: id.nullable().optional(),
+});
+export const listViewSettingsSchema = z.object({ id, settings: viewSettingsSchema });
 export const setTaskTagsSchema = z.object({ id, tagIds: z.array(id).max(50) });
 
 /** Flattens Zod issues to the first message per field, for forms. */

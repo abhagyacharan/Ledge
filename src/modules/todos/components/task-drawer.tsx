@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import { InlineAdd } from "./inline-add";
 import { run } from "./run-action";
 import { TagField } from "./tag-field";
 import { TaskCheckbox } from "./task-row";
+import { useTaskLinks } from "./use-task-links";
 import { PRIORITY_LABELS, type DateContext } from "./types";
 
 export type TaskDetailData = {
@@ -62,10 +63,10 @@ type Props = {
  */
 export function TaskDrawer({ detail, lists, tags, ctx }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
+  const { closeHref } = useTaskLinks();
 
   function close() {
-    router.replace(pathname, { scroll: false });
+    router.replace(closeHref, { scroll: false });
   }
 
   return (
@@ -109,6 +110,7 @@ function DrawerBody({
 } & Omit<Props, "detail"> & { close: () => void }) {
   const { task, subtasks, parentTitle, sections } = detail;
   const isSubtask = task.parentId !== null;
+  const { hrefFor } = useTaskLinks();
   const done = task.status === "done";
 
   const [title, setTitle] = useState(task.title);
@@ -165,7 +167,7 @@ function DrawerBody({
         <p className="text-sm text-muted-foreground">
           Subtask of{" "}
           <Link
-            href={`?task=${task.parentId}`}
+            href={hrefFor(task.parentId ?? task.id)}
             scroll={false}
             className="underline underline-offset-4"
           >
@@ -317,7 +319,7 @@ function DrawerBody({
               <li key={s.id} className="flex items-center gap-1 border-b last:border-b-0">
                 <TaskCheckbox taskId={s.id} title={s.title} done={s.status === "done"} size="sm" />
                 <Link
-                  href={`?task=${s.id}`}
+                  href={hrefFor(s.id)}
                   scroll={false}
                   className={`min-w-0 flex-1 break-words py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${s.status === "done" ? "text-muted-foreground line-through" : ""}`}
                 >

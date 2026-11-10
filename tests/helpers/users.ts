@@ -1,22 +1,15 @@
-import { sql } from "drizzle-orm";
 import { auth } from "@/server/auth";
-import { db } from "@/server/db/client";
+import { type TestUser } from "./fast-users";
+
+export { resetAuthData, type TestUser } from "./fast-users";
 
 export const TEST_PASSWORD = "correct-horse-battery";
 
-/** Removes every user (sessions and accounts cascade) and rate-limit rows. */
-export async function resetAuthData() {
-  await db.execute(sql`truncate table "user", "rate_limit" restart identity cascade`);
-}
-
-export type TestUser = {
-  id: string;
-  email: string;
-  /** Cookie header value that authenticates as this user. */
-  cookie: string;
-};
-
-/** Creates a user through Better Auth (real hashing, real session) and returns a session cookie. */
+/**
+ * Creates a user through Better Auth (real password hashing, real session) and returns a session
+ * cookie. Slow on purpose: only the sign-in and session tests use it. Everything else should use
+ * `createUser` from `fast-users.ts`.
+ */
 export async function createTestUser(email: string, name = "Test User"): Promise<TestUser> {
   const result = await auth.api.signUpEmail({
     body: { email, password: TEST_PASSWORD, name },

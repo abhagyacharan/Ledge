@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and (later) an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 3 are done: sign-in, the database, and a working task manager with lists, sections, tags, subtasks, a detail drawer and quick add. The Today, Upcoming and other views arrive in Phase 4.
+**Status:** Phases 0 to 4 are done: sign-in, the database, and a working task manager with lists, sections, tags, subtasks, a detail drawer, quick add, the Today, Upcoming, All, Completed and Tag views, sorting, grouping, filtering and drag-and-drop ordering. Undo, Trash and keyboard shortcuts are next (Phase 5).
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 
@@ -55,7 +55,15 @@ pnpm typecheck && pnpm lint && pnpm test
 
 `pnpm test` needs the dev database running (`pnpm db:up`). It creates a separate `ledge_test` database and migrates it automatically; your dev data is never touched.
 
-End-to-end tests (`pnpm test:e2e`) arrive in later phases. Run `pnpm exec playwright install` once before the first run.
+End-to-end tests drive a real browser:
+
+```bash
+pnpm test:e2e
+```
+
+They need the dev database running (`pnpm db:up`) and the Chrome browser installed (no download needed). They use their own database (`ledge_e2e`) and their own server on port 3100, re-seeded on every run, so your dev data and any running `pnpm dev` are not touched.
+
+Unit and integration tests take about 15 seconds. Tests that only need a user use `createUser` (`tests/helpers/fast-users.ts`), which skips slow password hashing.
 
 ## Deploy
 

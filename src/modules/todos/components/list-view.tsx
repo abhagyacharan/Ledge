@@ -1,92 +1,169 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { List, Section } from "@/server/db/schema";
+import type { List, Section, Tag } from "@/server/db/schema";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
+import { setListViewSettingsAction } from "../actions/lists";
 import { createSectionAction } from "../actions/sections";
+import { applyView, filterTasks } from "../view-logic";
+import { DEFAULT_VIEW_SETTINGS, type ViewSettings } from "../view-settings";
 import { InlineAdd } from "./inline-add";
 import { ListHeader } from "./list-header";
+import { ManualBoard } from "./manual-board";
 import { NameDialog } from "./name-dialog";
 import { run } from "./run-action";
-import { SectionBlock } from "./section-block";
 import { TaskRow } from "./task-row";
 import type { DateContext, TagsById } from "./types";
+import { ViewControls } from "./view-controls";
 
 type Props = {
   list: List;
   sections: Section[];
   tasks: TaskRowData[];
+  tags: Tag[];
   tagsById: TagsById;
   ctx: DateContext;
+  /** Saved in `lists.view_settings`. */
+  settings: ViewSettings;
 };
 
-/** A list screen: header, tasks grouped by section, inline add, completed tasks. */
-export function ListView({ list, sections, tasks, tagsById, ctx }: Props) {
-  const [showDone, setShowDone] = useState(false);
+/**
+ * A list screen: header, view controls, then the tasks. With manual order and no grouping the
+ * tasks sit in their sections and can be dragged. Any other sort or grouping shows a flat,
+ * grouped list instead (sections are only shown in manual order). The choices are saved per list.
+ */
+export function ListView({ list, sections, tasks, tags, tagsById, ctx, settings: saved }: Props) {
+  // Show a change at once, then follow whatever the server sends back after saving.
+  const [seen, setSeen] = useState(saved);
+  const [settings, setSettings] = useState(saved);
+  if (saved !== seen) {
+    setSeen(saved);
+    setSettings(saved);
+  }
   const [addingSection, setAddingSection] = useState(false);
+
+  async function change(next: ViewSettings) {
+    const previous = settings;
+    setSettings(next);
+    const result = await run(setListViewSettingsAction({ id: list.id, settings: next }));
+    if (!result.ok) setSettings(previous);
+  }
 
   const topLevel = tasks.filter((t) => !t.parentId);
   const subtasksOf = (id: string) => tasks.filter((t) => t.parentId === id);
-  const open = topLevel.filter((t) => t.status === "open");
-  const done = topLevel.filter((t) => t.status === "done");
-  const unsectioned = open.filter((t) => !t.sectionId);
+  const doneCount = topLevel.filter((t) => t.status === "done").length;
+  const visible = filterTasks(topLevel, settings);
+  const manual = settings.sort === "manual" && settings.group === "none";
+  const filtersHideEverything = visible.length === 0 && topLevel.length > doneCount;
 
-  const rows = (items: TaskRowData[]) => (
-    <ul>
-      {items.map((t) => (
-        <TaskRow key={t.id} task={t} subtasks={subtasksOf(t.id)} tagsById={tagsById} ctx={ctx} />
-      ))}
-    </ul>
-  );
+  // The drag board remounts with fresh state whenever the saved order changes.
+  const boardKey = [
+    ...sections.map((s) => s.id),
+    "|",
+    ...visible.map((t) => `${t.id}:${t.sectionId}:${t.position}:${t.status}`),
+  ].join(",");
 
   return (
     <div>
       <ListHeader list={list} taskCount={topLevel.length} ctx={ctx} />
 
-      {open.length === 0 && done.length === 0 && sections.length === 0 ? (
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <ViewControls
+          settings={settings}
+          tags={tags}
+          allowManual
+          onChange={(next) => void change(next)}
+        />
+        {doneCount > 0 ? (
+          <Button
+            variant="ghost"
+            className="h-11 text-muted-foreground md:h-8"
+            aria-pressed={settings.showCompleted}
+            onClick={() => void change({ ...settings, showCompleted: !settings.showCompleted })}
+          >
+            {settings.showCompleted ? "Hide" : "Show"} {doneCount} completed
+          </Button>
+        ) : null}
+      </div>
+
+      {topLevel.length === 0 && sections.length === 0 ? (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
           No tasks yet. Type one below and press Enter.
         </p>
       ) : null}
 
-      {unsectioned.length > 0 ? rows(unsectioned) : null}
-      <InlineAdd listId={list.id} />
+      {filtersHideEverything ? (
+        <p className="mb-3 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+          No tasks match this view.{" "}
+          <button
+            type="button"
+            className="underline underline-offset-4"
+            onClick={() => void change(DEFAULT_VIEW_SETTINGS)}
+          >
+            Reset view
+          </button>
+        </p>
+      ) : null}
 
-      {sections.map((section) => {
-        const inSection = open.filter((t) => t.sectionId === section.id);
-        return (
-          <SectionBlock key={section.id} section={section} count={inSection.length}>
-            {rows(inSection)}
-            <InlineAdd listId={list.id} sectionId={section.id} label={`Add to ${section.name}`} />
-          </SectionBlock>
-        );
-      })}
+      {manual ? (
+        <ManualBoard
+          key={boardKey}
+          listId={list.id}
+          sections={sections}
+          tasks={visible}
+          subtasksOf={subtasksOf}
+          tagsById={tagsById}
+          ctx={ctx}
+        />
+      ) : (
+        <>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Sections and dragging are available when sorted manually with no grouping.{" "}
+            <button
+              type="button"
+              className="underline underline-offset-4"
+              onClick={() => void change({ ...settings, sort: "manual", group: "none" })}
+            >
+              Back to manual order
+            </button>
+          </p>
+          {applyView(topLevel, settings, ctx, tagsById).map((group) => (
+            <section key={group.key} className="mb-4" aria-label={group.label || "Tasks"}>
+              {group.label ? (
+                <h2 className="mb-1 border-b pb-1 text-sm font-semibold">
+                  {group.label}{" "}
+                  <span className="font-normal text-muted-foreground">{group.tasks.length}</span>
+                </h2>
+              ) : null}
+              <ul>
+                {group.tasks.map((t) => (
+                  <TaskRow
+                    key={`${group.key}:${t.id}`}
+                    task={t}
+                    subtasks={subtasksOf(t.id)}
+                    tagsById={tagsById}
+                    ctx={ctx}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
+          <InlineAdd listId={list.id} />
+        </>
+      )}
 
-      <div className="mt-6">
-        <Button
-          variant="ghost"
-          className="h-11 gap-1 text-muted-foreground md:h-8"
-          onClick={() => setAddingSection(true)}
-        >
-          <Plus /> Add section
-        </Button>
-      </div>
-
-      {done.length > 0 ? (
-        <section className="mt-6" aria-label="Completed tasks">
+      {manual ? (
+        <div className="mt-6">
           <Button
             variant="ghost"
             className="h-11 gap-1 text-muted-foreground md:h-8"
-            aria-expanded={showDone}
-            onClick={() => setShowDone((v) => !v)}
+            onClick={() => setAddingSection(true)}
           >
-            {showDone ? <ChevronDown /> : <ChevronRight />}
-            {showDone ? "Hide" : "Show"} {done.length} completed
+            <Plus /> Add section
           </Button>
-          {showDone ? rows(done) : null}
-        </section>
+        </div>
       ) : null}
 
       <NameDialog

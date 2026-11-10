@@ -146,6 +146,20 @@ export async function setListArchived(
   return row ?? null;
 }
 
+/** Saves how a list is sorted, grouped and filtered (`lists.view_settings`). */
+export async function setListViewSettings(
+  userId: string,
+  listId: string,
+  viewSettings: Record<string, unknown>,
+): Promise<boolean> {
+  const rows = await db
+    .update(lists)
+    .set({ viewSettings })
+    .where(and(owned(userId, listId), isNull(lists.deletedAt)))
+    .returning({ id: lists.id });
+  return rows.length > 0;
+}
+
 /** Moves a list one step up or down in the sidebar order. */
 export async function moveList(
   userId: string,

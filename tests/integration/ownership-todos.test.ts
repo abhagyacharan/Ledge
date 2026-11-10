@@ -37,7 +37,7 @@ import {
 import { db } from "@/server/db/client";
 import { lists, tasks } from "@/server/db/schema";
 import { makeList, makeTask } from "../helpers/data";
-import { createTestUser, resetAuthData, type TestUser } from "../helpers/users";
+import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
 /**
  * Ownership for the Phase 3 data functions (CLAUDE.md §5). User B must not be able to read,
@@ -55,8 +55,8 @@ let aTagId: string;
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
   await resetAuthData();
-  a = await createTestUser("a@example.com", "A");
-  b = await createTestUser("b@example.com", "B");
+  a = await createUser("a@example.com", "A");
+  b = await createUser("b@example.com", "B");
   aList = await makeList(a.id, "A's list");
   const section = await createSection(a.id, aList.id, "A's section");
   if (!section) throw new Error("setup failed");

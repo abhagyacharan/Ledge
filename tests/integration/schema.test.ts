@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/server/db/client";
 import { lists, sections, tags, taskTags, tasks, user, userSettings } from "@/server/db/schema";
 import { dbError, makeList, makeSection, makeTag, makeTask, PG } from "../helpers/data";
-import { createTestUser, resetAuthData, type TestUser } from "../helpers/users";
+import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
 let a: TestUser;
 let b: TestUser;
@@ -11,8 +11,8 @@ let b: TestUser;
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
   await resetAuthData();
-  a = await createTestUser("a@example.com", "A");
-  b = await createTestUser("b@example.com", "B");
+  a = await createUser("a@example.com", "A");
+  b = await createUser("b@example.com", "B");
 });
 
 describe("new accounts", () => {

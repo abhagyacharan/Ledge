@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/server/db/client";
 import { lists, sections, tasks } from "@/server/db/schema";
 import { makeList, makeSection, makeTask } from "../helpers/data";
-import { createTestUser, resetAuthData, type TestUser } from "../helpers/users";
+import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
 /**
  * Fractional-index positions must sort byte by byte ("Zz" before "a0", like the JavaScript
@@ -15,7 +15,7 @@ let a: TestUser;
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
   await resetAuthData();
-  a = await createTestUser("a@example.com", "A");
+  a = await createUser("a@example.com", "A");
 });
 
 describe("position ordering in the database", () => {

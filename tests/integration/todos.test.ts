@@ -44,14 +44,14 @@ import {
 } from "@/server/data/tasks";
 import { db } from "@/server/db/client";
 import { tasks, userSettings } from "@/server/db/schema";
-import { createTestUser, resetAuthData, type TestUser } from "../helpers/users";
+import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
 let a: TestUser;
 
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
   await resetAuthData();
-  a = await createTestUser("a@example.com", "A");
+  a = await createUser("a@example.com", "A");
 });
 
 /** Creates a list and returns it, failing the test if the data layer returns nothing. */

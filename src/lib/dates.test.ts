@@ -3,7 +3,9 @@ import {
   addDaysIso,
   daysBetween,
   formatDue,
+  formatDayHeading,
   formatDueDate,
+  formatLongDate,
   formatTime,
   isIsoDate,
   isIsoTime,
@@ -170,5 +172,23 @@ describe("labels", () => {
   it("combines date and time", () => {
     expect(formatDue("2026-11-11", "17:00", today)).toMatch(/^Tomorrow, 5:00\s?pm$/i);
     expect(formatDue("2026-11-11", null, today)).toBe("Tomorrow");
+  });
+});
+
+describe("long dates and day headings", () => {
+  const today = "2026-11-10";
+  it("writes a long date", () => {
+    expect(formatLongDate("2026-11-10")).toBe("Tuesday, 10 November");
+  });
+
+  it("names nearby days and always adds the short date", () => {
+    expect(formatDayHeading("2026-11-10", today)).toBe("Today · 10 Nov");
+    expect(formatDayHeading("2026-11-11", today)).toBe("Tomorrow · 11 Nov");
+    expect(formatDayHeading("2026-11-09", today)).toBe("Yesterday · 9 Nov");
+    expect(formatDayHeading("2026-11-13", today)).toBe("Friday · 13 Nov");
+  });
+
+  it("adds the year when it is not this year", () => {
+    expect(formatDayHeading("2027-01-01", today)).toBe("Friday · 1 Jan 2027");
   });
 });

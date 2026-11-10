@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
-import { positionAtEnd } from "@/lib/ordering";
+import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { db } from "@/server/db/client";
 import { lists, tasks, type Task } from "@/server/db/schema";
 import { getList } from "./lists";
@@ -254,6 +254,52 @@ export async function moveTaskToList(
     }
     return moved ?? null;
   });
+}
+
+/**
+ * Puts a task between two neighbours (drag and drop). `afterId` is the task that should come
+ * right before it and `beforeId` the one right after; either may be null at an edge. Both must be
+ * the user's active tasks in the same list with the same parent, otherwise nothing changes and
+ * null is returned. `sectionId` (undefined = keep, null = no section) moves it to another section
+ * of the same list; subtasks have no section.
+ */
+export async function reorderTask(
+  userId: string,
+  taskId: string,
+  move: { afterId?: string | null; beforeId?: string | null; sectionId?: string | null },
+): Promise<Task | null> {
+  const task = await getTask(userId, taskId);
+  if (!task) return null;
+
+  const neighbour = async (id: string | null | undefined) => {
+    if (!id) return null;
+    if (id === taskId) return undefined;
+    const row = await getTask(userId, id);
+    if (!row || row.listId !== task.listId || row.parentId !== task.parentId) return undefined;
+    return row;
+  };
+  const [after, before] = await Promise.all([neighbour(move.afterId), neighbour(move.beforeId)]);
+  if (after === undefined || before === undefined) return null;
+
+  const set: Partial<typeof tasks.$inferInsert> = {};
+  if (move.sectionId !== undefined) {
+    if (move.sectionId !== null) {
+      if (task.parentId) return null;
+      const section = await getSection(userId, move.sectionId);
+      if (!section || section.listId !== task.listId) return null;
+    }
+    set.sectionId = move.sectionId;
+  }
+
+  if (after && before && after.position >= before.position) {
+    // The two neighbours are tied or out of order (should not happen): put it after the first.
+    set.position = positionAtEnd(after.position);
+  } else {
+    set.position = positionBetween(after?.position ?? null, before?.position ?? null);
+  }
+
+  const [row] = await db.update(tasks).set(set).where(activeTask(userId, taskId)).returning();
+  return row ?? null;
 }
 
 /** Moves a task and its subtasks to Trash (soft delete), all with the same timestamp. */

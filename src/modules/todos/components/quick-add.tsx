@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createTaskAction } from "../actions/tasks";
+import { QUICK_ADD_EVENT } from "./quick-add-button";
 import { run } from "./run-action";
 import { useTodos } from "./todos-provider";
 
@@ -54,8 +55,13 @@ export function QuickAdd() {
       event.preventDefault();
       setOpen(true);
     }
+    const openFromButton = () => setOpen(true);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener(QUICK_ADD_EVENT, openFromButton);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener(QUICK_ADD_EVENT, openFromButton);
+    };
   }, []);
 
   return (

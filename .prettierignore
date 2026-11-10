@@ -5,3 +5,5 @@ src/server/db/migrations
 playwright-report
 test-results
 coverage
+.next-e2e
+tests/e2e/.auth

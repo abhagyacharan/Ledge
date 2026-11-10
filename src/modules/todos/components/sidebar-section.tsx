@@ -19,6 +19,15 @@ import { useTodos } from "./todos-provider";
 
 /** The "Lists" group in the sidebar, with a button to create a list. */
 export function TodoSidebarSection() {
+  return (
+    <>
+      <ListsGroup />
+      <TagsGroup />
+    </>
+  );
+}
+
+function ListsGroup() {
   const { lists } = useTodos();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -63,6 +72,47 @@ export function TodoSidebarSection() {
         </SidebarMenu>
       </SidebarGroupContent>
       <ListFormDialog open={creating} onOpenChange={setCreating} />
+    </SidebarGroup>
+  );
+}
+
+/** The "Tags" group in the sidebar: each tag opens the Tag view. */
+function TagsGroup() {
+  const { tags } = useTodos();
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+  if (tags.length === 0) return null;
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Tags</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {tags.map((tag) => {
+            const href = `/tags/${tag.id}`;
+            const active = pathname === href;
+            return (
+              <SidebarMenuItem key={tag.id}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={active}
+                  className="h-11 md:h-8"
+                  onClick={() => isMobile && setOpenMobile(false)}
+                >
+                  <Link href={href} aria-current={active ? "page" : undefined}>
+                    <span
+                      aria-hidden
+                      className="size-2.5 shrink-0 rounded-full bg-muted-foreground/50"
+                      style={tag.color ? { backgroundColor: tag.color } : undefined}
+                    />
+                    <span>{tag.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
     </SidebarGroup>
   );
 }

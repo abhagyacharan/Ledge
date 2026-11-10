@@ -2,12 +2,13 @@
 
 import { AlertCircle, CalendarDays, Check, Flag, ListChecks } from "lucide-react";
 import Link from "next/link";
-import { useTransition } from "react";
+import { useTransition, type CSSProperties, type ReactNode, type Ref } from "react";
 import { formatDue, isOverdue } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
 import { setTaskDoneAction } from "../actions/tasks";
 import { run } from "./run-action";
+import { useTaskLinks } from "./use-task-links";
 import { PRIORITY_LABELS, type DateContext, type TagsById } from "./types";
 
 const PRIORITY_STYLE = [
@@ -100,26 +101,55 @@ export function TagChip({ name, color }: { name: string; color: string | null })
   );
 }
 
+export type RowContext = {
+  listName: string;
+  listIcon: string | null;
+  /** Set when the row is a subtask shown outside its parent. */
+  parentTitle: string | null;
+};
+
 export function TaskRow({
   task,
   subtasks,
   tagsById,
   ctx,
+  context,
+  handle,
+  liRef,
+  liStyle,
+  dragging = false,
 }: {
   task: TaskRowData;
   subtasks: TaskRowData[];
   tagsById: TagsById;
   ctx: DateContext;
+  /** Where the task lives; shown in views that mix lists (Today, All, ...). */
+  context?: RowContext;
+  /** Drag handle, shown before the checkbox when the row can be reordered. */
+  handle?: ReactNode;
+  /** Used by the sortable list to position the row while it is dragged. */
+  liRef?: Ref<HTMLLIElement>;
+  liStyle?: CSSProperties;
+  dragging?: boolean;
 }) {
   const done = task.status === "done";
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
   const tagList = task.tagIds.map((id) => tagsById[id]).filter(Boolean);
+  const { hrefFor } = useTaskLinks();
 
   return (
-    <li className="group flex items-start gap-1 border-b py-1 last:border-b-0">
+    <li
+      ref={liRef}
+      style={liStyle}
+      className={cn(
+        "group flex items-start gap-1 border-b bg-background py-1 last:border-b-0",
+        dragging && "relative z-10 rounded-md border shadow-md",
+      )}
+    >
+      {handle}
       <TaskCheckbox taskId={task.id} title={task.title} done={done} />
       <Link
-        href={`?task=${task.id}`}
+        href={hrefFor(task.id)}
         scroll={false}
         className="min-w-0 flex-1 rounded-md py-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:py-1"
       >
@@ -151,6 +181,15 @@ export function TaskRow({
           {tagList.map((t) => (
             <TagChip key={t.id} name={t.name} color={t.color} />
           ))}
+          {context ? (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              {context.listIcon ? <span aria-hidden>{context.listIcon}</span> : null}
+              <span>
+                {context.parentTitle ? `Subtask of ${context.parentTitle} in ` : "In "}
+                {context.listName}
+              </span>
+            </span>
+          ) : null}
         </span>
       </Link>
     </li>

@@ -37,3 +37,8 @@ Thumbs.db
 
 # misc
 .vercel
+
+# end-to-end test output
+.next-e2e/
+tests/e2e/.auth/
+.vitest/

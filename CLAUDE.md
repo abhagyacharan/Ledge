@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Current phase          | **Phase 4: Views (P0)** (Phases 0 to 3 done)                                                                                                                                                                                                                                                                                                                                                                   |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Last verified test run | 2026-11-10: `typecheck`, `lint`, `test` all pass (179 tests, real database). Browser-checked on the seeded demo account: list and Inbox screens, quick add, inline add, detail drawer (notes autosave, due date, subtasks), new list, list to Trash, settings, phone width. Not checked: light theme visually, `secure` cookie over real HTTPS, Playwright e2e (none yet), keyboard-only run-through (Phase 6) |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                           |
-| Enabled modules        | todos (auth shell and placeholder views only)                                                                                                                                                                                                                                                                                                                                                                  |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-10                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Current phase          | **Phase 5: Safety (P0)** (Phases 0 to 4 done)                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                            |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Last verified test run | 2026-11-10: `typecheck`, `lint`, `format:check` clean; `pnpm test` 237 tests pass in about 15 s (real database); `pnpm test:e2e` 5 Playwright tests pass in Chrome (sign-in setup, Today, Upcoming, keyboard drag-reorder with reload, list remembers its sort). Browser-checked Today, All with grouping, Completed, not-found. Not checked: light theme visually, `secure` cookie over real HTTPS, phone-width drag, keyboard-only run-through (Phase 6) |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Enabled modules        | todos (lists, tasks, views)                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ---
 
@@ -77,7 +77,7 @@ Park any new idea in `docs/ideas.md` instead of building it.
 
 Next.js and Better Auth APIs change between versions. **Verify against current docs before writing code.**
 
-**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, date-fns 4.4.0, fractional-indexing 4.0.0, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
+**Versions in use** (recorded 2026-11-10; update on any major bump): Node 26.2.0, pnpm 12.18.0, Next.js 16.4.5, React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.5, shadcn CLI 4.23.0 (style `radix-nova`, Radix primitives, `cn` package for class merging), Better Auth 1.7.18, Drizzle ORM 0.45.4 + drizzle-kit 0.31.11, `pg` 8.23.1, Zod 4.6.7, date-fns 4.4.0, fractional-indexing 4.0.0, dnd-kit core 6.3.1 + sortable 10.0.0, Vitest 5.1.0, Playwright 1.65.0, PostgreSQL 18.
 
 **Next.js 16 notes** (verified in `node_modules/next/dist/docs/`; `AGENTS.md` says to read them before writing Next code): `middleware` is now `proxy` (`src/proxy.ts`); `LayoutProps<"/">` types come from `next typegen`, which `pnpm typecheck` runs first; Cache Components is off (see `docs/decisions.md`).
 
@@ -104,7 +104,7 @@ src/
     api/health, api/export  # health check, JSON/CSV export
   modules/
     auth/                   # sign-in/up forms, Zod schemas (client side of auth)
-    todos/                  # components/ (list screen, task row, drawer, quick add), actions/ (server actions), schema.ts (Zod)
+    todos/                  # components/ (list screen, views, task row, drawer, quick add, drag board), actions/ (server actions), schema.ts (Zod), view-logic.ts, day-views.ts, view-settings.ts (pure, tested)
     expenses/               # placeholder (§7)
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
@@ -122,7 +122,7 @@ src/
   lib/                      # shared utils: dates.ts (floating dates), ordering.ts (fractional index), result.ts, utils.ts
 docs/ decisions.md  ideas.md
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
-tests/ e2e/  integration/  helpers/  setup/  stubs/
+tests/ e2e/  integration/  helpers/ (fast-users.ts, users.ts)  setup/  stubs/
 ```
 
 **Module registry:** every feature module registers itself in `src/config/modules.ts` (id, label, icon, route, enabled). The sidebar renders from this registry. Adding a module later should not require touching the shell.
@@ -283,7 +283,7 @@ pnpm typecheck         # next typegen && tsc --noEmit
 pnpm lint
 pnpm format            # prettier --write . (format:check to verify)
 pnpm test              # vitest (needs the dev DB: pnpm db:up)
-pnpm test:e2e          # playwright (no tests yet; run `pnpm exec playwright install` once)
+pnpm test:e2e          # playwright: own DB (ledge_e2e) and server on port 3100, uses installed Chrome; needs `pnpm db:up`
 pnpm db:up             # start Postgres on 127.0.0.1:5433 (compose + dev override)
 pnpm db:generate       # drizzle-kit generate migration
 pnpm db:migrate        # apply migrations
@@ -361,7 +361,7 @@ This is the canonical plan. It expands the original suggested build order into p
 | 1   | Auth                            | `[x]` done 2026-11-10 |
 | 2   | Data model                      | `[x]` done 2026-11-10 |
 | 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10 |
-| 4   | Views (P0)                      | `[ ]`                 |
+| 4   | Views (P0)                      | `[x]` done 2026-11-10 |
 | 5   | Safety (P0)                     | `[ ]`                 |
 | 6   | Polish                          | `[ ]`                 |
 | 7   | Deploy and backup               | `[ ]`                 |
@@ -435,12 +435,12 @@ Exit: all P0 items under "Capture", "Task fields and detail", "Lists, sections, 
 
 Goal: every view in §6.2 renders correctly.
 
-- [ ] Inbox, Today (overdue block, then today, by time then priority), Upcoming (next 14 days by day, undated excluded), All, Completed (grouped by completion day)
-- [ ] List view and Tag view
-- [ ] Sort (manual, due date, priority, created), group by (none, due date, priority, tag), filters; stored per list in `lists.view_settings`
-- [ ] Drag-and-drop manual ordering with fractional index and dnd-kit keyboard sensor
-- [ ] Empty, loading (skeleton) and error state for each view
-- [ ] E2E: create a list and drag-reorder; Today view shows overdue and today correctly
+- [x] Inbox, Today (overdue block, then today, by time then priority), Upcoming (next 14 days by day, undated excluded), All, Completed (grouped by completion day) (2026-11-10)
+- [x] List view and Tag view (2026-11-10)
+- [x] Sort (manual, due date, priority, created), group by (none, due date, priority, tag), filters; stored per list in `lists.view_settings` (2026-11-10)
+- [x] Drag-and-drop manual ordering with fractional index and dnd-kit keyboard sensor (2026-11-10)
+- [x] Empty, loading (skeleton) and error state for each view (2026-11-10)
+- [x] E2E: create a list and drag-reorder; Today view shows overdue and today correctly (2026-11-10)
 
 Exit: every P0 view is correct against the seed data; reorder survives reload.
 
@@ -591,14 +591,15 @@ When any of these happens, update the listed places before finishing the task.
 
 ## 18. Change log for this file
 
-| Date       | Change                                                                                                                                                                                                                                         | Why                                                                   |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 2026-11-10 | Initial CLAUDE.md added to the repo. Added status snapshot, working-agreement items 11 and 12, "Versions in use", skeleton note in §4, §14 expanded into phases with exit criteria, §16 answer format, §17 self-maintenance protocol, this log | Make the plan trackable and keep the file true as the project changes |
-| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub)                                                                                                                                                        | Phase 0 first deliverable                                             |
-| 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                              | Phase 0 deliverable                                                   |
-| 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo             |
-| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                 |
-| 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind       |
-| 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                               | Data model built and verified; keep this file equal to the repo       |
-| 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                             | O asked for it                                                        |
-| 2026-11-10 | Phase 3 completed. Status snapshot, §3 versions (date-fns), §4 layout, §14 ticks updated; decisions logged                                                                                                                                     | Lists, sections, tags, tasks, drawer and quick add built and verified |
+| Date       | Change                                                                                                                                                                                                                                         | Why                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2026-11-10 | Initial CLAUDE.md added to the repo. Added status snapshot, working-agreement items 11 and 12, "Versions in use", skeleton note in §4, §14 expanded into phases with exit criteria, §16 answer format, §17 self-maintenance protocol, this log | Make the plan trackable and keep the file true as the project changes                           |
+| 2026-11-10 | Repo skeleton created (folders per §4, docs, `.env.example`, `.gitignore`, README stub)                                                                                                                                                        | Phase 0 first deliverable                                                                       |
+| 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                              | Phase 0 deliverable                                                                             |
+| 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo                                       |
+| 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                                           |
+| 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind                                 |
+| 2026-11-10 | Phase 2 completed. Status snapshot, §3 versions, §4 layout (data layer, user-defaults, seed), §10 `db:seed`, §14 ticks updated; decisions logged                                                                                               | Data model built and verified; keep this file equal to the repo                                 |
+| 2026-11-10 | §9: commit messages carry no `Co-Authored-By` or attribution lines                                                                                                                                                                             | O asked for it                                                                                  |
+| 2026-11-10 | Phase 3 completed. Status snapshot, §3 versions (date-fns), §4 layout, §14 ticks updated; decisions logged                                                                                                                                     | Lists, sections, tags, tasks, drawer and quick add built and verified                           |
+| 2026-11-10 | Phase 4 completed. Status snapshot, §3 versions (dnd-kit), §4 layout, §10 `test:e2e`, §14 ticks updated; decisions logged. Test speed-up recorded (fast user fixtures, shared worker)                                                          | Views, saved view settings, drag and drop and the first Playwright tests are built and verified |

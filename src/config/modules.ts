@@ -1,4 +1,13 @@
-import { CalendarDays, Inbox, ListChecks, Sun, Wallet, type LucideIcon } from "lucide-react";
+import {
+  CalendarDays,
+  CircleCheckBig,
+  Inbox,
+  ListChecks,
+  ListTodo,
+  Sun,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import type { ComponentType } from "react";
 import { QuickAdd } from "@/modules/todos/components/quick-add";
 import { TodoSidebarSection } from "@/modules/todos/components/sidebar-section";
@@ -44,6 +53,8 @@ export const modules: AppModule[] = [
       { label: "Inbox", route: "/inbox", icon: Inbox },
       { label: "Today", route: "/today", icon: Sun },
       { label: "Upcoming", route: "/upcoming", icon: CalendarDays },
+      { label: "All tasks", route: "/all", icon: ListTodo },
+      { label: "Completed", route: "/completed", icon: CircleCheckBig },
     ],
     SidebarSection: TodoSidebarSection,
     Global: QuickAdd,

@@ -42,6 +42,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Docker / Docker Compose.** A tool for running programs in containers, and a file format for describing which containers to run together.
 
+**Drag handle.** The grip (six dots) on the left of a task. You grab it to move the task, with a mouse, a finger or the keyboard.
+
 **Drizzle.** The translator that lets the app read and write the database safely in code.
 
 **End-to-end test (e2e).** A robot that uses a real browser and clicks through the app the way a person would.
@@ -49,6 +51,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Environment variable.** A setting kept outside the code (for example a secret or an address), so the same code can run in different places. Stored in the `.env` file.
 
 **ESLint.** A tool that scans code for risky or sloppy patterns.
+
+**Filter.** Hiding tasks that do not match your choice, for example only tasks with the tag "bills".
 
 **Floating date and time.** A date or time stored without a time zone, read in the owner's time zone. Avoids daylight-saving mistakes.
 
@@ -61,6 +65,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Git / GitHub.** Git remembers every version of the project. GitHub is a website that stores a copy online.
 
 **Goal.** In Ledge, a list that has a target date. The list heading shows how many days are left.
+
+**Group by.** Splitting a list into headed blocks, for example by priority or by due date.
 
 **Hashing.** Scrambling a password in a one-way process so that the original cannot be recovered from the stored result.
 
@@ -128,7 +134,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **shadcn/ui.** A collection of ready-made interface parts (buttons, menus, and so on) that can be restyled.
 
+**Skeleton (loading).** Grey placeholder bars shown while a page loads, shaped like the real content so nothing jumps.
+
 **Soft delete.** Marking something as deleted without erasing it, so it can be restored from Trash.
+
+**Sort.** Choosing the order tasks are shown in: your own manual order, due date, priority or newest first.
 
 **Strict mode (TypeScript).** The most careful setting of TypeScript's mistake-catching.
 
@@ -160,6 +170,10 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Validation.** Checking that information is acceptable (for example, that an email looks like an email) before using it.
 
+**View.** One way of looking at your tasks, such as Today, Upcoming, All tasks, Completed, a list or a tag. Also the name of the button that opens the sort, group and filter panel.
+
 **Vitest.** The tool that runs the small automatic tests.
+
+**Worker (tests).** A background process that runs tests. Reusing one worker for all test files saves start-up time.
 
 **Zod.** The tool that does validation, with the same rules used in the browser and on the server.

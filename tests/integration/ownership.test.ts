@@ -11,7 +11,7 @@ import {
 import { db } from "@/server/db/client";
 import { lists, tasks } from "@/server/db/schema";
 import { dbError, makeList, makeTask, PG } from "../helpers/data";
-import { createTestUser, resetAuthData, type TestUser } from "../helpers/users";
+import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
 /**
  * CLAUDE.md §5: user B cannot read, update or delete user A's lists or tasks.
@@ -26,8 +26,8 @@ let aTask: Awaited<ReturnType<typeof makeTask>>;
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
   await resetAuthData();
-  a = await createTestUser("a@example.com", "A");
-  b = await createTestUser("b@example.com", "B");
+  a = await createUser("a@example.com", "A");
+  b = await createUser("b@example.com", "B");
   aList = await makeList(a.id, "A's list");
   aTask = await makeTask(a.id, aList.id, "A's task");
 });
