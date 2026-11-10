@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# build and test output
+build/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# secrets (never commit; .env.example is the committed template)
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# local data and backups
+/backups/
+*.sql.gz
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# misc
+.vercel
