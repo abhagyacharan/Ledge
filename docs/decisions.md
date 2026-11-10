@@ -82,3 +82,8 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 
 - Trash auto-purge mechanism: scheduled job vs on-load cleanup (Phase 5).
 - Behind Cloudflare Tunnel, set Better Auth's `advanced.ipAddress.ipAddressHeaders` (for example `cf-connecting-ip`) so rate limits see real client IPs (Phase 7).
+
+## 2026-11-10: Plain-English documentation folder
+
+- **Decision:** `docs/plain-english/` holds a layman write-up per phase plus a glossary. It is updated in the same change as anything it describes (CLAUDE.md §2 item 13, §15, §17.2).
+- **Reason:** O wants to understand what is being built without technical language, and the write-ups must never fall behind the project.

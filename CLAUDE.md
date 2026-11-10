@@ -52,6 +52,7 @@ Park any new idea in `docs/ideas.md` instead of building it.
 10. Never commit secrets. `.env` is gitignored; `.env.example` is committed and kept current.
 11. **Keep this file true.** When something important to the project changes, update this file in the same change, following §17. Report what you changed in it when you finish.
 12. Work phase by phase (§14). Do not start phase N+1 until phase N's exit criteria are met, except where §14 says otherwise.
+13. **Keep the plain-English docs in step.** `docs/plain-english/` explains the project to a non-programmer, phase by phase, plus a glossary. Whenever you finish a phase or change anything those write-ups describe (a feature, a decision, a limit, a command, a setting), update the matching file in the same change. Write in short sentences and everyday words, explain each technical term the first time, say why as well as what, leave no detail out, and be honest about what is unfinished or unchecked. Rules and status table: `docs/plain-english/README.md`.
 
 ---
 
@@ -118,6 +119,7 @@ src/
     modules.ts              # module registry (nav items, routes, icons)
   lib/                      # shared utils (dates, ids, money)
 docs/ decisions.md  ideas.md
+  plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
 tests/ e2e/  integration/  helpers/  setup/  stubs/
 ```
 
@@ -518,6 +520,7 @@ Exit: scaffolding in place; nothing else built. When O supplies the spec, add a 
 - `typecheck`, `lint`, and `test` pass.
 - README or `docs/decisions.md` updated if behavior or setup changed.
 - This file updated if anything in the §17 trigger table applies.
+- `docs/plain-english/` updated for what changed (§2 item 13), in simple language, with nothing left out.
 
 ---
 
@@ -542,26 +545,28 @@ This file is the project's source of truth for future sessions. Claude updates i
 
 When any of these happens, update the listed places before finishing the task.
 
-| Event                                                                            | Update                                                                                                                                                              |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A deliverable is finished, or a phase starts or ends                             | Tick the box in §14, update the phase table and the status snapshot (date, current phase)                                                                           |
-| A test run is made at the end of a task                                          | Status snapshot: "Last verified test run" (date and result)                                                                                                         |
-| A decision is made or changed (library, pattern, convention, behaviour)          | Append to `docs/decisions.md`; fix any section here that it contradicts                                                                                             |
-| The stack changes or a major version is bumped                                   | §3 table and "Versions in use"; `docs/decisions.md` (needs O's OK, §17.3)                                                                                           |
-| A script is added, renamed or removed                                            | §10 (keep equal to `package.json`)                                                                                                                                  |
-| An env var is added, renamed or removed                                          | §11, `.env.example`, README                                                                                                                                         |
-| A folder or file layout in §4 changes, or a module is added                      | §4 (and the module registry note)                                                                                                                                   |
-| A module is enabled or disabled                                                  | Status snapshot "Enabled modules"; §7 if it is expenses                                                                                                             |
-| An open question in §16 is answered                                              | Mark it `ANSWERED` with date; propagate (for example the expense spec becomes `docs/expenses-spec.md` plus a new phase in §14; the hostname goes to §12 and README) |
-| O corrects Claude's behaviour or states a lasting preference                     | Add it as a rule in §2 or §9, with the reason if known                                                                                                              |
-| A rule here turns out wrong, impossible or outdated (for example an API changed) | Fix the rule; record why in `docs/decisions.md`                                                                                                                     |
-| The stop line triggers, or a priority changes (P1 dropped, P2 pulled in)         | Status snapshot and §14                                                                                                                                             |
-| Scope would change (new feature, new non-goal)                                   | Do not build it. Put the idea in `docs/ideas.md`; change §1 or §6 only with O's OK                                                                                  |
-| Deployment facts become known (host, tunnel, backup location)                    | §12 and README                                                                                                                                                      |
+| Event                                                                                                                 | Update                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A deliverable is finished, or a phase starts or ends                                                                  | Tick the box in §14, update the phase table and the status snapshot (date, current phase)                                                                           |
+| A test run is made at the end of a task                                                                               | Status snapshot: "Last verified test run" (date and result)                                                                                                         |
+| A decision is made or changed (library, pattern, convention, behaviour)                                               | Append to `docs/decisions.md`; fix any section here that it contradicts                                                                                             |
+| The stack changes or a major version is bumped                                                                        | §3 table and "Versions in use"; `docs/decisions.md` (needs O's OK, §17.3)                                                                                           |
+| A script is added, renamed or removed                                                                                 | §10 (keep equal to `package.json`)                                                                                                                                  |
+| An env var is added, renamed or removed                                                                               | §11, `.env.example`, README                                                                                                                                         |
+| A folder or file layout in §4 changes, or a module is added                                                           | §4 (and the module registry note)                                                                                                                                   |
+| A module is enabled or disabled                                                                                       | Status snapshot "Enabled modules"; §7 if it is expenses                                                                                                             |
+| An open question in §16 is answered                                                                                   | Mark it `ANSWERED` with date; propagate (for example the expense spec becomes `docs/expenses-spec.md` plus a new phase in §14; the hostname goes to §12 and README) |
+| O corrects Claude's behaviour or states a lasting preference                                                          | Add it as a rule in §2 or §9, with the reason if known                                                                                                              |
+| A rule here turns out wrong, impossible or outdated (for example an API changed)                                      | Fix the rule; record why in `docs/decisions.md`                                                                                                                     |
+| The stop line triggers, or a priority changes (P1 dropped, P2 pulled in)                                              | Status snapshot and §14                                                                                                                                             |
+| Scope would change (new feature, new non-goal)                                                                        | Do not build it. Put the idea in `docs/ideas.md`; change §1 or §6 only with O's OK                                                                                  |
+| Deployment facts become known (host, tunnel, backup location)                                                         | §12 and README                                                                                                                                                      |
+| A phase is finished, or anything changes that a phase write-up describes (feature, decision, limit, command, setting) | The matching `docs/plain-english/phase-N-*.md` (create it when the phase ends), the status table in `docs/plain-english/README.md`; follow the writing rules there  |
+| A technical term appears that a beginner would not know                                                               | `docs/plain-english/glossary.md`                                                                                                                                    |
 
 ### 17.3 Who may change what
 
-- **Claude may edit freely** (facts and status): the status snapshot, §14 checkboxes and phase table, §3 "Versions in use", §4 layout, §10 commands, §11 env vars, §16 answered markers, §18 changelog.
+- **Claude may edit freely** (facts and status): the status snapshot, §14 checkboxes and phase table, §3 "Versions in use", §4 layout, §10 commands, §11 env vars, §16 answered markers, §18 changelog, and everything under `docs/plain-english/` (the plain-English write-ups and glossary).
 - **Claude must get O's explicit OK first** (propose the exact change in chat): §1 scope and non-goals, §3 stack choices, §5 auth rules, §6 spec and priorities, §8 UX principles, §12 security checklist, the order or scope of phases in §14, the stop line, and this §17. Never silently delete or weaken a P0 item or a security rule.
 - A change O dictates in chat counts as OK. Record it as a decision.
 
@@ -591,3 +596,4 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-10 | Git repo initialised on `main`; first commit made                                                                                                                                                                                              | Phase 0 deliverable                                                   |
 | 2026-11-10 | Phases 0 and 1 completed. Status snapshot, §3 versions and Next 16 notes, §4 layout, §10 commands, §11 extra env vars, §14 ticks updated; decisions logged in `docs/decisions.md`                                                              | Scaffold and auth built; keep this file equal to the repo             |
 | 2026-11-10 | Ownership test split: scaffold in Phase 1, list and task assertions in Phases 2 and 3                                                                                                                                                          | The tables do not exist until Phase 2                                 |
+| 2026-11-10 | Added `docs/plain-english/` (layman write-up per phase + glossary) and the rule that it is updated with every project change: new working-agreement item 13, §4 layout, §15 done-checklist, two §17.2 triggers, §17.3 free-edit list           | O asked for non-technical documentation that never falls behind       |

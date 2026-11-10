@@ -4,6 +4,8 @@ A self-hosted personal life-management app: auth, a to-do/task manager, and (lat
 
 **Status:** Phases 0 (scaffold) and 1 (auth) are done; the app currently has sign-up, sign-in, sign-out and an empty app shell. See [CLAUDE.md](CLAUDE.md) for the spec, phases and current status, and [docs/decisions.md](docs/decisions.md) for decisions.
 
+New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
+
 This README is kept accurate as phases land. Sections marked _TBD_ are filled in by the phase named.
 
 ## Setup
