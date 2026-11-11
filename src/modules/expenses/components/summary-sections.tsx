@@ -319,8 +319,8 @@ function niceCeiling(peakMinor: number): number {
 }
 
 /**
- * One bar per month, made of two bars stacked in it (as in the design): money in (solid, bottom)
- * and money out, EMIs plus expenses (orange hatch, on top). The bar grows and shrinks with both.
+ * One bar per month, made of two rounded bars stacked in it with a small gap (as in the design):
+ * money in (solid, bottom) and money out, EMIs plus expenses (orange hatch, on top). The bar grows and shrinks with both.
  * A picture of the details table, so it is hidden from screen readers; the table has the numbers.
  */
 export function CashFlowChart({
@@ -372,11 +372,18 @@ export function CashFlowChart({
                   )}
                 >
                   <div
-                    className="flex w-full max-w-5 flex-col-reverse overflow-hidden rounded-t-md"
+                    className="flex w-full max-w-[22px] flex-col-reverse gap-0.5"
                     style={{ height: `${((m.income + m.emi + m.expense) / top) * 100}%` }}
                   >
-                    <div className="bg-dash-ink" style={{ flexGrow: m.income }} />
-                    <div className="dash-hatch" style={{ flexGrow: m.emi + m.expense }} />
+                    {m.income > 0 ? (
+                      <div className="rounded-md bg-dash-ink" style={{ flexGrow: m.income }} />
+                    ) : null}
+                    {m.emi + m.expense > 0 ? (
+                      <div
+                        className="dash-hatch rounded-md"
+                        style={{ flexGrow: m.emi + m.expense }}
+                      />
+                    ) : null}
                   </div>
                 </div>
               ))}

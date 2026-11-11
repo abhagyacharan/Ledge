@@ -64,19 +64,17 @@ Four blocks, two rows, on a 12-column grid at desktop width (`xl`), one column o
 
 ```
 +------------------------+--------------------------------------+
-| 1. Four stat tiles     | 2. Expense breakdown                 |
-|    Income | EMIs       |    (table with share bars)           |
+| 1. Four stat tiles     | 2. Annual cash flow (bar chart only) |
+|    Income | EMIs       |    one stacked bar per month         |
 |    Expenses | Savings* |                                      |
-+-----------------+------+--------------------------------------+
-| 3. Annual cash  | 4. Annual cash flow details (table,         |
-|    flow (one    |    January to December + full year)         |
-|    stacked bar  |                                             |
-|    per month)   |                                             |
-+-----------------+---------------------------------------------+
++------------------------+--------------------------------------+
+| 3. Expense breakdown   | 4. Annual cash flow details (table,  |
+|    (table, share bars) |    January to December + full year)  |
++------------------------+--------------------------------------+
   * Savings is the highlighted orange tile
 ```
 
-Columns (of 12): tiles 5 and breakdown 7 on the first row; chart 4 and details table 8 on the second, so the table gets the room it needs. The chart stretches to the height of its row. The period picker and the tab bar stay above, unchanged.
+Columns (of 12): tiles 5 and chart 7 on the first row; breakdown 5 and details table 7 on the second. The chart stretches to the height of its row. This arrangement was tried the other way round (chart narrow, table wide) and O preferred this one. The period picker and the tab bar stay above, unchanged.
 
 The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and delayed lines), **Living expenses**, **Net savings** (highlighted; it also carries the savings rate, how much was invested and what is left after investing, so nothing from the old tiles is lost). Each tile shows a delta pill against the previous month (not shown in "Whole year" view, where there is nothing fair to compare to).
 

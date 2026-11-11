@@ -369,6 +369,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** On the Summary, the expense breakdown and the cash flow chart swapped places: row one is the tiles (5 of 12 columns) and the breakdown (7); row two is the chart (4, narrower) and the details table (8, wider). The chart is now one bar per month with money in (solid) and money out (orange hatch) stacked inside it, as in the screenshot, instead of two side-by-side bars, and it stretches to the height of its row.
 - **Reason:** O's request after seeing the first version.
 
+## 2026-11-11: Summary layout reverted, chart kept
+
+- **Decision:** O found the swapped layout worse, so the blocks are back where they were (tiles and chart on top, breakdown and details table below, columns 5 and 7). The stacked-bar chart stays, with fully rounded segment corners, a 2px gap between the money-in and money-out segments, and bars up to 22px wide (2px wider).
+- **Reason:** O's request.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.
