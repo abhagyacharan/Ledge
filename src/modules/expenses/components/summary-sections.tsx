@@ -47,8 +47,9 @@ export function SummaryStats({
   const overspent = totals.netSavings < 0;
   const delta = (current: number, before: number | undefined) =>
     previous === null || before === undefined ? null : changePercent(current, before);
+  // The gap between tiles equals the card padding (p-5, md:p-6), so the spacing is even all round.
   return (
-    <dl className="grid flex-1 grid-cols-1 gap-3 min-[420px]:grid-cols-2 min-[420px]:grid-rows-2">
+    <dl className="grid flex-1 grid-cols-1 gap-5 min-[420px]:grid-cols-2 min-[420px]:grid-rows-2 md:gap-6">
       <StatTile label="Total inflows" value={money(totals.income, fmt)} icon={Wallet}>
         <DeltaPill
           change={delta(totals.income, previous?.income)}
