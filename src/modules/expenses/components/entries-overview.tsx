@@ -24,7 +24,8 @@ const VERBS: Record<EntryKind, string> = {
   investment: "Invested",
 };
 
-const card = "min-w-0 rounded-3xl border border-dash-edge bg-dash-card p-5 text-dash-ink md:p-6";
+const card =
+  "min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 sm:p-5 md:rounded-3xl text-dash-ink md:p-6";
 
 /**
  * The top card of an entries tab: the period's total as the one big number, how many entries

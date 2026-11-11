@@ -1,6 +1,16 @@
 "use client";
 
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChartPie,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Landmark,
+  ReceiptIndianRupee,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -20,11 +30,11 @@ import {
 import { usePending } from "./pending";
 
 const TABS = [
-  { label: "Summary", route: "/expenses" },
-  { label: KIND_LABELS.income.tab, route: KIND_ROUTES.income },
-  { label: KIND_LABELS.emi.tab, route: KIND_ROUTES.emi },
-  { label: KIND_LABELS.expense.tab, route: KIND_ROUTES.expense },
-  { label: KIND_LABELS.investment.tab, route: KIND_ROUTES.investment },
+  { label: "Summary", icon: ChartPie, route: "/expenses" },
+  { label: KIND_LABELS.income.tab, icon: Wallet, route: KIND_ROUTES.income },
+  { label: KIND_LABELS.emi.tab, icon: Landmark, route: KIND_ROUTES.emi },
+  { label: KIND_LABELS.expense.tab, icon: ReceiptIndianRupee, route: KIND_ROUTES.expense },
+  { label: KIND_LABELS.investment.tab, icon: TrendingUp, route: KIND_ROUTES.investment },
 ];
 
 /** Keeps only the period in the query string (filters belong to one tab). */
@@ -67,17 +77,17 @@ export function ExpensesTabs() {
       aria-label="Expense sections"
       className="no-scrollbar -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0"
     >
-      <ul className="inline-flex gap-1 rounded-full bg-dash-well p-1">
+      <ul className="flex w-full gap-1 rounded-full bg-dash-well p-1 sm:inline-flex sm:w-auto">
         {TABS.map((tab) => {
           const current = pathname === tab.route;
           return (
-            <li key={tab.route}>
+            <li key={tab.route} className="flex-1 sm:flex-none">
               <Link
                 ref={current ? active : undefined}
                 href={`${tab.route}${query}`}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "relative z-0 flex h-11 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9",
+                  "relative z-0 flex h-11 items-center justify-center rounded-full px-4 text-sm font-medium whitespace-nowrap outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9",
                   current ? "text-dash-ink" : "text-dash-ink-soft hover:text-dash-ink",
                 )}
               >
@@ -89,7 +99,9 @@ export function ExpensesTabs() {
                     className="absolute inset-0 -z-10 rounded-full bg-dash-raised shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
                   />
                 ) : null}
-                {tab.label}
+                {/* Phones show a line icon so all five fit; the name is still read out. */}
+                <tab.icon aria-hidden className="size-[18px] sm:hidden" strokeWidth={1.75} />
+                <span className="max-sm:sr-only">{tab.label}</span>
               </Link>
             </li>
           );
@@ -186,7 +198,7 @@ export function PeriodPicker({ fallback }: { fallback: Period }) {
             sideOffset={8}
             collisionPadding={16}
             aria-label="Choose a period"
-            className="dash z-50 w-[19.5rem] origin-(--radix-popover-content-transform-origin) rounded-3xl border border-dash-edge bg-dash-card p-3 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:duration-100 data-[state=open]:duration-150"
+            className="dash z-50 w-[19.5rem] origin-(--radix-popover-content-transform-origin) rounded-2xl border border-dash-edge bg-dash-card p-3 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:duration-100 data-[state=open]:duration-150"
           >
             <div className="flex items-center justify-between">
               <RoundButton

@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils";
 /**
  * A figure tile (docs/design.md): a grey well with a label, a round icon, a big number and room
  * for a delta pill and extra lines. `highlight` makes it the one orange tile. The parent must be
- * a `<dl>`; the tile is the `<div>` that holds one term and its value. On a phone tiles sit two
- * abreast, so they are tighter and the icon steps aside.
+ * a `<dl>`; the tile is the `<div>` that holds one term and its value.
+ *
+ * On a phone the tiles read as a statement instead (docs/design.md §5d): each is one row, label
+ * on the left and the change pill and figure on the right, all on one centre line, with hairlines
+ * between rows. The highlighted tile becomes a slim orange total row. Extra lines are hidden there.
  */
 export function StatTile({
   label,
@@ -28,16 +31,19 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "relative flex h-full min-w-0 flex-col gap-2.5 rounded-[20px] p-3.5 sm:gap-3 sm:p-4",
+        // Phone: a row.
+        "relative flex min-w-0 items-center justify-between gap-3 py-3.5",
+        // Wider: a tile.
+        "sm:h-full sm:flex-col sm:items-stretch sm:justify-start sm:gap-3 sm:rounded-[20px] sm:p-4",
         highlight
-          ? "bg-gradient-to-br from-dash-accent-from to-dash-accent-to text-white"
-          : "bg-dash-well text-dash-ink",
+          ? "mt-2 rounded-xl bg-gradient-to-br from-dash-accent-from to-dash-accent-to px-3.5 text-white sm:mt-0"
+          : "border-b border-dash-edge text-dash-ink sm:border-0 sm:bg-dash-well",
       )}
     >
       <dt
         className={cn(
-          "text-[13px] sm:pr-11 sm:text-sm",
-          highlight ? "text-white" : "text-dash-ink-soft",
+          "shrink-0 text-sm leading-none sm:pr-11 sm:leading-normal",
+          highlight ? "font-medium text-white" : "text-dash-ink-soft",
         )}
       >
         {label}
@@ -51,12 +57,12 @@ export function StatTile({
       >
         <Icon className="size-4" />
       </span>
-      <dd className="flex flex-col gap-2">
+      <dd className="flex min-w-0 flex-row-reverse items-center gap-2.5 sm:flex-col sm:items-start sm:gap-2">
         <span
           className={cn(
-            "font-display font-semibold tracking-tight whitespace-nowrap tabular-nums",
+            "font-display leading-none font-semibold tracking-tight whitespace-nowrap tabular-nums sm:leading-tight",
             // Long amounts (lakhs) step down a size instead of wrapping onto two lines.
-            value.length > 11 ? "text-base sm:text-xl" : "text-lg sm:text-2xl",
+            value.length > 11 ? "text-base sm:text-xl" : "text-[17px] sm:text-2xl",
           )}
         >
           {figure ?? value}

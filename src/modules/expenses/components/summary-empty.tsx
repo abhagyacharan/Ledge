@@ -8,7 +8,7 @@ import { useLogTransaction } from "./transaction-launcher";
 export function SummaryEmpty({ periodLabel }: { periodLabel: string }) {
   const { open } = useLogTransaction();
   return (
-    <div className="flex flex-col gap-4 rounded-3xl border border-dashed border-dash-edge bg-dash-card p-5 sm:flex-row sm:items-center md:p-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-dash-edge bg-dash-card px-4 py-5 sm:p-5 md:rounded-3xl sm:flex-row sm:items-center md:p-6">
       <span
         aria-hidden
         className="grid size-11 shrink-0 place-items-center rounded-full bg-dash-well text-dash-ink-soft"

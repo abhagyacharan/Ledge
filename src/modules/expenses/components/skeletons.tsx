@@ -15,7 +15,7 @@ function Card({ className, children }: { className?: string; children: ReactNode
     <div
       aria-hidden
       className={cn(
-        "min-w-0 rounded-3xl border border-dash-edge bg-dash-card p-5 md:p-6",
+        "min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 sm:p-5 md:rounded-3xl md:p-6",
         className,
       )}
     >
@@ -106,7 +106,7 @@ export function SummarySkeleton() {
   return (
     <Loading label="Loading summary" className="grid gap-4 xl:grid-cols-12">
       <Card className="xl:col-span-6">
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:gap-6">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-5 md:gap-6">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}

@@ -50,7 +50,7 @@ export function CashFlowChart({
   const shown = hover === null ? null : months.find((m) => m.month === hover);
 
   return (
-    <figure className="flex flex-1 flex-col rounded-[20px] bg-dash-well p-4">
+    <figure className="flex flex-1 flex-col rounded-xl bg-dash-well p-3 sm:rounded-[20px] sm:p-4">
       <div
         aria-hidden
         className="mb-3 flex flex-wrap justify-end gap-x-4 gap-y-1 text-xs text-dash-ink-soft"
@@ -87,7 +87,7 @@ export function CashFlowChart({
               role={interactive ? "group" : undefined}
               aria-label={interactive ? `Months of ${year}: choose one to open it` : undefined}
               aria-hidden={interactive ? undefined : true}
-              className="absolute inset-0 flex items-end gap-2"
+              className="absolute inset-0 flex items-end gap-1 sm:gap-2"
               onPointerLeave={() => setHover(null)}
             >
               {months.map((m) => {
@@ -155,16 +155,20 @@ export function CashFlowChart({
               />
             ) : null}
           </div>
-          <div aria-hidden className="mt-2 flex gap-2">
+          {/* Narrow phones get one letter per month so December never spills out of the card. */}
+          <div aria-hidden className="mt-2 flex gap-1 sm:gap-2">
             {months.map((m) => (
               <span
                 key={m.month}
                 className={cn(
-                  "flex-1 text-center text-[10px] text-dash-ink-soft",
+                  "min-w-0 flex-1 text-center text-[10px] text-dash-ink-soft",
                   selectedMonth === m.month && "font-semibold text-dash-ink",
                 )}
               >
-                {MONTH_NAMES[m.month - 1].slice(0, 3)}
+                <span className="min-[440px]:hidden">{MONTH_NAMES[m.month - 1][0]}</span>
+                <span className="hidden min-[440px]:inline">
+                  {MONTH_NAMES[m.month - 1].slice(0, 3)}
+                </span>
               </span>
             ))}
           </div>

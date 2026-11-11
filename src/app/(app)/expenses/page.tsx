@@ -56,7 +56,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="tiles"
           title={`${periodLabel(period)} at a glance`}
           hideTitle
-          className="flex flex-col xl:col-span-6"
+          className="flex flex-col max-sm:pt-1.5 max-sm:pb-4 xl:col-span-6"
         >
           <SummaryStats totals={totals} previous={previous} emi={emi} fmt={fmt} />
         </DashCard>

@@ -98,6 +98,13 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 - **Log a transaction:** a 56px ink circle bottom right (52px with a mouse), clear of the phone's home bar. It opens a menu above itself (scaling from the button): a small "Log a transaction" label, then Income, Expense, EMI or loan and Investment, each a 40px icon circle with the name and a one-line hint. The plus rotates into a cross while the menu is open. Choosing opens the add sheet for that kind.
 - **Summary chart:** on screens from `md` each month is a button; pointing or keyboard focus shows a dark tooltip (month, in, out, net) above the bar and fades the other months to 35%; clicking opens that month. On phones the chart is a picture only.
 
+## 5d. Phone rules (below `sm`, 640px)
+
+- Cards: 14px radius (`rounded-2xl`), 16px side padding, 20px top and bottom. No grey tiles inside cards on a phone.
+- Summary figures: a statement of rows. Row = label (14px, soft) on the left; change pill then figure (Bricolage 17px) on the right; everything on one centre line; 14px above and below; a hairline under each row. Net savings is the last row as an orange band with 12px corners and 14px side padding. Supporting lines are hidden.
+- Tabs: five equal icon-only cells (Lucide line icons at 18px, stroke 1.75) filling the track; the chosen one is the raised pill.
+- Chart: 12px padding and 12px corners for the well, 4px bar gaps, one-letter month labels below 440px.
+
 ## 6. Accessibility rules that override the screenshot
 
 - Text on the orange tile must pass 4.5 to 1: use the darker gradient above, never the bright `#f26b21` behind text. The bright orange is for fills that carry no text.

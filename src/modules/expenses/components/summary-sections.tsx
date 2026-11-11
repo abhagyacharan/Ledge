@@ -49,9 +49,9 @@ export function SummaryStats({
   const overspent = totals.netSavings < 0;
   const delta = (current: number, before: number | undefined) =>
     previous === null || before === undefined ? null : changePercent(current, before);
-  // The gap between tiles equals the card padding (p-5, md:p-6), so the spacing is even all round.
+  // Phone: one column of rows. Wider: a 2 by 2 grid whose gap equals the card padding.
   return (
-    <dl className="grid flex-1 grid-cols-2 gap-3 sm:grid-rows-2 sm:gap-5 md:gap-6">
+    <dl className="flex flex-1 flex-col sm:grid sm:grid-cols-2 sm:grid-rows-2 sm:gap-5 md:gap-6">
       <StatTile
         label="Total inflows"
         value={money(totals.income, fmt)}
@@ -74,7 +74,7 @@ export function SummaryStats({
       >
         <DeltaPill change={delta(totals.emi, previous?.emi)} goodWhen="down" locale={fmt.locale} />
         {totals.emi > 0 ? (
-          <span className="flex flex-col gap-1 text-xs text-dash-ink-soft">
+          <span className="hidden flex-col gap-1 text-xs text-dash-ink-soft sm:flex">
             <span className="inline-flex items-center gap-1">
               <CheckCircle2 className="size-3.5" aria-hidden />
               {money(emi.paidMinor, fmt)} paid
@@ -122,7 +122,7 @@ export function SummaryStats({
           locale={fmt.locale}
           onAccent
         />
-        <span className="flex flex-col gap-1 text-xs text-white">
+        <span className="hidden flex-col gap-1 text-xs text-white sm:flex">
           {overspent ? (
             <span className="inline-flex items-center gap-1 font-medium">
               <AlertTriangle className="size-3.5" aria-hidden />
@@ -186,7 +186,7 @@ export function BreakdownTable({
 }) {
   return (
     <ScrollRegion label="Expense breakdown by category">
-      <table className="w-full min-w-[22rem] text-sm">
+      <table className="w-full text-sm sm:min-w-[22rem]">
         <caption className="sr-only">Expense breakdown by category for the chosen period</caption>
         <thead>
           <tr>
@@ -196,7 +196,7 @@ export function BreakdownTable({
             <th scope="col" className={cn(th, "text-right")}>
               Period spend
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, "hidden text-right sm:table-cell")}>
               % of total
             </th>
             <th scope="col" className={cn(th, "hidden sm:table-cell")}>
@@ -230,7 +230,9 @@ export function BreakdownTable({
                 </span>
               </th>
               <td className={num}>{amount(row.amountMinor, fmt)}</td>
-              <td className={num}>{formatPercent(row.percent, fmt.locale)}</td>
+              <td className={cn(num, "hidden sm:table-cell")}>
+                {formatPercent(row.percent, fmt.locale)}
+              </td>
               <td className="hidden w-28 px-2.5 py-2.5 sm:table-cell">
                 <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-dash-well">
                   <div
@@ -253,7 +255,9 @@ export function BreakdownTable({
               Total living expenses
             </th>
             <td className={cn(num, "rule-double")}>{amount(total.amountMinor, fmt)}</td>
-            <td className={num}>{total.amountMinor > 0 ? "100.0%" : formatPercent(null)}</td>
+            <td className={cn(num, "hidden sm:table-cell")}>
+              {total.amountMinor > 0 ? "100.0%" : formatPercent(null)}
+            </td>
             <td className="hidden sm:table-cell" />
             <td className={cn(num, "hidden sm:table-cell xl:hidden 2xl:table-cell")}>
               {total.count}

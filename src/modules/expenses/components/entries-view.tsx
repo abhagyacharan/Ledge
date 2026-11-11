@@ -143,7 +143,7 @@ export function EntriesView(props: EntriesViewProps) {
 
       <section
         aria-labelledby="entries-title"
-        className="min-w-0 rounded-3xl border border-dash-edge bg-dash-card p-5 text-dash-ink md:p-6 xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
+        className="min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 sm:p-5 md:rounded-3xl text-dash-ink md:p-6 xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
       >
         <h3 id="entries-title" className="sr-only">
           Entries
@@ -324,7 +324,7 @@ function Toolbar({
         <div
           role="group"
           aria-label="Category"
-          className="dash-fade-x no-scrollbar -mx-5 flex gap-2 overflow-x-auto overscroll-x-contain px-5 md:-mx-6 md:px-6"
+          className="dash-fade-x no-scrollbar -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 sm:-mx-5 sm:px-5 md:-mx-6 md:px-6"
         >
           {[null, ...categories].map((c) => {
             const active = category === c;

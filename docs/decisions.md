@@ -393,6 +393,12 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Summary:** the four tiles sit 2 by 2 on phones too (smaller figures, no icon, no filler lines, the delta pill without its "vs last month" words, which screen readers still hear); figures roll with NumberFlow; the cash-flow chart moved to a client component where each month is a button (tooltip with in, out and net on hover or keyboard focus, the other months fade, a click opens that month); on phones the bars stay a picture because 15px-wide buttons break the 44px tap rule, and the period pill is right above. Bars change height smoothly. The breakdown shows category icons and keeps names on one line (the item count column hides at the in-between `xl` width). The yearly table keeps its month column fixed while it scrolls sideways. The empty month card has one Add income button that opens the sheet.
 - **Reason:** O's requests in chat ("Yes, swap it... ask the user what type of transaction they want to log", and to apply the design to the Summary, the month and year toggle and the tabs).
 
+## 2026-11-11: Phone polish for the expense tracker
+
+- **Decision:** On phones the four Summary figures are a statement, not four boxes: three rows (label left; change pill and figure right; one shared centre line; hairlines between) and Net savings as a slim orange total row (12px corners). The extra lines (paid / to pay, savings rate, invested) show only from `sm` up. Expense cards use a 14px radius and 16px side padding on phones (desktop keeps the earlier radius and padding); menus and the period card use the same 14px. The phone tab bar uses monochrome Lucide line icons (pie chart, wallet, bank, rupee receipt, trend) instead of colour emojis, spread evenly across the full width; names stay readable to screen readers. Below 440px the chart's month labels are single letters and the bar gaps tighten, so December stays inside the card (it overflowed on a 412px Pixel 9).
+- **Why Lucide:** O asked for black-and-white minimal icons, sourced if possible. Lucide is the open-source icon set the whole app already uses, it has exactly these glyphs (including an Indian rupee receipt), and it adds no download or style mismatch.
+- **Reason:** O's feedback after using it on a phone ("looking very cheap", too much padding and rounding, labels off-centre, generic emojis, December out of the chart).
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

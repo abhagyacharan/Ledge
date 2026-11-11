@@ -96,7 +96,7 @@ export function TransactionLauncher({
               if (picked.current) event.preventDefault();
               picked.current = false;
             }}
-            className="dash z-40 w-72 origin-(--radix-dropdown-menu-content-transform-origin) rounded-3xl border border-dash-edge bg-dash-card p-2 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.35)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:duration-200 data-[state=closed]:duration-150"
+            className="dash z-40 w-72 origin-(--radix-dropdown-menu-content-transform-origin) rounded-2xl border border-dash-edge bg-dash-card p-2 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.35)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:duration-200 data-[state=closed]:duration-150"
           >
             <Menu.Label className="px-3 pt-2 pb-1.5 text-xs font-medium text-dash-ink-soft">
               Log a transaction
@@ -108,7 +108,7 @@ export function TransactionLauncher({
                   picked.current = true;
                   open(option.kind);
                 }}
-                className="group flex cursor-pointer items-center gap-3 rounded-2xl px-2 py-2 outline-none select-none transition-colors duration-100 data-[highlighted]:bg-dash-well"
+                className="group flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 outline-none select-none transition-colors duration-100 data-[highlighted]:bg-dash-well"
               >
                 <span
                   aria-hidden
