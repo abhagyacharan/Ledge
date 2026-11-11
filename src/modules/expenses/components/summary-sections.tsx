@@ -357,13 +357,7 @@ export function CashFlowChart({
             ))}
             <div className="absolute inset-0 flex items-end gap-1">
               {months.map((m) => (
-                <div
-                  key={m.month}
-                  className={cn(
-                    "flex h-full flex-1 items-end justify-center rounded-md",
-                    selectedMonth === m.month && "bg-dash-card/70",
-                  )}
-                >
+                <div key={m.month} className="flex h-full flex-1 items-end justify-center">
                   <div
                     className="flex w-full max-w-[22px] flex-col-reverse gap-0.5"
                     style={{ height: `${((m.income + m.emi + m.expense) / top) * 100}%` }}
