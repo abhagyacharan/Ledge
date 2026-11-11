@@ -23,7 +23,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "relative flex min-w-0 flex-col gap-3 rounded-[20px] p-4",
+        "relative flex h-full min-w-0 flex-col gap-3 rounded-[20px] p-4",
         highlight
           ? "bg-gradient-to-br from-dash-accent-from to-dash-accent-to text-white"
           : "bg-dash-well text-dash-ink",

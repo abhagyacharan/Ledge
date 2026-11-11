@@ -240,6 +240,10 @@
       color-mix(in oklab, var(--dash-accent) 38%, var(--dash-well)) 3px 6px
     );
   }
+  /* One flat, light orange: the share bars in the breakdown. */
+  .dash-fill-soft {
+    background-color: color-mix(in oklab, var(--dash-accent) 55%, var(--dash-well));
+  }
   .figures {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;

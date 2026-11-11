@@ -48,7 +48,7 @@ export function SummaryStats({
   const delta = (current: number, before: number | undefined) =>
     previous === null || before === undefined ? null : changePercent(current, before);
   return (
-    <dl className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+    <dl className="grid flex-1 grid-cols-1 gap-3 min-[420px]:grid-cols-2 min-[420px]:grid-rows-2">
       <StatTile label="Total inflows" value={money(totals.income, fmt)} icon={Wallet}>
         <DeltaPill
           change={delta(totals.income, previous?.income)}
@@ -151,6 +151,9 @@ const th =
   "bg-dash-well px-2.5 py-2 text-left text-xs font-medium text-dash-ink-soft first:rounded-l-xl last:rounded-r-xl";
 const num = "figures px-2.5 py-2.5 text-right";
 
+/** Numbers in the narrow details table: a little smaller and tighter so five columns fit half a row. */
+const tnum = "figures px-2 py-2.5 text-right text-xs";
+
 /** Spending by category, with a bar for the share. Categories with no spending stay in the list. */
 export function BreakdownTable({
   rows,
@@ -195,7 +198,7 @@ export function BreakdownTable({
               <td className="hidden w-36 px-2.5 py-2.5 sm:table-cell">
                 <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-dash-well">
                   <div
-                    className="dash-hatch h-full rounded-full"
+                    className="dash-fill-soft h-full rounded-full"
                     style={{ width: `${Math.max(0, Math.min(100, row.percent ?? 0))}%` }}
                   />
                 </div>
@@ -236,27 +239,24 @@ export function TrendTable({
 }) {
   return (
     <ScrollRegion label={`Annual cash flow trend for ${year}`}>
-      <table className="w-full min-w-[31rem] text-sm">
+      <table className="w-full min-w-[26rem] text-sm">
         <caption className="sr-only">Cash flow for each month of {year}</caption>
         <thead>
           <tr>
-            <th scope="col" className={th}>
+            <th scope="col" className={cn(th, "w-20")}>
               Month
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, "px-2 text-right")}>
               Total inflow
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, "px-2 text-right")}>
               EMI & debt
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, "px-2 text-right")}>
               Expenses
             </th>
-            <th scope="col" className={cn(th, "text-right")}>
+            <th scope="col" className={cn(th, "px-2 text-right")}>
               Net savings
-            </th>
-            <th scope="col" className={cn(th, "text-right")}>
-              Savings %
             </th>
           </tr>
         </thead>
@@ -275,17 +275,13 @@ export function TrendTable({
               >
                 <th scope="row" className="px-2.5 py-2.5 text-left font-normal">
                   {MONTH_NAMES[row.month - 1]}
-                  {selected ? (
-                    <span className="ml-2 rounded-full border border-dash-edge bg-dash-card px-2 text-xs">
-                      Selected
-                    </span>
-                  ) : null}
+                  {/* The tint shows the chosen month; this says it in words for screen readers. */}
+                  {selected ? <span className="sr-only"> (selected)</span> : null}
                 </th>
-                <td className={num}>{amount(row.income, fmt)}</td>
-                <td className={num}>{amount(row.emi, fmt)}</td>
-                <td className={num}>{amount(row.expense, fmt)}</td>
-                <td className={num}>{amount(row.netSavings, fmt)}</td>
-                <td className={num}>{formatPercent(row.savingsRate, fmt.locale)}</td>
+                <td className={tnum}>{amount(row.income, fmt)}</td>
+                <td className={tnum}>{amount(row.emi, fmt)}</td>
+                <td className={tnum}>{amount(row.expense, fmt)}</td>
+                <td className={tnum}>{amount(row.netSavings, fmt)}</td>
               </tr>
             );
           })}
@@ -295,13 +291,10 @@ export function TrendTable({
             <th scope="row" className="px-2.5 py-2.5 text-left">
               Full year total
             </th>
-            <td className={cn(num, "rule-double")}>{amount(total.income, fmt)}</td>
-            <td className={cn(num, "rule-double")}>{amount(total.emi, fmt)}</td>
-            <td className={cn(num, "rule-double")}>{amount(total.expense, fmt)}</td>
-            <td className={cn(num, "rule-double")}>{amount(total.netSavings, fmt)}</td>
-            <td className={cn(num, "rule-double")}>
-              {formatPercent(total.savingsRate, fmt.locale)}
-            </td>
+            <td className={cn(tnum, "rule-double")}>{amount(total.income, fmt)}</td>
+            <td className={cn(tnum, "rule-double")}>{amount(total.emi, fmt)}</td>
+            <td className={cn(tnum, "rule-double")}>{amount(total.expense, fmt)}</td>
+            <td className={cn(tnum, "rule-double")}>{amount(total.netSavings, fmt)}</td>
           </tr>
         </tfoot>
       </table>

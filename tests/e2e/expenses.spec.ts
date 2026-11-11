@@ -63,9 +63,10 @@ test("the summary for this month matches the sample sheet", async ({ page }) => 
     name: new RegExp(`Cash flow for each month of ${YEAR}`),
   });
   await expect(trend.getByRole("row")).toHaveCount(1 + 12 + 1);
-  await expect(trend.locator("tr[aria-current=true]")).toContainText("Selected");
+  await expect(trend.locator("tr[aria-current=true]")).toContainText("selected");
   await expect(trend.locator("tr[aria-current=true]")).toContainText("28,000.00");
-  await expect(trend.locator("tr[aria-current=true]")).toContainText("47.4%");
+  await expect(trend.locator("tr[aria-current=true]")).toContainText("13,258.00");
+  await expect(trend.getByRole("columnheader", { name: "Savings %" })).toHaveCount(0);
   await expect(trend.getByRole("row", { name: /Full year total/ })).toBeVisible();
 });
 

@@ -374,6 +374,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** O found the swapped layout worse, so the blocks are back where they were (tiles and chart on top, breakdown and details table below, columns 5 and 7). The stacked-bar chart stays, with fully rounded segment corners, a 2px gap between the money-in and money-out segments, and bars up to 22px wide (2px wider).
 - **Reason:** O's request.
 
+## 2026-11-11: Summary: 50/50 rows and a leaner details table
+
+- **Decision:** Both rows are 50/50 (tiles and chart, breakdown and details table). The four tiles stretch to fill their card in two equal rows. The annual details table lost its Savings % column and its visible "Selected" tag (the chosen month keeps its tint and `aria-current`, plus screen-reader-only text "(selected)"), has a narrower Month column and smaller numbers so five columns fit half a row. The breakdown's share bars are one flat light orange instead of the two-tone hatch (`.dash-fill-soft`). The savings rate is still shown on the orange Net savings tile.
+- **Reason:** O's request.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

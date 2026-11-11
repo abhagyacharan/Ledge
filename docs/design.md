@@ -74,7 +74,7 @@ Four blocks, two rows, on a 12-column grid at desktop width (`xl`), one column o
   * Savings is the highlighted orange tile
 ```
 
-Columns (of 12): tiles 5 and chart 7 on the first row; breakdown 5 and details table 7 on the second. The chart stretches to the height of its row. This arrangement was tried the other way round (chart narrow, table wide) and O preferred this one. The period picker and the tab bar stay above, unchanged.
+Columns (of 12): every block is 6 wide, so each row is 50/50. The four tiles stretch to fill their card evenly (two rows of two). The chart stretches to the height of its row. This arrangement was tried the other way round (chart narrow, table wide) and O preferred this one. The period picker and the tab bar stay above, unchanged.
 
 The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and delayed lines), **Living expenses**, **Net savings** (highlighted; it also carries the savings rate, how much was invested and what is left after investing, so nothing from the old tiles is lost). Each tile shows a delta pill against the previous month (not shown in "Whole year" view, where there is nothing fair to compare to).
 

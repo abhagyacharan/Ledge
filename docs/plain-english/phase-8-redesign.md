@@ -89,3 +89,5 @@ What the Summary looks like now: four blocks.
 On a phone the four blocks stack in one column. Light and dark both work. The orange is a deeper shade where white text sits on it, so the text stays readable (a rule from the accessibility check). The new colours are only used inside the Summary for now, so nothing else changed. The other expense tabs and the to-do screens will be moved to this look later, when you ask.
 
 Checked: the accessibility inspector (including colour contrast) in light and dark, the phone-size rules, and all expense browser tests (updated for the new tiles). Not checked: how it looks on a real phone.
+
+Later tweaks to the Summary: both rows are split 50/50; the four tiles grow to fill their block evenly; the yearly table no longer has the Savings % column or the "Selected" label (the chosen month is still tinted, and screen readers are still told); and the share bars in the expense breakdown are one flat light orange.

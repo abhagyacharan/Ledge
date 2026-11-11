@@ -67,7 +67,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="tiles"
           title={`${periodLabel(period)} at a glance`}
           hideTitle
-          className="xl:col-span-5"
+          className="flex flex-col xl:col-span-6"
         >
           <SummaryStats totals={totals} previous={previous} emi={emi} fmt={fmt} />
         </DashCard>
@@ -76,7 +76,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="cash-flow"
           title="Annual cash flow"
           subtitle={`Money in and out, each month of ${period.year}`}
-          className="flex flex-col xl:col-span-7"
+          className="flex flex-col xl:col-span-6"
         >
           <CashFlowChart months={trend.months} selectedMonth={period.month} fmt={fmt} />
         </DashCard>
@@ -85,7 +85,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="breakdown"
           title="Expense breakdown by category"
           subtitle={periodLabel(period)}
-          className="xl:col-span-5"
+          className="xl:col-span-6"
         >
           <BreakdownTable rows={breakdown.rows} total={breakdown.total} fmt={fmt} />
         </DashCard>
@@ -94,7 +94,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="details"
           title={`Annual cash flow trend, ${period.year}`}
           subtitle="Month by month, with the full-year total"
-          className="xl:col-span-7"
+          className="xl:col-span-6"
         >
           <TrendTable
             months={trend.months}
