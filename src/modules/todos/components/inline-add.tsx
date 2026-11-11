@@ -1,9 +1,11 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, SlidersHorizontal } from "lucide-react";
 import { useRef, useState, useTransition, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createTaskAction } from "../actions/tasks";
+import { QUICK_ADD_EVENT, type QuickAddPrefill } from "./quick-add-button";
 import { run } from "./run-action";
 
 /**
@@ -45,6 +47,19 @@ export function InlineAdd({
     });
   }
 
+  // The full form (date, priority, tags, notes, repeat) with what is typed so far.
+  function openFullForm() {
+    const detail: QuickAddPrefill = {
+      title,
+      listId,
+      sectionId,
+      dueDate,
+      tagIds,
+    };
+    window.dispatchEvent(new CustomEvent(QUICK_ADD_EVENT, { detail }));
+    setTitle("");
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex items-center gap-1 py-1">
       <span className="flex size-11 shrink-0 items-center justify-center text-muted-foreground md:size-8">
@@ -60,6 +75,19 @@ export function InlineAdd({
         disabled={pending}
         className="h-11 border-transparent bg-transparent shadow-none focus-visible:border-ring md:h-8"
       />
+      {parentId ? null : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-11 shrink-0 text-muted-foreground md:size-8"
+          aria-label={`More options: open the full form`}
+          title="More options"
+          onClick={openFullForm}
+        >
+          <SlidersHorizontal aria-hidden />
+        </Button>
+      )}
     </form>
   );
 }

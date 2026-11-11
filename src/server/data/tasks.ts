@@ -117,6 +117,8 @@ export type NewTaskInput = {
   priority?: number;
   dueDate?: string | null;
   dueTime?: string | null;
+  recurrenceRule?: string | null;
+  recurrenceMode?: RecurrenceMode;
 };
 
 /**
@@ -143,6 +145,9 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
   }
 
   const dueDate = input.dueDate ?? null;
+  const recurrenceRule = input.recurrenceRule ?? null;
+  // A repeat needs a due date, a top-level task and a rule we understand.
+  if (recurrenceRule && (!dueDate || parentId || !parseRule(recurrenceRule))) return null;
   const [row] = await db
     .insert(tasks)
     .values({
@@ -155,6 +160,8 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
       priority: input.priority ?? 0,
       dueDate,
       dueTime: dueDate ? (input.dueTime ?? null) : null,
+      recurrenceRule,
+      recurrenceMode: input.recurrenceMode ?? "fixed",
       position: positionAtEnd(await lastPositionInGroup(userId, listId, parentId)),
     })
     .returning();

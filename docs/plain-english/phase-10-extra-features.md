@@ -98,3 +98,11 @@ With "follows the schedule", finishing early moves to the date after the one tha
 
 - Checked: the tests above, browser tests that set a weekly repeat, tick it, see it move, undo, and set a custom every-2-weeks repeat that survives a reload; the accessibility inspector on the drawer of a monthly and a weekly task in light and dark; the phone-size rule.
 - Not built: "every weekday" style presets, an end date or a count ("repeat 5 times"), and typing "every day" into quick add.
+
+## The full form in quick add (done 2026-11-11)
+
+You asked that the **+** button (and the **q** key) offer everything the task panel has, not only a title and a list. The quick add box now has: the sentence box with its chips, **Due** (date and optional time), **Priority**, **List**, **Tags** (including creating one), **Repeat**, and **Notes**. Choices you make with the controls win over what Ledge guessed from the sentence. Enter still adds the task and keeps the box open; the box scrolls on a small phone screen.
+
+The **"Add a task" line** at the bottom of a list or view still adds a plain task with Enter. Next to it is a new **More options** button (sliders icon) that opens this full form with what you had typed, in the same list and section. A task can now be created with a repeat straight away, and the server checks the same rules (a repeat needs a due date and cannot be on a subtask).
+
+Not in the form: choosing a **section** (the form uses the one you came from), and subtasks (add those from the task panel).

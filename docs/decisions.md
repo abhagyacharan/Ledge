@@ -353,6 +353,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** O did not like the board view and found it not functional enough, so the whole feature was removed (reverting the code, tests and docs of the board commit). The `lists.view_mode` column from Phase 2 stays in the schema (it is in §6.3) but nothing reads or writes it. The main content area keeps `min-w-0` so wide content can never stretch the page.
 - **Reason:** O's instruction in chat. History: the board commit and its decisions entry remain in git.
 
+## 2026-11-11: Quick add has every task field
+
+- **Decision:** The quick-add dialog now has due date and time, priority, list, tags, repeat and notes, next to the sentence box; controls win over parsed values (manual due, priority) and tags are the union. The inline "Add a task" row keeps its fast Enter-to-add and gains a "More options" button that opens the dialog through the existing quick-add event, carrying title, list, section, date and tags. `createTask` and `createTaskSchema` accept a repeat rule and mode with the same checks as `updateTask`. The provider also passes `weekStartsOn` for the date picker.
+- **Reason:** O's request: the plus button should offer what editing a task offers. Sections and subtasks were left out of the dialog on purpose (sections need server data; subtasks belong to an existing task).
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

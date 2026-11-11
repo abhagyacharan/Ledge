@@ -29,6 +29,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         tags,
         timeZone: settings.timezone,
         locale: settings.locale,
+        weekStartsOn: settings.weekStartsOn,
       }}
     >
       <SidebarProvider>

@@ -93,6 +93,8 @@ export const createTaskSchema = z.object({
   dueDate: isoDate.nullable().optional(),
   dueTime: isoTime.nullable().optional(),
   tagIds: z.array(id).max(50).optional(),
+  recurrenceRule: recurrenceRule.nullable().optional(),
+  recurrenceMode: recurrenceMode.optional(),
 });
 
 export const updateTaskSchema = z.object({

@@ -223,3 +223,48 @@ test("quick add with a tag nobody has used creates it", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("link", { name: /^NL brand new tag/ })).toContainText("freshtag");
 });
+
+test("quick add has every task field: date, priority, tag, notes and repeat", async ({ page }) => {
+  await page.goto("/inbox");
+  await page.keyboard.press("q");
+  const dialog = page.getByRole("dialog", { name: "Quick add" });
+  await dialog.getByLabel("Task", { exact: true }).fill("Full form task");
+
+  await dialog.getByRole("button", { name: /^Due date:/ }).click();
+  await page.getByRole("button", { name: "Tomorrow", exact: true }).click();
+  await page.keyboard.press("Escape"); // close the date popover, keep the dialog
+  await dialog.getByLabel("Priority").click();
+  await page.getByRole("option", { name: "High" }).click();
+  await dialog.getByRole("button", { name: "Add tags" }).click();
+  await page.getByRole("checkbox", { name: "bills" }).click();
+  await page.keyboard.press("Escape");
+  await dialog.getByLabel("Notes").fill("Written in quick add");
+  await dialog.locator("#task-repeat").click();
+  await page.getByRole("option", { name: "Every week" }).click();
+  await expect(dialog.getByText(/^Every week on /)).toBeVisible();
+  await dialog.getByRole("button", { name: "Add task" }).click();
+  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Everything arrived on the task.
+  await page.getByRole("link", { name: /^Full form task/ }).click();
+  const drawer = page.getByRole("dialog");
+  await expect(drawer.getByLabel("Priority")).toContainText("High");
+  await expect(drawer.getByLabel("Notes")).toHaveValue("Written in quick add");
+  await expect(drawer.getByRole("button", { name: /^Due date: Tomorrow/ })).toBeVisible();
+  await expect(drawer.getByText(/^Every week on /)).toBeVisible();
+  await expect(drawer.getByText("bills")).toBeVisible();
+});
+
+test("the inline add field opens the full form with what was typed", async ({ page }) => {
+  await page.goto("/inbox");
+  await page.getByLabel("Add a task", { exact: true }).first().fill("From the inline field");
+  await page
+    .getByRole("button", { name: /More options: open the full form/ })
+    .first()
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Quick add" });
+  await expect(dialog.getByLabel("Task", { exact: true })).toHaveValue("From the inline field");
+  await expect(dialog.getByLabel("Priority")).toBeVisible();
+  await expect(dialog.getByLabel("Notes")).toBeVisible();
+});
