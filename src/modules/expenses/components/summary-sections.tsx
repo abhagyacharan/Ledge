@@ -355,11 +355,11 @@ export function CashFlowChart({
                 style={{ bottom: `${i * 25}%` }}
               />
             ))}
-            <div className="absolute inset-0 flex items-end gap-1">
+            <div className="absolute inset-0 flex items-end gap-2">
               {months.map((m) => (
                 <div key={m.month} className="flex h-full flex-1 items-end justify-center">
                   <div
-                    className="flex w-full max-w-[22px] flex-col-reverse gap-0.5"
+                    className="flex w-full max-w-[24px] flex-col-reverse gap-0.5"
                     style={{ height: `${((m.income + m.emi + m.expense) / top) * 100}%` }}
                   >
                     {m.income > 0 ? (
@@ -376,7 +376,7 @@ export function CashFlowChart({
               ))}
             </div>
           </div>
-          <div className="mt-2 flex gap-1">
+          <div className="mt-2 flex gap-2">
             {months.map((m) => (
               <span
                 key={m.month}
