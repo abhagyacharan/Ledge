@@ -95,7 +95,9 @@ test("a custom repeat: every 2 weeks on chosen weekdays, counted from when it is
   await page.getByRole("option", { name: "Counts from when I finish it" }).click();
   await expect(dialog.getByText(/^Every 2 weeks after you finish it/)).toBeVisible();
 
-  // It is all saved: same after a reload.
+  // It is all saved: same after a reload. (Wait for every save to finish first: the Saved label
+  // can still be showing from an earlier change.)
+  await page.waitForLoadState("networkidle");
   await expect(dialog.getByRole("status")).toHaveText("Saved");
   await page.reload();
   const again = page.getByRole("dialog");
