@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isIsoDate, isIsoTime, trimTime } from "@/lib/dates";
+import { formatRule, parseRule } from "@/lib/recurrence";
 import { viewSettingsSchema } from "./view-settings";
 
 /** Zod schemas shared by the server actions and the forms (CLAUDE.md §9). */
@@ -75,6 +76,13 @@ export const updateTagSchema = z.object({
 export const taskTitle = trimmed(1, 500, "a title");
 export const priority = z.number().int().min(0).max(3);
 
+/** A repeat rule we understand; stored in its canonical form. */
+export const recurrenceRule = z
+  .string()
+  .refine((text) => parseRule(text) !== null, "Choose how often it repeats")
+  .transform((text) => formatRule(parseRule(text)!)); // refine above guarantees it parses
+export const recurrenceMode = z.enum(["fixed", "after_completion"]);
+
 export const createTaskSchema = z.object({
   listId: id,
   title: taskTitle,
@@ -95,6 +103,8 @@ export const updateTaskSchema = z.object({
   dueDate: isoDate.nullable().optional(),
   dueTime: isoTime.nullable().optional(),
   sectionId: id.nullable().optional(),
+  recurrenceRule: recurrenceRule.nullable().optional(),
+  recurrenceMode: recurrenceMode.optional(),
 });
 
 export const setTaskDoneSchema = z.object({ id, done: z.boolean() });
@@ -104,6 +114,13 @@ export const moveTaskSchema = z.object({
   sectionId: id.nullable().optional(),
 });
 export const taskIdSchema = z.object({ id });
+export const undoRecurringSchema = z.object({
+  taskId: id,
+  snapshotId: id,
+  previousDueDate: isoDate.nullable(),
+  previousDueTime: isoTime.nullable(),
+  reopenedSubtaskIds: z.array(id).max(500),
+});
 export const reorderTaskSchema = z.object({
   id,
   /** The task that should end up right before this one (null at the top). */

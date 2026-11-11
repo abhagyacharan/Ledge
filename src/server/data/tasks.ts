@@ -1,8 +1,9 @@
 import "server-only";
 import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { positionAtEnd, positionBetween } from "@/lib/ordering";
+import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
 import { db } from "@/server/db/client";
-import { lists, tasks, type Task } from "@/server/db/schema";
+import { lists, taskTags, tasks, type Task } from "@/server/db/schema";
 import { getList } from "./lists";
 import { getSection } from "./sections";
 import { tagIdsForTasks } from "./tags";
@@ -25,6 +26,9 @@ export type TaskPatch = {
   dueDate?: string | null;
   dueTime?: string | null;
   sectionId?: string | null;
+  /** Canonical rule text (src/lib/recurrence.ts) or null to stop repeating. */
+  recurrenceRule?: string | null;
+  recurrenceMode?: RecurrenceMode;
 };
 
 /** The task's list has not been moved to Trash. */
@@ -181,6 +185,17 @@ export async function updateTask(
     const effectiveDate = patch.dueDate ?? current.dueDate;
     set.dueTime = effectiveDate ? patch.dueTime : null;
   }
+  if (patch.recurrenceRule !== undefined) {
+    if (patch.recurrenceRule !== null) {
+      // Only a top-level task with a due date can repeat, and the rule must be one we understand.
+      const effectiveDue = patch.dueDate === undefined ? current.dueDate : patch.dueDate;
+      if (current.parentId || !effectiveDue || !parseRule(patch.recurrenceRule)) return null;
+    }
+    set.recurrenceRule = patch.recurrenceRule;
+  } else if (patch.dueDate === null && current.recurrenceRule) {
+    set.recurrenceRule = null; // a repeating task with no date has nothing to repeat from
+  }
+  if (patch.recurrenceMode !== undefined) set.recurrenceMode = patch.recurrenceMode;
   if (patch.sectionId !== undefined) {
     if (patch.sectionId !== null) {
       if (current.parentId) return null;
@@ -193,6 +208,141 @@ export async function updateTask(
 
   const [row] = await db.update(tasks).set(set).where(activeTask(userId, taskId)).returning();
   return row ?? null;
+}
+
+export type RecurringCompletion = {
+  /** The finished copy that now sits in Completed. */
+  snapshotId: string;
+  previousDueDate: string | null;
+  previousDueTime: string | null;
+  nextDueDate: string;
+  /** Subtasks that were done and were reopened for the next round. */
+  reopenedSubtaskIds: string[];
+};
+
+/**
+ * Completing a repeating task (CLAUDE.md §6.2): a finished copy ("snapshot", pointing back at the
+ * task through `recurrence_origin_id`) is added to Completed, and the task itself stays open with
+ * its due date moved to the next date. Its done subtasks are reopened and the snapshot keeps the
+ * tags. Returns null when the task is not the user's, is not a repeating open task, or the rule is
+ * not understood (then the caller completes it like any other task).
+ */
+export async function completeRecurringTask(
+  userId: string,
+  taskId: string,
+  completedOn: string,
+): Promise<RecurringCompletion | null> {
+  const task = await getTask(userId, taskId);
+  if (!task || task.status !== "open" || task.parentId || !task.recurrenceRule) return null;
+  const rule = parseRule(task.recurrenceRule);
+  if (!rule) return null;
+  const nextDue = nextDueDate({
+    rule,
+    mode: task.recurrenceMode,
+    dueDate: task.dueDate,
+    completedOn,
+  });
+
+  return db.transaction(async (tx) => {
+    const [snapshot] = await tx
+      .insert(tasks)
+      .values({
+        userId,
+        listId: task.listId,
+        sectionId: task.sectionId,
+        title: task.title,
+        notes: task.notes,
+        priority: task.priority,
+        status: "done",
+        completedAt: new Date(),
+        dueDate: task.dueDate,
+        dueTime: task.dueTime,
+        recurrenceOriginId: task.id,
+        position: task.position,
+      })
+      .returning({ id: tasks.id });
+
+    const tagRows = await tx
+      .select({ tagId: taskTags.tagId })
+      .from(taskTags)
+      .where(and(eq(taskTags.userId, userId), eq(taskTags.taskId, task.id)));
+    if (tagRows.length > 0) {
+      await tx
+        .insert(taskTags)
+        .values(tagRows.map((r) => ({ userId, taskId: snapshot.id, tagId: r.tagId })));
+    }
+
+    const reopened = await tx
+      .update(tasks)
+      .set({ status: "open", completedAt: null })
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          eq(tasks.parentId, task.id),
+          eq(tasks.status, "done"),
+          isNull(tasks.deletedAt),
+        ),
+      )
+      .returning({ id: tasks.id });
+
+    await tx
+      .update(tasks)
+      .set({ dueDate: nextDue })
+      .where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
+
+    return {
+      snapshotId: snapshot.id,
+      previousDueDate: task.dueDate,
+      previousDueTime: task.dueTime,
+      nextDueDate: nextDue,
+      reopenedSubtaskIds: reopened.map((r) => r.id),
+    };
+  });
+}
+
+/**
+ * Undo for `completeRecurringTask`: removes the finished copy, puts the old due date back and
+ * marks the reopened subtasks done again. Only works on this user's own snapshot of this task.
+ */
+export async function undoRecurringCompletion(
+  userId: string,
+  input: {
+    taskId: string;
+    snapshotId: string;
+    previousDueDate: string | null;
+    previousDueTime: string | null;
+    reopenedSubtaskIds: string[];
+  },
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const removed = await tx
+      .delete(tasks)
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          eq(tasks.id, input.snapshotId),
+          eq(tasks.recurrenceOriginId, input.taskId),
+          eq(tasks.status, "done"),
+        ),
+      )
+      .returning({ id: tasks.id });
+    if (removed.length === 0) return false;
+
+    await tx
+      .update(tasks)
+      .set({ dueDate: input.previousDueDate, dueTime: input.previousDueTime })
+      .where(and(eq(tasks.userId, userId), eq(tasks.id, input.taskId)));
+
+    if (input.reopenedSubtaskIds.length > 0) {
+      for (const id of input.reopenedSubtaskIds) {
+        await tx
+          .update(tasks)
+          .set({ status: "done", completedAt: new Date() })
+          .where(and(eq(tasks.userId, userId), eq(tasks.id, id), eq(tasks.parentId, input.taskId)));
+      }
+    }
+    return true;
+  });
 }
 
 /** Completes or reopens a task. Completing sets `completed_at`; it never touches the parent. */

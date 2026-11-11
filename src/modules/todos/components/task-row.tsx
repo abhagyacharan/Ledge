@@ -1,14 +1,16 @@
 "use client";
 
-import { AlertCircle, CalendarDays, Check, Flag, ListChecks } from "lucide-react";
+import { AlertCircle, CalendarDays, Check, Flag, ListChecks, Repeat } from "lucide-react";
 import Link from "next/link";
 import { useOptimistic, useTransition, type CSSProperties, type ReactNode, type Ref } from "react";
-import { formatDue, isOverdue } from "@/lib/dates";
+import { formatDue, formatDueDate, isOverdue, todayIn } from "@/lib/dates";
+import { describeStored } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
-import { setTaskDoneAction } from "../actions/tasks";
+import { setTaskDoneAction, undoRecurringCompletionAction } from "../actions/tasks";
 import { run, undoToast } from "./run-action";
 import { useTaskLinks } from "./use-task-links";
+import { useTodos } from "./todos-provider";
 import { PRIORITY_LABELS, type DateContext, type TagsById } from "./types";
 
 const PRIORITY_STYLE = [
@@ -25,18 +27,37 @@ const PRIORITY_STYLE = [
 export function useToggleDone(taskId: string, title: string, serverDone: boolean) {
   const [, startTransition] = useTransition();
   const [done, setDone] = useOptimistic(serverDone);
+  const { timeZone, locale } = useTodos();
 
   function toggle() {
     startTransition(async () => {
       const next = !done;
       setDone(next);
       const result = await run(setTaskDoneAction({ id: taskId, done: next }));
-      if (result.ok && next) {
+      if (!result.ok || !next) return;
+      const repeat = result.data.recurring;
+      if (repeat) {
+        // A repeating task is not finished for good: it moved to its next date.
+        const when = formatDueDate(repeat.nextDueDate, todayIn(timeZone), locale).toLowerCase();
         undoToast(
-          `Completed "${title}"`,
-          () => void run(setTaskDoneAction({ id: taskId, done: false })),
+          `Done "${title}". Next: ${when}`,
+          () =>
+            void run(
+              undoRecurringCompletionAction({
+                taskId,
+                snapshotId: repeat.snapshotId,
+                previousDueDate: repeat.previousDueDate,
+                previousDueTime: repeat.previousDueTime,
+                reopenedSubtaskIds: repeat.reopenedSubtaskIds,
+              }),
+            ),
         );
+        return;
       }
+      undoToast(
+        `Completed "${title}"`,
+        () => void run(setTaskDoneAction({ id: taskId, done: false })),
+      );
     });
   }
 
@@ -172,6 +193,7 @@ export function TaskRow({
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
   const tagList = task.tagIds.map((id) => tagsById[id]).filter(Boolean);
   const { hrefFor } = useTaskLinks();
+  const repeatText = describeStored(task.recurrenceRule, task.recurrenceMode);
 
   return (
     <li
@@ -197,6 +219,12 @@ export function TaskRow({
         </span>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 empty:hidden">
           <DueLabel task={task} ctx={ctx} done={done} />
+          {repeatText ? (
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Repeat className="size-3.5" aria-hidden />
+              {repeatText}
+            </span>
+          ) : null}
           {task.priority > 0 ? (
             <span
               className={cn(

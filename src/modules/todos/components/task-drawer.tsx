@@ -32,6 +32,7 @@ import {
   updateTaskAction,
 } from "../actions/tasks";
 import { DueDateField } from "./due-date-field";
+import { RepeatField } from "./repeat-field";
 import { InlineAdd } from "./inline-add";
 import { run, undoToast } from "./run-action";
 import { TagField } from "./tag-field";
@@ -244,9 +245,29 @@ function DrawerBody({
           <DueDateField
             value={{ dueDate: view.dueDate, dueTime: view.dueTime }}
             ctx={ctx}
-            onChange={(due) => void save(due)}
+            onChange={(due) =>
+              // Without a date there is nothing to repeat from.
+              void save(
+                due.dueDate === null && view.recurrenceRule
+                  ? { ...due, recurrenceRule: null }
+                  : due,
+              )
+            }
           />
         </div>
+
+        {isSubtask ? null : (
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label htmlFor="task-repeat">Repeat</Label>
+            <RepeatField
+              rule={view.recurrenceRule}
+              mode={view.recurrenceMode}
+              dueDate={view.dueDate}
+              today={ctx.today}
+              onChange={(change) => void save(change)}
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="task-priority">Priority</Label>

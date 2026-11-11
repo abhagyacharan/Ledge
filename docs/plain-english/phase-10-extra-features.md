@@ -98,3 +98,31 @@ The slash key used to open the command box. It now opens Search. The command box
 
 - Checked: 9 tests against the real database (titles, notes, word forms, half words, all-words-must-match, only-stop-words like "the", odd characters, ranking, other users, Trash and archived lists); a browser test that presses `/`, searches, opens a result and sees the "nothing found" message; the accessibility inspector in light and dark and the phone-size rule on the search page, empty and with results.
 - Not checked: very large collections (thousands of tasks should be fast because of the index, but this was not timed), or other languages (word forms are English only).
+
+## Repeating tasks (done 2026-11-11)
+
+### What it does
+
+In the task panel there is a new **Repeat** box under the due date. Choose **Every day, week, month or year**, or fine-tune it:
+
+- **Repeat every N** days, weeks, months or years ("every 2 weeks").
+- For weekly repeats, **which weekdays** (Mon and Fri, say).
+- **Next date**: either **Follows the schedule** (the next date on the calendar pattern) or **Counts from when I finish it** (one interval after the day you tick it, good for "water the plants every 3 days after the last time").
+
+A task needs a due date to repeat; if it has none, turning on a repeat gives it today's date. Clearing the due date turns the repeat off. Only whole tasks repeat, not subtasks. Repeating tasks show a small repeat symbol and words ("Every week on Mon, Wed") in their row.
+
+### What happens when you tick one
+
+The task is **not finished for good**. Ledge adds a finished copy to **Completed** (so your history shows every time you did it) and moves the task to its **next date**. Its subtasks are unticked for the next round, and the copy keeps its tags. A message says "Done ... Next: tomorrow" with **Undo**, which removes the copy and puts everything back, including the subtasks' ticks.
+
+With "follows the schedule", finishing early moves to the date after the one that was due, and finishing late skips the dates you missed, so the next date is never in the past. Month ends are handled: a task on the 31st uses the 28th, 29th or 30th in short months and goes back to the 31st afterwards, and a 29 February task uses 28 February in other years.
+
+### Behind the scenes
+
+- The repeat is stored as a short text in a small, strict subset of the standard calendar format (for example `FREQ=WEEKLY;BYDAY=MO,WE`). Anything outside that subset is refused rather than guessed.
+- The date maths is a separate, pure piece of code with 20 tests (month ends, leap years, early and late completion, every-2-weeks patterns). The completion, copy, undo and ownership rules have 14 tests against a real database. Another user can never complete, undo or change your repeats.
+
+### Checked, and not checked
+
+- Checked: the tests above, browser tests that set a weekly repeat, tick it, see it move, undo, and set a custom every-2-weeks repeat that survives a reload; the accessibility inspector on the drawer of a monthly and a weekly task in light and dark; the phone-size rule.
+- Not built: "every weekday" style presets, an end date or a count ("repeat 5 times"), and typing "every day" into quick add.

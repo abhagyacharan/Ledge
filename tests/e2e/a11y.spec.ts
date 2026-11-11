@@ -106,6 +106,22 @@ for (const scheme of SCHEMES) {
       await audit(page, `the task drawer (${scheme})`);
     });
 
+    test("the task drawer of a repeating task", async ({ page }) => {
+      await page.goto("/today");
+      await page.getByRole("link", { name: /^Send monthly invoice/ }).click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog.getByLabel("Repeat every")).toBeVisible();
+      await audit(page, `the drawer of a repeating task (${scheme})`);
+
+      // A weekly one also shows the weekday buttons.
+      await page.goto("/upcoming");
+      await page.getByRole("link", { name: /^Triage new issues/ }).click();
+      await expect(
+        page.getByRole("dialog").getByRole("group", { name: "Repeat on" }),
+      ).toBeVisible();
+      await audit(page, `the drawer of a weekly task (${scheme})`);
+    });
+
     test("the command palette and the shortcuts list", async ({ page }) => {
       await page.goto("/inbox");
       await page.keyboard.press("Control+k");

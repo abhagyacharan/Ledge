@@ -107,6 +107,16 @@ test("the task drawer fills the screen and has big enough tap targets", async ({
   await noSidewaysScroll(page);
 });
 
+test("the drawer of a repeating task has big enough tap targets", async ({ page }) => {
+  await page.goto("/today");
+  await page.getByRole("link", { name: /^Send monthly invoice/ }).tap();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Repeat every")).toBeVisible();
+  await page.waitForTimeout(400); // let the slide-in finish
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+});
+
 test("quick add button is always reachable and the dialog fits", async ({ page }) => {
   await page.goto("/inbox");
   const add = page.getByRole("button", { name: /Quick add task/ });
