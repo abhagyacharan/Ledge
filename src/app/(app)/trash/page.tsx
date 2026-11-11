@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/shell/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
@@ -5,6 +6,7 @@ import { formatDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { KIND_LABELS } from "@/modules/expenses/categories";
 import { loadMoneyContext } from "@/modules/expenses/context";
+import { TaskPanel } from "@/modules/todos/components/task-panel";
 import { TrashList, type TrashItem } from "@/modules/todos/components/trash-list";
 import {
   daysLeftInTrash,
@@ -59,19 +61,23 @@ export default async function TrashPage() {
   ].sort((a, b) => b.at - a.at);
 
   return (
-    <>
-      <PageHeader
-        title="Trash"
-        description={`Deleted tasks, lists and money entries stay here for ${TRASH_RETENTION_DAYS} days, then they are erased for good.`}
-      />
-      {items.length === 0 ? (
-        <EmptyState
-          title="The Trash is empty"
-          hint="Deleted tasks and lists show up here so you can bring them back."
-        />
-      ) : (
-        <TrashList items={items} />
-      )}
-    </>
+    <div className="dash">
+      <PageHeader title="Trash" />
+      <TaskPanel
+        id="trash"
+        title="Deleted items"
+        subtitle={`Tasks, lists and money entries stay here for ${TRASH_RETENTION_DAYS} days, then they are erased for good.`}
+      >
+        {items.length === 0 ? (
+          <EmptyState
+            icon={Trash2}
+            title="The Trash is empty"
+            hint="Deleted tasks, lists and entries show up here so you can bring them back."
+          />
+        ) : (
+          <TrashList items={items} />
+        )}
+      </TaskPanel>
+    </div>
   );
 }

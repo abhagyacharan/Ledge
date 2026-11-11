@@ -4,7 +4,8 @@ import { Plus, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { DashButton } from "@/components/dash/dash-button";
+import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -24,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { timeNowIn, todayIn } from "@/lib/dates";
 import type { RecurrenceMode } from "@/lib/recurrence";
-import { createTagAction } from "../actions/tags";
+import { cn } from "@/lib/utils";
 import { createTaskAction } from "../actions/tasks";
 import {
   parseQuickAdd,
@@ -35,8 +34,8 @@ import {
 import { DueDateField } from "./due-date-field";
 import { QUICK_ADD_EVENT, type QuickAddPrefill } from "./quick-add-button";
 import { RepeatField, type RepeatChange } from "./repeat-field";
+import { ListGlyph } from "../list-icons";
 import { run } from "./run-action";
-import { TagField } from "./tag-field";
 import { useTodos } from "./todos-provider";
 import { PRIORITY_LABELS, type DateContext } from "./types";
 
@@ -52,7 +51,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 /**
  * Quick add (CLAUDE.md §6.2): a button that is always reachable, and the `q` key.
  * Enter adds the task and the field stays open for the next one. The form has every field a task
- * has (due date and time, priority, list, tags, notes, repeat), and understands a typed sentence.
+ * has (due date and time, priority, list, notes, repeat), and understands a typed sentence.
  */
 export function QuickAdd() {
   const { lists, inboxId } = useTodos();
@@ -62,7 +61,7 @@ export function QuickAdd() {
   // A new key starts the form fresh each time it is opened.
   const [openCount, setOpenCount] = useState(0);
 
-  // Default to the list being viewed, otherwise the Inbox.
+  // Default to the list being viewed, otherwise General (the default list).
   const viewed = /^\/lists\/([0-9a-f-]{36})/.exec(pathname)?.[1];
   const defaultListId = lists.some((l) => l.id === viewed) ? (viewed as string) : inboxId;
 
@@ -90,21 +89,20 @@ export function QuickAdd() {
 
   return (
     <>
-      {/* On expense screens the round button logs a transaction instead; q still adds a task. */}
+      {/* On Expense Tracker pages the round button logs a transaction instead; q still adds a task. */}
       {pathname.startsWith("/expenses") ? null : (
-        <Button
+        <button
           type="button"
-          size="icon"
           aria-label="Quick add task (shortcut: q)"
-          title="Quick add (q)"
+          title="Add a task (q)"
           onClick={() => show()}
-          className="fixed right-4 bottom-4 z-30 size-14 rounded-full shadow-lg md:size-12"
+          className={FAB_CLASS}
         >
-          <Plus className="size-6" />
-        </Button>
+          <Plus aria-hidden className={cn(FAB_ICON_CLASS, open && "rotate-45")} />
+        </button>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="dash max-h-[92svh] overflow-y-auto sm:max-w-lg">
           {open ? (
             <QuickAddForm
               key={openCount}
@@ -120,6 +118,8 @@ export function QuickAdd() {
 
 type Due = { dueDate: string | null; dueTime: string | null };
 
+const label = "text-[13px] font-medium text-dash-ink";
+
 function QuickAddForm({
   prefill,
   defaultListId,
@@ -127,7 +127,7 @@ function QuickAddForm({
   prefill: QuickAddPrefill;
   defaultListId: string;
 }) {
-  const { lists, tags, timeZone, locale, weekStartsOn } = useTodos();
+  const { lists, timeZone, locale, weekStartsOn } = useTodos();
   const [dateCtx] = useState<DateContext>(() => {
     const now = new Date();
     return {
@@ -141,7 +141,7 @@ function QuickAddForm({
   const [title, setTitle] = useState(prefill.title ?? "");
   const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
   const [parsed, setParsed] = useState<ParsedQuickAdd>(() =>
-    parse(prefill.title ?? "", new Set(), lists, tags, timeZone, locale),
+    parse(prefill.title ?? "", new Set(), lists, timeZone, locale),
   );
   const [listId, setListId] = useState(defaultListId);
   // Choices made with the controls win over what was understood from the sentence.
@@ -149,7 +149,6 @@ function QuickAddForm({
     prefill.dueDate ? { dueDate: prefill.dueDate, dueTime: null } : null,
   );
   const [manualPriority, setManualPriority] = useState<number | null>(null);
-  const [tagIds, setTagIds] = useState<string[]>(prefill.tagIds ?? []);
   const [notes, setNotes] = useState("");
   const [repeatRule, setRepeatRule] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState<RecurrenceMode>("fixed");
@@ -164,7 +163,7 @@ function QuickAddForm({
   function update(nextTitle: string, nextIgnored: ReadonlySet<string>) {
     setTitle(nextTitle);
     setIgnored(nextIgnored);
-    setParsed(parse(nextTitle, nextIgnored, lists, tags, timeZone, locale));
+    setParsed(parse(nextTitle, nextIgnored, lists, timeZone, locale));
   }
 
   function removeToken(token: QuickAddToken) {
@@ -188,22 +187,13 @@ function QuickAddForm({
     const value = parsed.title;
     if (!value) return;
     startTransition(async () => {
-      // A tag nobody has used yet is created first (or found, if it already exists).
-      const newTagIds: string[] = [];
-      for (const name of parsed.newTagNames) {
-        const tag = await run(createTagAction({ name }));
-        if (tag.ok) newTagIds.push(tag.data.id);
-      }
-      const allTagIds = [...new Set([...tagIds, ...parsed.tagIds, ...newTagIds])];
       const result = await run(
         createTaskAction({
           listId: effectiveListId,
-          sectionId: prefill.sectionId ?? null,
           title: value,
           notes,
           priority,
           ...(due.dueDate ? { dueDate: due.dueDate, dueTime: due.dueTime } : {}),
-          ...(allTagIds.length > 0 ? { tagIds: allTagIds } : {}),
           ...(repeatRule && due.dueDate
             ? { recurrenceRule: repeatRule, recurrenceMode: repeatMode }
             : {}),
@@ -216,7 +206,6 @@ function QuickAddForm({
         update("", new Set());
         setManualDue(null);
         setManualPriority(null);
-        setTagIds([]);
         setNotes("");
         setRepeatRule(null);
         setRepeatMode("fixed");
@@ -226,17 +215,20 @@ function QuickAddForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <DialogHeader>
-        <DialogTitle>Quick add</DialogTitle>
-        <DialogDescription>
-          Type it as you would say it: dates, #list, @tag and p1 to p3 are picked up. Or use the
-          fields below. Enter adds the task and the box stays open.
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <DialogHeader className="pr-10">
+        <DialogTitle className="text-lg font-semibold">Add a task</DialogTitle>
+        <DialogDescription className="text-[13px] text-dash-ink-soft">
+          Type it as you would say it: dates, #list and p1 to p3 are picked up. Enter adds it and
+          the box stays open for the next one.
         </DialogDescription>
       </DialogHeader>
+
       <div className="flex flex-col gap-2">
-        <Label htmlFor="quick-add-title">Task</Label>
-        <Input
+        <label htmlFor="quick-add-title" className="sr-only">
+          Task
+        </label>
+        <input
           id="quick-add-title"
           ref={inputRef}
           value={title}
@@ -244,22 +236,23 @@ function QuickAddForm({
           maxLength={500}
           autoFocus
           disabled={pending}
-          placeholder="pay rent tomorrow 5pm #home @bills p1"
-          className="h-11 md:h-8"
+          enterKeyHint="done"
+          placeholder="pay rent tomorrow 5pm #home p1"
+          className="h-14 w-full rounded-2xl bg-dash-well px-4 text-lg text-dash-ink outline-none transition-shadow duration-150 placeholder:text-dash-ink-soft/70 focus-visible:ring-3 focus-visible:ring-ring/40"
         />
         {parsed.tokens.length > 0 ? (
-          <ul aria-label="Understood from your text" className="flex flex-wrap gap-2">
+          <ul aria-label="Understood from your text" className="flex flex-wrap gap-1.5">
             {parsed.tokens.map((token) => (
               <li
                 key={tokenKey(token)}
-                className="inline-flex items-center rounded-full border bg-accent pl-3 text-sm"
+                className="inline-flex animate-in items-center rounded-full bg-dash-ink pl-3 text-[13px] text-dash-card duration-150 fade-in-0 zoom-in-95"
               >
                 {token.label}
                 <button
                   type="button"
                   aria-label={`Remove ${token.label}`}
                   onClick={() => removeToken(token)}
-                  className="grid size-11 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-7"
+                  className="grid size-11 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-8"
                 >
                   <X className="size-3.5" aria-hidden />
                 </button>
@@ -270,39 +263,26 @@ function QuickAddForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label>Due</Label>
+        <div className="flex flex-col gap-1.5">
+          <span className={label}>Due</span>
           <DueDateField value={due} ctx={dateCtx} onChange={changeDue} />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="quick-add-priority">Priority</Label>
-          <Select value={String(priority)} onValueChange={(v) => setManualPriority(Number(v))}>
-            <SelectTrigger id="quick-add-priority" className="h-11 w-full md:h-8">
-              <SelectValue>{PRIORITY_LABELS[priority]}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_LABELS.map((label, i) => (
-                <SelectItem key={label} value={String(i)}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <Label htmlFor="quick-add-list">List</Label>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="quick-add-list" className={label}>
+            List
+          </label>
           <Select
             value={effectiveListId}
             onValueChange={setListId}
             disabled={parsed.listId !== null}
           >
-            <SelectTrigger id="quick-add-list" className="h-11 w-full md:h-8">
+            <SelectTrigger id="quick-add-list" className="h-11 w-full rounded-xl md:h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {lists.map((l) => (
                 <SelectItem key={l.id} value={l.id}>
-                  {l.icon ? `${l.icon} ` : ""}
+                  <ListGlyph icon={l.icon} className="size-4" />
                   {l.name}
                 </SelectItem>
               ))}
@@ -311,13 +291,43 @@ function QuickAddForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label>Tags</Label>
-        <TagField allTags={tags} selectedIds={tagIds} onChange={setTagIds} />
+      <div
+        role="radiogroup"
+        aria-labelledby="quick-add-priority-label"
+        className="flex flex-col gap-1.5"
+      >
+        <span id="quick-add-priority-label" className={label}>
+          Priority
+        </span>
+        <div className="grid grid-cols-4 gap-1 rounded-full bg-dash-well p-1">
+          {PRIORITY_LABELS.map((name, i) => (
+            <label
+              key={name}
+              className={cn(
+                "relative inline-flex h-11 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-9",
+                priority === i
+                  ? "bg-dash-raised text-dash-ink shadow-(--dash-lift)"
+                  : "text-dash-ink-soft hover:text-dash-ink",
+              )}
+            >
+              <input
+                type="radio"
+                name="quick-add-priority"
+                value={i}
+                checked={priority === i}
+                onChange={() => setManualPriority(i)}
+                className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
+              />
+              {name}
+            </label>
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="task-repeat">Repeat</Label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="task-repeat" className={label}>
+          Repeat
+        </label>
         <RepeatField
           rule={repeatRule}
           mode={repeatMode}
@@ -327,8 +337,10 @@ function QuickAddForm({
         />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="quick-add-notes">Notes</Label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="quick-add-notes" className={label}>
+          Notes
+        </label>
         <Textarea
           id="quick-add-notes"
           value={notes}
@@ -336,12 +348,13 @@ function QuickAddForm({
           rows={3}
           maxLength={10000}
           placeholder="Plain text. Add details, links, or steps."
+          className="rounded-xl"
         />
       </div>
 
-      <Button type="submit" className="h-11 md:h-8" disabled={pending || !parsed.title}>
+      <DashButton type="submit" className="h-11! w-full" disabled={pending || !parsed.title}>
         Add task
-      </Button>
+      </DashButton>
     </form>
   );
 }
@@ -351,7 +364,6 @@ function parse(
   text: string,
   ignored: ReadonlySet<string>,
   lists: { id: string; name: string }[],
-  tags: { id: string; name: string }[],
   timeZone: string,
   locale: string,
 ): ParsedQuickAdd {
@@ -361,7 +373,6 @@ function parse(
     timeNow: timeNowIn(timeZone, now),
     locale,
     lists,
-    tags,
     ignored,
   });
 }

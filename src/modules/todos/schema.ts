@@ -58,20 +58,6 @@ export const listIdSchema = z.object({ id });
 export const archiveListSchema = z.object({ id, archived: z.boolean() });
 export const moveSchema = z.object({ id, direction: z.enum(["up", "down"]) });
 
-// Sections
-export const sectionName = trimmed(1, 100, "a name");
-export const createSectionSchema = z.object({ listId: id, name: sectionName });
-export const renameSectionSchema = z.object({ id, name: sectionName });
-
-// Tags
-export const tagName = trimmed(1, 50, "a name");
-export const createTagSchema = z.object({ name: tagName, color: color.optional() });
-export const updateTagSchema = z.object({
-  id,
-  name: tagName.optional(),
-  color: color.optional(),
-});
-
 // Tasks
 export const taskTitle = trimmed(1, 500, "a title");
 export const priority = z.number().int().min(0).max(3);
@@ -86,13 +72,11 @@ export const recurrenceMode = z.enum(["fixed", "after_completion"]);
 export const createTaskSchema = z.object({
   listId: id,
   title: taskTitle,
-  sectionId: id.nullable().optional(),
   parentId: id.nullable().optional(),
   notes: optionalText(10_000).optional(),
   priority: priority.optional(),
   dueDate: isoDate.nullable().optional(),
   dueTime: isoTime.nullable().optional(),
-  tagIds: z.array(id).max(50).optional(),
   recurrenceRule: recurrenceRule.nullable().optional(),
   recurrenceMode: recurrenceMode.optional(),
 });
@@ -104,17 +88,12 @@ export const updateTaskSchema = z.object({
   priority: priority.optional(),
   dueDate: isoDate.nullable().optional(),
   dueTime: isoTime.nullable().optional(),
-  sectionId: id.nullable().optional(),
   recurrenceRule: recurrenceRule.nullable().optional(),
   recurrenceMode: recurrenceMode.optional(),
 });
 
 export const setTaskDoneSchema = z.object({ id, done: z.boolean() });
-export const moveTaskSchema = z.object({
-  id,
-  listId: id,
-  sectionId: id.nullable().optional(),
-});
+export const moveTaskSchema = z.object({ id, listId: id });
 export const taskIdSchema = z.object({ id });
 export const undoRecurringSchema = z.object({
   taskId: id,
@@ -129,11 +108,8 @@ export const reorderTaskSchema = z.object({
   afterId: id.nullable().optional(),
   /** The task that should end up right after this one (null at the bottom). */
   beforeId: id.nullable().optional(),
-  /** Omit to keep the section; null means "no section". */
-  sectionId: id.nullable().optional(),
 });
 export const listViewSettingsSchema = z.object({ id, settings: viewSettingsSchema });
-export const setTaskTagsSchema = z.object({ id, tagIds: z.array(id).max(50) });
 
 /** Flattens Zod issues to the first message per field, for forms. */
 export function fieldErrorsFrom(error: z.ZodError): Record<string, string> {

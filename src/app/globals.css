@@ -46,6 +46,7 @@
   --color-dash-card: var(--dash-card);
   --color-dash-well: var(--dash-well);
   --color-dash-raised: var(--dash-raised);
+  --color-dash-track: var(--dash-track);
   --color-dash-edge: var(--dash-edge);
   --color-dash-ink: var(--dash-ink);
   --color-dash-ink-soft: var(--dash-ink-soft);
@@ -69,95 +70,104 @@
 }
 
 /*
- * Design tokens (CLAUDE.md §8, Phase 8). The idea is a modern account book: pale ledger paper,
- * dark ink, a cloth-green spine for the sidebar, and "margin red" kept for what needs attention
- * (overdue, outflow, delete). Every pair below was checked against WCAG AA by the axe audit.
+ * Design tokens (CLAUDE.md §8, docs/design.md). One calm palette for the whole app: a soft grey
+ * canvas, white cards, near-black ink, grey wells, and one orange used sparingly (the dashboard
+ * look). The sidebar is the same light canvas. Every pair is checked by the axe audit in the tests.
  */
 :root {
-  --background: oklch(0.955 0.012 150); /* ledger paper */
-  --foreground: oklch(0.25 0.025 175); /* ink */
-  --card: oklch(0.985 0.006 150);
-  --card-foreground: oklch(0.25 0.025 175);
-  --popover: oklch(0.985 0.006 150);
-  --popover-foreground: oklch(0.25 0.025 175);
-  --primary: oklch(0.42 0.075 168); /* ledger green */
-  --primary-foreground: oklch(0.975 0.01 150);
-  --secondary: oklch(0.925 0.014 150);
-  --secondary-foreground: oklch(0.25 0.025 175);
-  --muted: oklch(0.935 0.012 150);
-  --muted-foreground: oklch(0.46 0.03 170);
-  --accent: oklch(0.915 0.028 160);
-  --accent-foreground: oklch(0.25 0.025 175);
-  --destructive: oklch(0.5 0.19 27); /* margin red */
-  --border: oklch(0.875 0.018 150);
-  --input: oklch(0.83 0.02 150);
-  --ring: oklch(0.55 0.09 168);
-  --inflow: oklch(0.45 0.09 160);
-  --outflow: oklch(0.52 0.17 30);
-  --brass: oklch(0.72 0.12 85);
-  --chart-1: oklch(0.45 0.09 160);
-  --chart-2: oklch(0.52 0.17 30);
-  --chart-3: oklch(0.72 0.12 85);
-  --chart-4: oklch(0.46 0.03 170);
-  --chart-5: oklch(0.25 0.025 175);
+  /* A faint green-grey canvas, the light echo of the dark theme's green-black. */
+  --background: #eceee9;
+  --foreground: #111214;
+  --card: #ffffff;
+  --card-foreground: #111214;
+  --popover: #ffffff;
+  --popover-foreground: #111214;
+  --primary: #111214;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f2;
+  --secondary-foreground: #111214;
+  --muted: #f4f4f2;
+  --muted-foreground: #5b5f66;
+  --accent: #ececea;
+  --accent-foreground: #111214;
+  --destructive: #b42318;
+  --border: #dfe2dc;
+  --input: #d6d6d2;
+  --ring: #6b7078;
+  --inflow: #166534;
+  --outflow: #b42318;
+  --brass: #8a5a00;
+  --chart-1: #111214;
+  --chart-2: #f26b21;
+  --chart-3: #8a5a00;
+  --chart-4: #5b5f66;
+  --chart-5: #166534;
   --radius: 0.5rem;
-  --sidebar: oklch(0.27 0.04 172); /* the cloth spine of the book */
-  --sidebar-foreground: oklch(0.95 0.012 150);
-  --sidebar-primary: oklch(0.82 0.12 165);
-  --sidebar-primary-foreground: oklch(0.22 0.035 170);
-  --sidebar-accent: oklch(0.34 0.05 170);
-  --sidebar-accent-foreground: oklch(0.98 0.01 150);
-  --sidebar-border: oklch(1 0 0 / 14%);
-  --sidebar-ring: oklch(0.82 0.12 165);
+  --sidebar: #eceee9;
+  --sidebar-foreground: #111214;
+  --sidebar-primary: #111214;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0e3dd;
+  --sidebar-accent-foreground: #111214;
+  --sidebar-border: #dde0da;
+  --sidebar-ring: #6b7078;
 }
 
 .dark {
-  --background: oklch(0.2 0.012 170);
-  --foreground: oklch(0.94 0.01 150);
-  --card: oklch(0.245 0.015 170);
-  --card-foreground: oklch(0.94 0.01 150);
-  --popover: oklch(0.26 0.016 170);
-  --popover-foreground: oklch(0.94 0.01 150);
-  --primary: oklch(0.8 0.11 165);
-  --primary-foreground: oklch(0.2 0.03 170);
-  --secondary: oklch(0.3 0.018 170);
-  --secondary-foreground: oklch(0.94 0.01 150);
-  --muted: oklch(0.28 0.016 170);
-  --muted-foreground: oklch(0.74 0.025 160);
-  --accent: oklch(0.32 0.035 170);
-  --accent-foreground: oklch(0.96 0.01 150);
-  --destructive: oklch(0.72 0.17 25);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.7 0.09 165);
-  --inflow: oklch(0.8 0.11 165);
-  --outflow: oklch(0.74 0.15 30);
-  --brass: oklch(0.8 0.12 85);
-  --chart-1: oklch(0.8 0.11 165);
-  --chart-2: oklch(0.74 0.15 30);
-  --chart-3: oklch(0.8 0.12 85);
-  --chart-4: oklch(0.74 0.025 160);
-  --chart-5: oklch(0.94 0.01 150);
-  --sidebar: oklch(0.165 0.02 172);
-  --sidebar-foreground: oklch(0.94 0.012 150);
-  --sidebar-primary: oklch(0.8 0.11 165);
-  --sidebar-primary-foreground: oklch(0.2 0.03 170);
-  --sidebar-accent: oklch(0.26 0.03 170);
-  --sidebar-accent-foreground: oklch(0.97 0.01 150);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.8 0.11 165);
+  --background: #121514;
+  --foreground: #f2f4f1;
+  --card: #1d211f;
+  --card-foreground: #f2f4f1;
+  --popover: #1f2321;
+  --popover-foreground: #f2f4f1;
+  --primary: #f2f4f1;
+  --primary-foreground: #121514;
+  --secondary: #282d2a;
+  --secondary-foreground: #f2f4f1;
+  --muted: #282d2a;
+  --muted-foreground: #aeb4ae;
+  --accent: #2c322e;
+  --accent-foreground: #f2f4f1;
+  --destructive: #f58b84;
+  --border: #ffffff1a;
+  --input: #ffffff2b;
+  --ring: #aeb4ae;
+  --inflow: #86efac;
+  --outflow: #fca5a5;
+  --brass: #f0c25c;
+  --chart-1: #f2f4f1;
+  --chart-2: #f58445;
+  --chart-3: #f0c25c;
+  --chart-4: #aeb4ae;
+  --chart-5: #86efac;
+  --sidebar: #121514;
+  --sidebar-foreground: #f2f4f1;
+  --sidebar-primary: #f2f4f1;
+  --sidebar-primary-foreground: #121514;
+  --sidebar-accent: #232826;
+  --sidebar-accent-foreground: #f2f4f1;
+  --sidebar-border: #ffffff14;
+  --sidebar-ring: #aeb4ae;
 }
 
 /*
- * The dashboard look (docs/design.md): white rounded cards, grey wells, near-black ink and one
- * orange. Scoped to `.dash` so screens can move to it one at a time.
+ * The dashboard tokens (docs/design.md §2). They now apply everywhere; the `.dash` class is kept
+ * on screens built in this look so they read the same if the defaults ever change again.
  */
+:root,
 .dash {
   --dash-card: #ffffff;
   --dash-well: #f4f4f2;
   /* A surface lifted off a well: the selected pill of a segmented control. */
   --dash-raised: #ffffff;
-  --dash-edge: #ececea;
+  /* The track behind pill tabs and the period picker, sitting on the canvas (must stand out from it). */
+  --dash-track: #dde1da;
+  --dash-track-edge: rgb(0 0 0 / 0.05);
+  /* The raised pill on a track: white with a short shadow so it reads as lifted. */
+  --dash-lift: 0 1px 3px rgb(16 24 16 / 0.14), 0 0 0 1px rgb(16 24 16 / 0.05);
+  --dash-edge: #e4e7e1;
+  /* Cards on the canvas: a hairline edge plus the faintest shadow, so white never melts into grey. */
+  --dash-card-shadow: 0 1px 2px rgb(16 24 16 / 0.05);
   --dash-ink: #111214;
   --dash-ink-soft: #5b5f66;
   --dash-accent: #f26b21;
@@ -168,11 +178,16 @@
   --dash-bad: #b42318;
   --dash-bad-bg: #fee4e2;
 }
+.dark,
 .dark .dash {
   --dash-card: #1d211f;
   --dash-well: #282d2a;
   --dash-raised: #3b423e;
+  --dash-track: #282d2a;
+  --dash-track-edge: transparent;
+  --dash-lift: 0 1px 2px rgb(0 0 0 / 0.3);
   --dash-edge: #ffffff1a;
+  --dash-card-shadow: none;
   --dash-ink: #f2f4f1;
   --dash-ink-soft: #aeb4ae;
   --dash-accent: #f58445;
@@ -180,27 +195,6 @@
   --dash-good-bg: #14532d;
   --dash-bad: #fca5a5;
   --dash-bad-bg: #7f1d1d;
-}
-
-/*
- * The sidebar is always a dark panel, even in the light theme. Components inside it (tags, theme
- * button, sign out) use the ordinary tokens, so inside the panel those tokens are re-pointed at the
- * sidebar palette. Menus that open in a portal sit outside the panel and keep the page theme.
- */
-[data-sidebar="sidebar"] {
-  --foreground: var(--sidebar-foreground);
-  --muted-foreground: oklch(0.8 0.02 160);
-  --accent: var(--sidebar-accent);
-  --accent-foreground: var(--sidebar-accent-foreground);
-  --secondary: var(--sidebar-accent);
-  --secondary-foreground: var(--sidebar-accent-foreground);
-  --muted: var(--sidebar-accent);
-  --border: var(--sidebar-border);
-  --input: oklch(1 0 0 / 20%);
-  --ring: var(--sidebar-ring);
-  --destructive: oklch(0.78 0.15 25);
-  --primary: var(--sidebar-primary);
-  --primary-foreground: var(--sidebar-primary-foreground);
 }
 
 @layer base {

@@ -1,118 +1,53 @@
 "use client";
 
-import { List as ListIcon, Plus } from "lucide-react";
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import {
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { NavRow } from "@/components/shell/nav-row";
 import { ListFormDialog } from "./list-form-dialog";
+import { listIcon } from "../list-icons";
 import { useTodos } from "./todos-provider";
 
-/** The "Lists" group in the sidebar, with a button to create a list. */
+/** The sidebar block under Tasks: your lists, General first, and a button for a new one. */
 export function TodoSidebarSection() {
-  return (
-    <>
-      <ListsGroup />
-      <TagsGroup />
-    </>
-  );
+  return <ListsNav />;
 }
 
-function ListsGroup() {
+export function ListsNav({ onNavigate }: { onNavigate?: () => void }) {
   const { lists } = useTodos();
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
   const [creating, setCreating] = useState(false);
-  const own = lists.filter((l) => !l.isInbox);
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Lists</SidebarGroupLabel>
-      <SidebarGroupAction
-        title="New list"
-        aria-label="New list"
-        onClick={() => setCreating(true)}
-        className="size-11 md:size-5"
-      >
-        <Plus />
-      </SidebarGroupAction>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {own.map((list) => {
-            const href = `/lists/${list.id}`;
-            const active = pathname === href;
-            return (
-              <SidebarMenuItem key={list.id}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={active}
-                  className="h-11 md:h-8"
-                  onClick={() => isMobile && setOpenMobile(false)}
-                >
-                  <Link href={href} aria-current={active ? "page" : undefined}>
-                    {list.icon ? <span aria-hidden>{list.icon}</span> : <ListIcon />}
-                    <span>{list.name}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-          {own.length === 0 ? (
-            <li className="px-2 py-1 text-xs text-muted-foreground">No lists yet.</li>
-          ) : null}
-        </SidebarMenu>
-      </SidebarGroupContent>
+    <div className="mt-2">
+      <div className="flex items-center justify-between pr-0.5 pl-2.5">
+        <h2 className="text-xs font-medium text-muted-foreground">Lists</h2>
+        <button
+          type="button"
+          aria-label="New list"
+          title="New list"
+          onClick={() => setCreating(true)}
+          className="grid size-11 place-items-center rounded-lg text-muted-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 md:size-7"
+        >
+          <Plus aria-hidden className="size-4" />
+        </button>
+      </div>
+      <div className="flex flex-col gap-1">
+        {lists.map((list) => {
+          const href = `/lists/${list.id}`;
+          return (
+            <NavRow
+              key={list.id}
+              href={href}
+              label={list.name}
+              icon={listIcon(list.icon)}
+              current={pathname === href}
+              onNavigate={onNavigate}
+            />
+          );
+        })}
+      </div>
       <ListFormDialog open={creating} onOpenChange={setCreating} />
-    </SidebarGroup>
-  );
-}
-
-/** The "Tags" group in the sidebar: each tag opens the Tag view. */
-function TagsGroup() {
-  const { tags } = useTodos();
-  const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
-  if (tags.length === 0) return null;
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Tags</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {tags.map((tag) => {
-            const href = `/tags/${tag.id}`;
-            const active = pathname === href;
-            return (
-              <SidebarMenuItem key={tag.id}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={active}
-                  className="h-11 md:h-8"
-                  onClick={() => isMobile && setOpenMobile(false)}
-                >
-                  <Link href={href} aria-current={active ? "page" : undefined}>
-                    <span
-                      aria-hidden
-                      className="size-2.5 shrink-0 rounded-full bg-muted-foreground/50"
-                      style={tag.color ? { backgroundColor: tag.color } : undefined}
-                    />
-                    <span>{tag.name}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    </div>
   );
 }

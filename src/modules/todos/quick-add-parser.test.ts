@@ -11,22 +11,17 @@ const ctx: ParseContext = {
     { id: "L-work", name: "Work" },
     { id: "L-os", name: "Open source" },
   ],
-  tags: [
-    { id: "T-bills", name: "bills" },
-    { id: "T-deep", name: "deep-work" },
-  ],
 };
 
 describe("the whole sentence from the spec", () => {
-  it("pay rent tomorrow 5pm #home @bills p1", () => {
-    const r = parseQuickAdd("pay rent tomorrow 5pm #home @bills p1", ctx);
+  it("pay rent tomorrow 5pm #home p1", () => {
+    const r = parseQuickAdd("pay rent tomorrow 5pm #home p1", ctx);
     expect(r.title).toBe("pay rent");
     expect(r.dueDate).toBe("2026-11-11");
     expect(r.dueTime).toBe("17:00");
     expect(r.listId).toBe("L-home");
-    expect(r.tagIds).toEqual(["T-bills"]);
     expect(r.priority).toBe(3);
-    expect(r.tokens.map((t) => t.kind)).toEqual(["date", "list", "tag", "priority"]);
+    expect(r.tokens.map((t) => t.kind)).toEqual(["date", "list", "priority"]);
   });
 });
 
@@ -67,19 +62,11 @@ describe("lists", () => {
   });
 });
 
-describe("tags", () => {
-  it("finds existing tags by name, any capitalisation", () => {
-    expect(parseQuickAdd("x @BILLS @deep-work", ctx).tagIds).toEqual(["T-bills", "T-deep"]);
-  });
-  it("marks unknown tags as new, once", () => {
-    const r = parseQuickAdd("x @fresh @Fresh", ctx);
-    expect(r.tagIds).toEqual([]);
-    expect(r.newTagNames).toEqual(["fresh"]);
-    expect(r.title).toBe("x");
-  });
-  it("does not treat an email address as a tag", () => {
-    const r = parseQuickAdd("write to bob@example.com", ctx);
+describe("@ words", () => {
+  it("stay in the title (tags were removed)", () => {
+    const r = parseQuickAdd("write to bob@example.com @later", ctx);
     expect(r.tokens).toEqual([]);
+    expect(r.title).toBe("write to bob@example.com @later");
   });
 });
 

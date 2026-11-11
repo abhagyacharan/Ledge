@@ -51,7 +51,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // Every new account gets its settings row and its Inbox (CLAUDE.md §5).
+        // Every new account gets its settings row and its default list, General (CLAUDE.md §5).
         after: async (createdUser) => {
           await ensureUserDefaults(createdUser.id);
         },

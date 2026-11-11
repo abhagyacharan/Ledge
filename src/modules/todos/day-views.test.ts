@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { groupCompletedByDay, groupUpcoming, splitToday } from "./day-views";
+import {
+  countCompletedOn,
+  groupCompletedByDay,
+  groupUpcoming,
+  splitToday,
+  weekDates,
+} from "./day-views";
 
 type T = {
   title: string;
@@ -122,5 +128,44 @@ describe("groupCompletedByDay", () => {
 
   it("ignores tasks without a completion time", () => {
     expect(groupCompletedByDay([{ completedAt: null }], "Asia/Kolkata")).toEqual([]);
+  });
+});
+
+describe("weekDates", () => {
+  it("starts on Monday when weeks start on Monday", () => {
+    // Wednesday 11 November 2026.
+    expect(weekDates("2026-11-11", 1)).toEqual([
+      "2026-11-09",
+      "2026-11-10",
+      "2026-11-11",
+      "2026-11-12",
+      "2026-11-13",
+      "2026-11-14",
+      "2026-11-15",
+    ]);
+  });
+  it("starts on Sunday when weeks start on Sunday, and a Sunday is its own start", () => {
+    expect(weekDates("2026-11-11", 0)[0]).toBe("2026-11-08");
+    expect(weekDates("2026-11-15", 0)[0]).toBe("2026-11-15");
+  });
+  it("crosses a month end", () => {
+    expect(weekDates("2026-12-01", 1)).toContain("2026-11-30");
+  });
+});
+
+describe("countCompletedOn", () => {
+  it("counts by the day in the user's timezone and ignores days outside the week", () => {
+    const dates = ["2026-11-09", "2026-11-10"];
+    const tasks = [
+      // 20:00 UTC on the 9th is 01:30 on the 10th in India.
+      { completedAt: new Date("2026-11-09T20:00:00Z") },
+      { completedAt: new Date("2026-11-09T05:00:00Z") },
+      { completedAt: new Date("2026-11-01T05:00:00Z") },
+      { completedAt: null },
+    ];
+    expect(countCompletedOn(tasks, dates, "Asia/Kolkata")).toEqual([
+      { date: "2026-11-09", count: 1 },
+      { date: "2026-11-10", count: 1 },
+    ]);
   });
 });

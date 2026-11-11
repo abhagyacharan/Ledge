@@ -25,17 +25,17 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/inbox/);
-  await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
+  await expect(page).toHaveURL(/\/tasks/);
+  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
 
-  // The new account starts with an empty Inbox, and no one else's tasks.
-  await expect(page.getByText("No tasks yet")).toBeVisible();
+  // The new account starts with nothing to do, and no one else's tasks.
+  await expect(page.getByText("Nothing due today")).toBeVisible();
   await expect(page.getByText("Pay rent")).toHaveCount(0);
 
   // Sign out.
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in/);
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   await expect(page).toHaveURL(/\/sign-in/);
 
   // A wrong password gets one general message; the right one gets you in.
@@ -46,8 +46,8 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/inbox/);
-  await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
+  await expect(page).toHaveURL(/\/tasks/);
+  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
 });
 
 test("an unknown email gets the same message as a wrong password", async ({ page }) => {

@@ -86,3 +86,26 @@ export function groupCompletedByDay<T extends { completedAt: Date | null }>(
       tasks: list.sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0)),
     }));
 }
+
+/** The seven dates of the week that contains `today`, starting on `weekStartsOn` (0 = Sunday). */
+export function weekDates(today: IsoDate, weekStartsOn: number): IsoDate[] {
+  const weekday = new Date(`${today}T00:00:00Z`).getUTCDay();
+  const back = (weekday - weekStartsOn + 7) % 7;
+  const start = addDaysIso(today, -back);
+  return Array.from({ length: 7 }, (_, i) => addDaysIso(start, i));
+}
+
+/** How many tasks were finished on each of `dates`, by the day in the user's timezone. */
+export function countCompletedOn<T extends { completedAt: Date | null }>(
+  tasks: T[],
+  dates: IsoDate[],
+  timeZone: string,
+): { date: IsoDate; count: number }[] {
+  const counts = new Map(dates.map((d) => [d, 0]));
+  for (const t of tasks) {
+    if (!t.completedAt) continue;
+    const day = todayIn(timeZone, t.completedAt);
+    if (counts.has(day)) counts.set(day, (counts.get(day) ?? 0) + 1);
+  }
+  return dates.map((date) => ({ date, count: counts.get(date) ?? 0 }));
+}

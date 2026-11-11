@@ -17,8 +17,8 @@ async function quickAdd(page: Page, title: string) {
 }
 
 test("quick-add a task with q, complete it, and undo", async ({ page }) => {
-  await page.goto("/inbox");
-  await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
+  await page.goto("/all");
+  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
 
   await quickAdd(page, "Undo me");
   const checkbox = page.getByRole("checkbox", { name: "Undo me: mark done" });
@@ -37,7 +37,7 @@ test("quick-add a task with q, complete it, and undo", async ({ page }) => {
 });
 
 test("open a task in the drawer, edit it, and the changes are saved", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await quickAdd(page, "Edit me");
 
   await page.getByRole("link", { name: /^Edit me/ }).click();
@@ -71,7 +71,7 @@ test("open a task in the drawer, edit it, and the changes are saved", async ({ p
 test("a deleted task can be undone, then restored or erased from the Trash screen", async ({
   page,
 }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await quickAdd(page, "Trash me");
   await page.getByRole("link", { name: /^Trash me/ }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Move to Trash" }).click();
@@ -91,7 +91,7 @@ test("a deleted task can be undone, then restored or erased from the Trash scree
   // Restore it, then delete it for good (with a confirmation).
   await page.getByRole("button", { name: "Restore Trash me" }).click();
   await expect(page.getByRole("button", { name: "Restore Trash me" })).toHaveCount(0);
-  await page.goto("/inbox");
+  await page.goto("/all");
   await expect(page.getByRole("link", { name: /^Trash me/ })).toBeVisible();
 
   await page.getByRole("link", { name: /^Trash me/ }).click();
@@ -107,17 +107,17 @@ test("seeded Trash item can be restored", async ({ page }) => {
   await expect(page.getByText("Old idea (in Trash)")).toBeVisible();
   await page.getByRole("button", { name: "Restore Old idea (in Trash)" }).click();
   await expect(page.getByRole("button", { name: "Restore Old idea (in Trash)" })).toHaveCount(0);
-  await page.goto("/inbox");
+  await page.goto("/all");
   await expect(page.getByRole("link", { name: /^Old idea \(in Trash\)/ })).toBeVisible();
 });
 
 test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   // Own list with two tasks, so nothing depends on the seed.
-  await page.goto("/inbox");
-  await page.getByRole("button", { name: "New list" }).click();
+  await page.goto("/all");
+  await page.getByRole("button", { name: "New list" }).first().click();
   await page.getByLabel("Name", { exact: true }).fill("Keys list");
   await page.getByRole("button", { name: "Create list" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Keys list" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Keys list" })).toBeVisible();
   const add = page.getByLabel("Add a task");
   for (const title of ["Key A", "Key B"]) {
     await add.fill(title);
@@ -169,26 +169,25 @@ test("keyboard shortcuts: ?, j and k, x, e, Ctrl+K and /", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Command palette" })).toBeVisible();
   await page.keyboard.type("Keys list");
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { level: 1, name: "Keys list" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Keys list" })).toBeVisible();
 
   // / goes to the search page with its box ready.
   await page.locator("body").click({ position: { x: 5, y: 300 } });
   await page.keyboard.press("/");
   await expect(page).toHaveURL(/\/search/);
-  await expect(page.getByRole("searchbox", { name: "Search tasks" })).toBeFocused();
+  await expect(page.getByRole("searchbox", { name: "Search everything" })).toBeFocused();
 });
 
-test("quick add understands a sentence: date, time, list, tag and priority", async ({ page }) => {
-  await page.goto("/inbox");
+test("quick add understands a sentence: date, time, list and priority", async ({ page }) => {
+  await page.goto("/all");
   await page.keyboard.press("q");
   const input = page.getByLabel("Task", { exact: true });
-  await input.fill("NL pay rent tomorrow 5pm #home @bills p1");
+  await input.fill("NL pay rent tomorrow 5pm #home p1");
 
   // The chips show what was understood, and the words leave the title.
   const chips = page.getByRole("list", { name: "Understood from your text" });
   await expect(chips).toContainText("Tomorrow, 5:00 pm");
   await expect(chips).toContainText("List: Home");
-  await expect(chips).toContainText("Tag: bills");
   await expect(chips).toContainText("Priority: High");
 
   // A removed chip puts its words back into the task and stops applying.
@@ -203,41 +202,24 @@ test("quick add understands a sentence: date, time, list, tag and priority", asy
   ).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // It is in the Home list with its date and tag, and the title is clean (and keeps "p1").
+  // It is in the Home list with its date, and the title is clean (and keeps "p1").
   await page.goto("/upcoming");
   const row = page.getByRole("link", { name: /^NL pay rent p1/ });
   await expect(row).toBeVisible();
   await expect(row).toContainText("5:00 pm");
-  await expect(row).toContainText("bills");
+  await expect(row).toContainText("Home");
 });
 
-test("quick add with a tag nobody has used creates it", async ({ page }) => {
-  await page.goto("/inbox");
+test("quick add has every task field: date, priority, notes and repeat", async ({ page }) => {
+  await page.goto("/all");
   await page.keyboard.press("q");
-  await page.getByLabel("Task", { exact: true }).fill("NL brand new tag @freshtag");
-  await expect(page.getByRole("list", { name: "Understood from your text" })).toContainText(
-    "New tag: freshtag",
-  );
-  await page.getByLabel("Task", { exact: true }).press("Enter");
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("link", { name: /^NL brand new tag/ })).toContainText("freshtag");
-});
-
-test("quick add has every task field: date, priority, tag, notes and repeat", async ({ page }) => {
-  await page.goto("/inbox");
-  await page.keyboard.press("q");
-  const dialog = page.getByRole("dialog", { name: "Quick add" });
+  const dialog = page.getByRole("dialog", { name: "Add a task" });
   await dialog.getByLabel("Task", { exact: true }).fill("Full form task");
 
   await dialog.getByRole("button", { name: /^Due date:/ }).click();
   await page.getByRole("button", { name: "Tomorrow", exact: true }).click();
   await page.keyboard.press("Escape"); // close the date popover, keep the dialog
-  await dialog.getByLabel("Priority").click();
-  await page.getByRole("option", { name: "High" }).click();
-  await dialog.getByRole("button", { name: "Add tags" }).click();
-  await page.getByRole("checkbox", { name: "bills" }).click();
-  await page.keyboard.press("Escape");
+  await dialog.getByRole("radio", { name: "High" }).check();
   await dialog.getByLabel("Notes").fill("Written in quick add");
   await dialog.locator("#task-repeat").click();
   await page.getByRole("option", { name: "Every week" }).click();
@@ -253,18 +235,20 @@ test("quick add has every task field: date, priority, tag, notes and repeat", as
   await expect(drawer.getByLabel("Notes")).toHaveValue("Written in quick add");
   await expect(drawer.getByRole("button", { name: /^Due date: Tomorrow/ })).toBeVisible();
   await expect(drawer.getByText(/^Every week on /)).toBeVisible();
-  await expect(drawer.getByText("bills")).toBeVisible();
 });
 
 test("the inline add field opens the full form with what was typed", async ({ page }) => {
-  await page.goto("/inbox");
-  await page.getByLabel("Add a task", { exact: true }).first().fill("From the inline field");
+  await page.goto("/all");
+  await page
+    .getByRole("textbox", { name: /^Add a task/ })
+    .first()
+    .fill("From the inline field");
   await page
     .getByRole("button", { name: /More options: open the full form/ })
     .first()
     .click();
-  const dialog = page.getByRole("dialog", { name: "Quick add" });
+  const dialog = page.getByRole("dialog", { name: "Add a task" });
   await expect(dialog.getByLabel("Task", { exact: true })).toHaveValue("From the inline field");
-  await expect(dialog.getByLabel("Priority")).toBeVisible();
+  await expect(dialog.getByRole("radiogroup", { name: "Priority" })).toBeVisible();
   await expect(dialog.getByLabel("Notes")).toBeVisible();
 });

@@ -515,7 +515,7 @@ function ChoiceGroup({
                   "relative inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-[transform,background-color,color,box-shadow] duration-150 ease-snap select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 active:scale-[0.97] md:h-9",
                   segmented
                     ? checked
-                      ? "bg-dash-raised text-dash-ink shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
+                      ? "bg-dash-raised text-dash-ink shadow-(--dash-lift)"
                       : "text-dash-ink-soft hover:text-dash-ink"
                     : checked
                       ? "bg-dash-ink text-dash-card"

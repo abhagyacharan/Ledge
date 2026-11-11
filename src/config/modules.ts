@@ -1,12 +1,14 @@
 import {
   CalendarDays,
+  ChartPie,
   CircleCheckBig,
-  Inbox,
+  LayoutGrid,
+  Landmark,
   ListChecks,
   ListTodo,
-  Search,
+  ReceiptIndianRupee,
   Sun,
-  Trash2,
+  TrendingUp,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -15,12 +17,9 @@ import { TodoGlobal } from "@/modules/todos/components/todo-global";
 import { TodoSidebarSection } from "@/modules/todos/components/sidebar-section";
 
 /**
- * Module registry (CLAUDE.md §4). The sidebar renders from this list, so adding a module
- * means adding an entry here, not editing the shell.
- *
- * - `section: "primary"` items render at the top of the sidebar without a group heading.
- * - `section: "modules"` items render in the "Modules" group, below Lists and Tags.
- * - `enabled: false` hides the module from the sidebar until it is switched on.
+ * Module registry (CLAUDE.md §4). The sidebar, the phone tab bar and the command palette all
+ * render from this list, so adding a module means adding an entry here, not editing the shell.
+ * Order matters: modules appear in this order everywhere.
  */
 export type NavItem = {
   label: string;
@@ -32,61 +31,62 @@ export type AppModule = {
   id: string;
   label: string;
   icon: LucideIcon;
+  /** Where the module's own entry (and the phone tab) goes. */
   route: string;
   enabled: boolean;
-  section: "primary" | "modules";
-  /** Extra links shown for this module. Defaults to a single item for `route`. */
-  nav?: NavItem[];
-  /** Extra places the command palette can jump to (not shown in the sidebar). */
-  paletteRoutes?: { label: string; route: string }[];
-  /** Extra sidebar group rendered under the module's links (for example "Lists"). */
+  /** The module's views, shown under it in the sidebar and as the tabs on its pages. */
+  nav: NavItem[];
+  /** Whether a path belongs to this module (marks its sidebar entry and phone tab as current). */
+  owns: (pathname: string) => boolean;
+  /** Extra sidebar block rendered under the module's views (the tasks module adds its lists). */
   SidebarSection?: ComponentType;
   /** Always-mounted UI for the module, such as the quick-add button. Rendered in the app layout. */
   Global?: ComponentType;
 };
 
+const TASK_ROUTES = ["/tasks", "/today", "/upcoming", "/all", "/completed", "/lists"];
+
 export const modules: AppModule[] = [
+  {
+    id: "expenses",
+    label: "Expense Tracker",
+    icon: Wallet,
+    route: "/expenses",
+    enabled: true,
+    nav: [
+      { label: "Summary", route: "/expenses", icon: ChartPie },
+      { label: "Income", route: "/expenses/income", icon: Wallet },
+      { label: "EMIs & loans", route: "/expenses/emis", icon: Landmark },
+      { label: "Expenses", route: "/expenses/spending", icon: ReceiptIndianRupee },
+      { label: "Investments", route: "/expenses/investments", icon: TrendingUp },
+    ],
+    owns: (path) => path === "/expenses" || path.startsWith("/expenses/"),
+  },
   {
     id: "todos",
     label: "Tasks",
     icon: ListChecks,
-    route: "/inbox",
+    route: "/tasks",
     enabled: true,
-    section: "primary",
     nav: [
-      { label: "Inbox", route: "/inbox", icon: Inbox },
+      { label: "Overview", route: "/tasks", icon: LayoutGrid },
       { label: "Today", route: "/today", icon: Sun },
       { label: "Upcoming", route: "/upcoming", icon: CalendarDays },
       { label: "All tasks", route: "/all", icon: ListTodo },
-      { label: "Search", route: "/search", icon: Search },
       { label: "Completed", route: "/completed", icon: CircleCheckBig },
-      { label: "Trash", route: "/trash", icon: Trash2 },
     ],
+    owns: (path) => TASK_ROUTES.some((r) => path === r || path.startsWith(`${r}/`)),
     SidebarSection: TodoSidebarSection,
     Global: TodoGlobal,
   },
-  {
-    id: "expenses",
-    label: "Expenses",
-    icon: Wallet,
-    route: "/expenses",
-    enabled: true,
-    section: "modules",
-    // The sidebar shows one "Expenses" entry; the tabs inside are reachable from the palette.
-    paletteRoutes: [
-      { label: "Expenses: Summary", route: "/expenses" },
-      { label: "Expenses: Income", route: "/expenses/income" },
-      { label: "Expenses: EMIs & loans", route: "/expenses/emis" },
-      { label: "Expenses: Expenses", route: "/expenses/spending" },
-      { label: "Expenses: Investments", route: "/expenses/investments" },
-    ],
-  },
 ];
 
-export function enabledModules(section: AppModule["section"]): AppModule[] {
-  return modules.filter((m) => m.enabled && m.section === section);
+export function enabledModules(): AppModule[] {
+  return modules.filter((m) => m.enabled);
 }
 
-export function navItemsFor(module: AppModule): NavItem[] {
-  return module.nav ?? [{ label: module.label, route: module.route, icon: module.icon }];
+/** Exact match for a module's home view, prefix match for the rest ("/lists/x" is under Tasks). */
+export function isCurrent(route: string, pathname: string, home: string): boolean {
+  if (route === home) return pathname === route;
+  return pathname === route || pathname.startsWith(`${route}/`);
 }

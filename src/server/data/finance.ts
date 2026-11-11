@@ -198,6 +198,35 @@ export async function listEntries(
     .orderBy(...order);
 }
 
+/**
+ * Entries of every kind whose name, notes, lender, platform or category contains `text` (any
+ * date), newest first. Used by the app-wide search (CLAUDE.md §6.2, Search).
+ */
+export async function searchEntries(
+  userId: string,
+  text: string,
+  limit = 50,
+): Promise<FinanceEntry[]> {
+  const pattern = likePattern(text);
+  return db
+    .select()
+    .from(financeEntries)
+    .where(
+      and(
+        live(userId),
+        or(
+          ilike(financeEntries.title, pattern),
+          ilike(financeEntries.notes, pattern),
+          ilike(financeEntries.lender, pattern),
+          ilike(financeEntries.platform, pattern),
+          ilike(financeEntries.category, pattern),
+        ),
+      ),
+    )
+    .orderBy(desc(financeEntries.entryDate), desc(financeEntries.createdAt))
+    .limit(limit);
+}
+
 const total = sql<number>`sum(${financeEntries.amountMinor})`.mapWith(Number);
 const rowCount = sql<number>`count(*)`.mapWith(Number);
 

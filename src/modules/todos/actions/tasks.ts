@@ -2,7 +2,6 @@
 
 import { todayIn } from "@/lib/dates";
 import { fail, ok } from "@/lib/result";
-import { setTaskTags } from "@/server/data/tags";
 import { getUserSettings } from "@/server/data/settings";
 import {
   completeRecurringTask,
@@ -26,7 +25,6 @@ import {
   moveTaskSchema,
   reorderTaskSchema,
   setTaskDoneSchema,
-  setTaskTagsSchema,
   taskIdSchema,
   undoRecurringSchema,
   updateTaskSchema,
@@ -34,10 +32,9 @@ import {
 import { guarded, NOT_FOUND, refresh } from "./guard";
 
 export async function createTaskAction(input: unknown) {
-  return guarded(createTaskSchema, input, async ({ tagIds, ...data }, userId) => {
+  return guarded(createTaskSchema, input, async (data, userId) => {
     const task = await createTask(userId, data);
     if (!task) return fail("Couldn't add that task. The list or parent no longer exists.");
-    if (tagIds && tagIds.length > 0) await setTaskTags(userId, task.id, tagIds);
     refresh();
     return ok({ id: task.id });
   });
@@ -90,8 +87,8 @@ export async function undoRecurringCompletionAction(input: unknown) {
 }
 
 export async function moveTaskAction(input: unknown) {
-  return guarded(moveTaskSchema, input, async ({ id, listId, sectionId }, userId) => {
-    const moved = await moveTaskToList(userId, id, listId, sectionId ?? null);
+  return guarded(moveTaskSchema, input, async ({ id, listId }, userId) => {
+    const moved = await moveTaskToList(userId, id, listId);
     if (!moved) return fail("Couldn't move that task.");
     refresh();
     return ok();
@@ -114,18 +111,10 @@ export async function restoreTaskAction(input: unknown) {
   });
 }
 
-export async function setTaskTagsAction(input: unknown) {
-  return guarded(setTaskTagsSchema, input, async ({ id, tagIds }, userId) => {
-    if (!(await setTaskTags(userId, id, tagIds))) return fail(NOT_FOUND);
-    refresh();
-    return ok();
-  });
-}
-
-/** Drag and drop: put a task between two neighbours, optionally in another section. */
+/** Drag and drop: put a task between two neighbours. */
 export async function reorderTaskAction(input: unknown) {
-  return guarded(reorderTaskSchema, input, async ({ id, afterId, beforeId, sectionId }, userId) => {
-    const move = { afterId, beforeId, ...(sectionId === undefined ? {} : { sectionId }) };
+  return guarded(reorderTaskSchema, input, async ({ id, afterId, beforeId }, userId) => {
+    const move = { afterId, beforeId };
     if (!(await reorderTask(userId, id, move))) return fail("Couldn't move that task.");
     refresh();
     return ok();

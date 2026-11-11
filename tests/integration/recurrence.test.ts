@@ -1,6 +1,5 @@
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createTag, setTaskTags, tagIdsForTasks } from "@/server/data/tags";
 import {
   completeRecurringTask,
   getTask,
@@ -83,16 +82,6 @@ describe("completing a repeating task (CLAUDE.md §6.2)", () => {
     });
     const result = await completeRecurringTask(a.id, task.id, "2026-11-10");
     expect(result?.nextDueDate).toBe("2026-11-17");
-  });
-
-  it("gives the copy the same tags", async () => {
-    const task = await repeating();
-    const tag = (await createTag(a.id, "home")).tag;
-    await setTaskTags(a.id, task.id, [tag.id]);
-    const result = await completeRecurringTask(a.id, task.id, "2026-11-10");
-    const tagMap = await tagIdsForTasks(a.id, [task.id, result!.snapshotId]);
-    expect(tagMap.get(result!.snapshotId)).toEqual([tag.id]);
-    expect(tagMap.get(task.id)).toEqual([tag.id]);
   });
 
   it("reopens the done subtasks for the next round", async () => {

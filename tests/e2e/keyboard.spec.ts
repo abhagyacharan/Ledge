@@ -33,7 +33,7 @@ async function tabThrough(page: Page, count: number): Promise<Stop[]> {
 
 test("every stop on the Today screen shows a focus ring", async ({ page }) => {
   await page.goto("/today");
-  await expect(page.getByRole("heading", { level: 1, name: "Today" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Today" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   const stops = await tabThrough(page, 45);
   const hidden = stops.filter((s) => !s.visible).map((s) => s.what);
@@ -43,9 +43,9 @@ test("every stop on the Today screen shows a focus ring", async ({ page }) => {
 });
 
 test("every stop on a list screen with a drag handle shows a focus ring", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Home" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   const stops = await tabThrough(page, 45);
   expect(stops.filter((s) => !s.visible).map((s) => s.what)).toEqual([]);
@@ -55,8 +55,8 @@ test("every stop on a list screen with a drag handle shows a focus ring", async 
 test("a task can be added, opened, changed and closed with the keyboard alone", async ({
   page,
 }) => {
-  await page.goto("/inbox");
-  await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
+  await page.goto("/all");
+  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
   await page.waitForLoadState("networkidle");
 
   // Quick add with q, type, Enter, close with Escape.
@@ -67,7 +67,8 @@ test("a task can be added, opened, changed and closed with the keyboard alone", 
   await page.keyboard.press("Escape");
 
   // Select it with j, open it with Enter, change the title, close with Escape.
-  for (let i = 0; i < 20; i++) {
+  // All tasks lists every task, so it may take a few presses to reach the new one.
+  for (let i = 0; i < 80; i++) {
     await page.keyboard.press("j");
     const focused = await page.evaluate(() => document.activeElement?.textContent ?? "");
     if (focused.startsWith("Keyboard only task")) break;

@@ -1,36 +1,41 @@
 import type { ViewTask } from "@/server/data/views";
-import type { TaskGroup } from "../view-logic";
+import type { TaskGroup as Group } from "../view-logic";
+import { TaskGroup } from "./task-panel";
 import { TaskRow } from "./task-row";
-import type { DateContext, TagsById } from "./types";
+import type { DateContext } from "./types";
 
 /**
- * Renders grouped tasks for the cross-list views. Each row shows which list it belongs to.
+ * Grouped tasks for the views that mix lists. Each row shows which list it belongs to.
  * `allTasks` is used to count each parent's subtasks for the "2/5" progress.
  */
 export function TaskGroups({
   groups,
   allTasks,
-  tagsById,
   ctx,
+  idPrefix = "group",
 }: {
-  groups: TaskGroup<ViewTask>[];
+  groups: Group<ViewTask>[];
   allTasks: ViewTask[];
-  tagsById: TagsById;
   ctx: DateContext;
+  idPrefix?: string;
 }) {
   return (
-    <div className="flex flex-col gap-6">
-      {groups.map((group) => (
-        <section key={group.key} aria-label={group.label || "Tasks"}>
-          {group.label ? (
-            <h2 className="mb-1 border-b pb-1 text-sm font-semibold">
-              {group.label}{" "}
-              <span className="font-normal text-muted-foreground">{group.tasks.length}</span>
-            </h2>
-          ) : null}
-          <TaskList tasks={group.tasks} allTasks={allTasks} tagsById={tagsById} ctx={ctx} />
-        </section>
-      ))}
+    <div>
+      {groups.map((group) =>
+        group.label ? (
+          <TaskGroup
+            key={group.key}
+            id={`${idPrefix}-${group.key.replace(/\s+/g, "-").toLowerCase()}`}
+            label={group.label}
+            count={group.tasks.length}
+            tone={group.key === "Overdue" ? "bad" : undefined}
+          >
+            <TaskList tasks={group.tasks} allTasks={allTasks} ctx={ctx} />
+          </TaskGroup>
+        ) : (
+          <TaskList key={group.key} tasks={group.tasks} allTasks={allTasks} ctx={ctx} />
+        ),
+      )}
     </div>
   );
 }
@@ -39,13 +44,14 @@ export function TaskGroups({
 export function TaskList({
   tasks,
   allTasks,
-  tagsById,
   ctx,
+  showList = true,
 }: {
   tasks: ViewTask[];
   allTasks: ViewTask[];
-  tagsById: TagsById;
   ctx: DateContext;
+  /** Show which list each task is in (off inside a single list). */
+  showList?: boolean;
 }) {
   return (
     <ul>
@@ -54,13 +60,12 @@ export function TaskList({
           key={task.id}
           task={task}
           subtasks={allTasks.filter((t) => t.parentId === task.id)}
-          tagsById={tagsById}
           ctx={ctx}
-          context={{
-            listName: task.listName,
-            listIcon: task.listIcon,
-            parentTitle: task.parentTitle,
-          }}
+          context={
+            showList
+              ? { listName: task.listName, listIcon: task.listIcon, parentTitle: task.parentTitle }
+              : undefined
+          }
         />
       ))}
     </ul>

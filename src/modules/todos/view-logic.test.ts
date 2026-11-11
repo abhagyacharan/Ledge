@@ -3,12 +3,6 @@ import { applyView, filterTasks, groupTasks, sortTasks, type ViewableTask } from
 import { DEFAULT_VIEW_SETTINGS, type ViewSettings } from "./view-settings";
 
 const info = { today: "2026-11-10", timeNow: "12:00" };
-const TAG_HOME = "11111111-1111-4111-8111-111111111111";
-const TAG_BILLS = "22222222-2222-4222-8222-222222222222";
-const tagsById = {
-  [TAG_HOME]: { id: TAG_HOME, name: "home" },
-  [TAG_BILLS]: { id: TAG_BILLS, name: "Bills" },
-};
 
 let n = 0;
 function task(overrides: Partial<ViewableTask> & { title: string }): ViewableTask {
@@ -21,7 +15,6 @@ function task(overrides: Partial<ViewableTask> & { title: string }): ViewableTas
     dueTime: null,
     position: `a${String(n).padStart(3, "0")}`,
     createdAt: new Date(2026, 10, n),
-    tagIds: [],
     ...overrides,
   };
 }
@@ -36,17 +29,13 @@ describe("filterTasks", () => {
   const all = [
     task({ title: "open plain" }),
     task({ title: "done", status: "done" }),
-    task({ title: "high", priority: 3, dueDate: "2026-11-11", tagIds: [TAG_HOME] }),
-    task({ title: "low", priority: 1, tagIds: [TAG_BILLS] }),
+    task({ title: "high", priority: 3, dueDate: "2026-11-11" }),
+    task({ title: "low", priority: 1 }),
   ];
 
   it("hides finished tasks by default and shows them on request", () => {
     expect(titles(filterTasks(all, settings({})))).not.toContain("done");
     expect(titles(filterTasks(all, settings({ showCompleted: true })))).toContain("done");
-  });
-
-  it("filters by tag", () => {
-    expect(titles(filterTasks(all, settings({ tagId: TAG_HOME })))).toEqual(["high"]);
   });
 
   it("filters by exact priority, including 'none'", () => {
@@ -118,7 +107,7 @@ describe("sortTasks", () => {
 
 describe("groupTasks", () => {
   it("none: one group", () => {
-    const g = groupTasks([task({ title: "x" })], "none", info, tagsById);
+    const g = groupTasks([task({ title: "x" })], "none", info);
     expect(g).toHaveLength(1);
     expect(g[0].label).toBe("");
   });
@@ -133,7 +122,7 @@ describe("groupTasks", () => {
       task({ title: "today am", dueDate: "2026-11-10", dueTime: "08:00" }), // time passed
       task({ title: "old", dueDate: "2026-11-01" }),
     ];
-    const g = groupTasks(list, "due", info, tagsById);
+    const g = groupTasks(list, "due", info);
     expect(g.map((x) => x.label)).toEqual([
       "Overdue",
       "Today",
@@ -151,7 +140,6 @@ describe("groupTasks", () => {
       [task({ title: "d7", dueDate: "2026-11-17" }), task({ title: "d8", dueDate: "2026-11-18" })],
       "due",
       info,
-      tagsById,
     );
     expect(g.map((x) => [x.label, titles(x.tasks)])).toEqual([
       ["Next 7 days", ["d7"]],
@@ -164,22 +152,8 @@ describe("groupTasks", () => {
       [task({ title: "a", priority: 1 }), task({ title: "b", priority: 3 })],
       "priority",
       info,
-      tagsById,
     );
     expect(g.map((x) => x.label)).toEqual(["High priority", "Low priority"]);
-  });
-
-  it("tag: alphabetical ignoring case, multi-tag tasks appear in each, untagged last", () => {
-    const list = [
-      task({ title: "both", tagIds: [TAG_HOME, TAG_BILLS] }),
-      task({ title: "home only", tagIds: [TAG_HOME] }),
-      task({ title: "no tag" }),
-    ];
-    const g = groupTasks(list, "tag", info, tagsById);
-    expect(g.map((x) => x.label)).toEqual(["Bills", "home", "No tag"]);
-    expect(titles(g[0].tasks)).toEqual(["both"]);
-    expect(titles(g[1].tasks)).toEqual(["both", "home only"]);
-    expect(titles(g[2].tasks)).toEqual(["no tag"]);
   });
 });
 
@@ -190,11 +164,11 @@ describe("applyView", () => {
       task({ title: "low", priority: 1 }),
       task({ title: "high", priority: 3 }),
     ];
-    const g = applyView(list, settings({ sort: "priority", showCompleted: true }), info, tagsById);
+    const g = applyView(list, settings({ sort: "priority", showCompleted: true }), info);
     expect(titles(g[0].tasks)).toEqual(["high", "low", "done high"]);
   });
 
   it("returns no groups for no tasks when grouping", () => {
-    expect(applyView([], settings({ group: "tag" }), info, tagsById)).toEqual([]);
+    expect(applyView([], settings({ group: "priority" }), info)).toEqual([]);
   });
 });

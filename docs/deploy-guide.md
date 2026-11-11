@@ -308,7 +308,7 @@ The first should print `{"status":"ok"}`. The second should print Ledge's securi
 ## 7. Create your account, then close sign-ups
 
 1. Open your address, click **Create an account**, and sign up with your email and a strong password (at least 10 characters). Store it in your password manager.
-2. You land in an empty Inbox. Your account is the only one that exists.
+2. You land on the Tasks overview, with nothing due yet. Your account is the only one that exists.
 3. **Close sign-ups so nobody else can create one.** On the server:
 
    ```bash

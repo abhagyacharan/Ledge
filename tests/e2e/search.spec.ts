@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 /** Search (CLAUDE.md §6.2, P1): reachable with `/`, finds titles by word and by the start of a word. */
 
 test("press / to search, find a task by the start of a word, and open it", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await page.keyboard.press("q");
   await page.getByLabel("Task", { exact: true }).fill("Zebra crossing paint");
   await page.keyboard.press("Enter");
@@ -15,7 +15,7 @@ test("press / to search, find a task by the start of a word, and open it", async
   // / goes to the search page with the box ready.
   await page.keyboard.press("/");
   await expect(page).toHaveURL(/\/search/);
-  const box = page.getByRole("searchbox", { name: "Search tasks" });
+  const box = page.getByRole("searchbox", { name: "Search everything" });
   await expect(box).toBeFocused();
 
   await box.fill("zebr");
@@ -23,7 +23,7 @@ test("press / to search, find a task by the start of a word, and open it", async
   await expect(page).toHaveURL(/\/search\?q=zebr/);
   const result = page.getByRole("link", { name: /^Zebra crossing paint/ });
   await expect(result).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("1 result for");
+  await expect(page.getByRole("status")).toContainText("1 task and");
 
   // A result opens the task drawer, like anywhere else.
   await result.click();
@@ -31,16 +31,29 @@ test("press / to search, find a task by the start of a word, and open it", async
   await page.keyboard.press("Escape");
 
   // Nothing matches: a clear message instead of an empty page.
-  await page.getByRole("searchbox", { name: "Search tasks" }).fill("qqqxyz");
-  await page.getByRole("searchbox", { name: "Search tasks" }).press("Enter");
+  await page.getByRole("searchbox", { name: "Search everything" }).fill("qqqxyz");
+  await page.getByRole("searchbox", { name: "Search everything" }).press("Enter");
   await expect(page.getByText('Nothing found for "qqqxyz"')).toBeVisible();
 });
 
 test("search is in the side menu and the command palette", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await page.getByRole("link", { name: "Search", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Search" })).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.keyboard.type("search");
   await expect(page.getByRole("option", { name: /Search/ }).first()).toBeVisible();
+});
+
+test("search also finds Expense Tracker entries and opens them in their tab", async ({ page }) => {
+  await page.goto("/search?q=netflix");
+  const entries = page.getByRole("region", { name: "Expense Tracker" });
+  const result = entries.getByRole("link", { name: /Netflix and iCloud/ });
+  await expect(result).toBeVisible();
+  await expect(result).toContainText("Expenses");
+  await result.click();
+  await expect(page).toHaveURL(/\/expenses\/spending\?y=\d{4}&m=\d{1,2}&q=netflix/);
+  await expect(
+    page.getByRole("button", { name: "Edit Netflix and iCloud", exact: true }),
+  ).toBeVisible();
 });

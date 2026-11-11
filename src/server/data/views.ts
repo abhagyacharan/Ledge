@@ -2,12 +2,11 @@ import "server-only";
 import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/server/db/client";
-import { lists, taskTags, tasks, type Task } from "@/server/db/schema";
-import { tagIdsForTasks } from "./tags";
+import { lists, tasks, type Task } from "@/server/db/schema";
 import type { TaskRow } from "./tasks";
 
 /**
- * Queries behind the cross-list views: Today, Upcoming, All, Completed and Tag.
+ * Queries behind the cross-list views: Overview, Today, Upcoming, All and Completed.
  * Every function takes `userId` and filters by it. A task is only returned when it is not in Trash
  * and its list is neither in Trash nor archived (archiving puts a list, and its tasks, away).
  */
@@ -51,13 +50,8 @@ async function fetchViewTasks(
   const rows = await (options.order ? query.orderBy(options.order) : query).limit(
     options.limit ?? 5000,
   );
-  const tagMap = await tagIdsForTasks(
-    userId,
-    rows.map((r) => r.task.id),
-  );
   return rows.map((r) => ({
     ...r.task,
-    tagIds: tagMap.get(r.task.id) ?? [],
     listName: r.listName,
     listIcon: r.listIcon,
     listIsInbox: r.listIsInbox,
@@ -113,16 +107,34 @@ export function getCompletedTasks(userId: string, limit = 200): Promise<ViewTask
   });
 }
 
-/** Tasks that carry a tag (open and done). Returns [] for a tag that is not the user's. */
-export async function getTaggedTasks(userId: string, tagId: string): Promise<ViewTask[]> {
-  const links = await db
-    .select({ taskId: taskTags.taskId })
-    .from(taskTags)
-    .where(and(eq(taskTags.userId, userId), eq(taskTags.tagId, tagId)));
-  if (links.length === 0) return [];
-  const all = await fetchViewTasks(userId, undefined);
-  const ids = new Set(links.map((l) => l.taskId));
-  return all.filter((t) => ids.has(t.id));
-}
-
 export type { Task };
+
+export type ListProgress = { listId: string; open: number; done: number };
+
+/**
+ * Open and finished top-level tasks per list (subtasks and Trash left out), for the progress
+ * bars on the Tasks overview. Lists with no tasks are simply absent.
+ */
+export async function getListProgress(userId: string): Promise<ListProgress[]> {
+  const rows = await db
+    .select({
+      listId: tasks.listId,
+      open: sql<number>`count(*) filter (where ${tasks.status} = 'open')`.mapWith(Number),
+      done: sql<number>`count(*) filter (where ${tasks.status} = 'done')`.mapWith(Number),
+    })
+    .from(tasks)
+    .innerJoin(lists, and(eq(lists.id, tasks.listId), eq(lists.userId, userId)))
+    .where(
+      and(
+        eq(tasks.userId, userId),
+        isNull(tasks.parentId),
+        isNull(tasks.deletedAt),
+        isNull(lists.deletedAt),
+        eq(lists.isArchived, false),
+        // A repeating task's finished copies would inflate "done"; count the task itself only.
+        isNull(tasks.recurrenceOriginId),
+      ),
+    )
+    .groupBy(tasks.listId);
+  return rows;
+}

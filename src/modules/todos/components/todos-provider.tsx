@@ -1,14 +1,13 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import type { List, Tag } from "@/server/db/schema";
+import type { List } from "@/server/db/schema";
 
 type TodosData = {
-  /** Lists for the sidebar and quick add: not archived, not in Trash, Inbox first. */
+  /** Lists for the sidebar and quick add: not archived, not in Trash, General (the default) first. */
   lists: List[];
+  /** The default list ("General"; stored as the inbox), where tasks go when no list is chosen. */
   inboxId: string;
-  /** All of the user's tags, alphabetical. */
-  tags: Tag[];
   /** The user's timezone and locale, so the browser can work out "today" the way the server does. */
   timeZone: string;
   locale: string;

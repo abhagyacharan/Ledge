@@ -4,7 +4,7 @@ import { Archive, ArrowDown, ArrowUp, MoreHorizontal, Pencil, Target, Trash2 } f
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { DashButton } from "@/components/dash/dash-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import {
 } from "../actions/lists";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ListFormDialog } from "./list-form-dialog";
+import { ListGlyph } from "../list-icons";
 import { run, undoToast } from "./run-action";
 import type { DateContext } from "./types";
 
@@ -36,10 +37,12 @@ function goalText(targetDate: string, ctx: DateContext): string {
 export function ListHeader({
   list,
   taskCount,
+  doneCount,
   ctx,
 }: {
   list: List;
   taskCount: number;
+  doneCount: number;
   ctx: DateContext;
 }) {
   const router = useRouter();
@@ -54,47 +57,64 @@ export function ListHeader({
     const result = await run(archiveListAction({ id: list.id, archived: true }));
     if (result.ok) {
       toast.success(`Archived "${list.name}". Find it in Settings.`);
-      router.push("/inbox");
+      router.push("/tasks");
     }
   }
 
   async function trash() {
     const result = await run(trashListAction({ id: list.id }));
     if (!result.ok) return;
-    router.push("/inbox");
+    router.push("/tasks");
     undoToast(`Moved "${list.name}" to Trash`, () => void run(restoreListAction({ id: list.id })));
   }
 
+  const share = taskCount === 0 ? 0 : doneCount / taskCount;
+
   return (
-    <header className="mb-4 flex items-start justify-between gap-2">
-      <div className="min-w-0">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          {list.icon ? <span aria-hidden>{list.icon}</span> : null}
-          <span className="break-words">{list.name}</span>
-        </h1>
+    <header className="flex min-w-0 items-start gap-4 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 shadow-(--dash-card-shadow) text-dash-ink sm:p-5 md:rounded-3xl md:p-6">
+      <span
+        aria-hidden
+        className="grid size-12 shrink-0 place-items-center rounded-2xl bg-dash-well"
+      >
+        <ListGlyph icon={list.icon} className="size-6 text-dash-ink" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight break-words">
+          {list.name}
+        </h2>
         {list.description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{list.description}</p>
+          <p className="mt-1 text-sm text-pretty text-dash-ink-soft">{list.description}</p>
         ) : null}
         {list.targetDate ? (
-          <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-dash-ink-soft">
             <Target className="size-4" aria-hidden />
             {goalText(list.targetDate, ctx)}
           </p>
         ) : null}
+        {taskCount > 0 ? (
+          <div className="mt-3 flex items-center gap-3">
+            <div
+              aria-hidden
+              className="h-1.5 max-w-64 flex-1 overflow-hidden rounded-full bg-dash-well"
+            >
+              <div
+                className="h-full origin-left rounded-full bg-dash-ink transition-transform duration-500 ease-snap"
+                style={{ transform: `scaleX(${share})` }}
+              />
+            </div>
+            <span className="figures shrink-0 text-xs text-dash-ink-soft">
+              {doneCount}/{taskCount} done
+            </span>
+          </div>
+        ) : null}
       </div>
-
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 shrink-0 md:size-8"
-            aria-label={`Options for ${list.name}`}
-          >
+          <DashButton variant="ghost" size="icon" aria-label={`Options for ${list.name}`}>
             <MoreHorizontal />
-          </Button>
+          </DashButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem onSelect={() => setEditing(true)}>
             <Pencil /> Edit details
           </DropdownMenuItem>
@@ -117,7 +137,6 @@ export function ListHeader({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-
       <ListFormDialog open={editing} onOpenChange={setEditing} list={list} />
       <ConfirmDialog
         open={confirmingDelete}

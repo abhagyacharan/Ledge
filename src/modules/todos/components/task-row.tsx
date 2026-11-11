@@ -10,15 +10,11 @@ import type { TaskRow as TaskRowData } from "@/server/data/tasks";
 import { setTaskDoneAction, undoRecurringCompletionAction } from "../actions/tasks";
 import { run, undoToast } from "./run-action";
 import { useTaskLinks } from "./use-task-links";
+import { ListGlyph } from "../list-icons";
 import { useTodos } from "./todos-provider";
-import { PRIORITY_LABELS, type DateContext, type TagsById } from "./types";
+import { PRIORITY_LABELS, type DateContext } from "./types";
 
-const PRIORITY_STYLE = [
-  "",
-  "text-primary",
-  "text-[oklch(0.46_0.1_75)] dark:text-brass",
-  "text-destructive",
-];
+const PRIORITY_STYLE = ["", "text-dash-ink-soft", "text-brass", "text-dash-bad"];
 
 /**
  * Ticking is optimistic: the checkbox and the row change at once, and go back (with an error
@@ -69,11 +65,14 @@ export function CheckboxButton({
   done,
   onToggle,
   size = "md",
+  priority = 0,
 }: {
   title: string;
   done: boolean;
   onToggle: () => void;
   size?: "sm" | "md";
+  /** 0 to 3: high and medium tint the ring, so urgency shows before you read the row. */
+  priority?: number;
 }) {
   return (
     <button
@@ -83,18 +82,24 @@ export function CheckboxButton({
       aria-label={`${title}: mark ${done ? "not done" : "done"}`}
       data-task-checkbox
       onClick={onToggle}
-      className="flex size-11 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-8"
+      className="group/check flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-9"
     >
       <span
         className={cn(
-          "flex items-center justify-center rounded-full border-2 transition-colors duration-150",
+          "flex items-center justify-center rounded-full border-[1.5px] transition-[background-color,border-color,transform] duration-150 ease-snap group-active/check:scale-90",
           size === "md" ? "size-5" : "size-4",
           done
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-muted-foreground/70 hover:border-foreground",
+            ? "border-dash-ink bg-dash-ink text-dash-card"
+            : priority === 3
+              ? "border-dash-bad hover:bg-dash-bad-bg"
+              : priority === 2
+                ? "border-brass hover:bg-brass/10"
+                : "border-dash-ink-soft/70 hover:border-dash-ink",
         )}
       >
-        {done ? <Check className="size-3" strokeWidth={3} /> : null}
+        {done ? (
+          <Check className="size-3 animate-in duration-150 zoom-in-50" strokeWidth={3} />
+        ) : null}
       </span>
     </button>
   );
@@ -130,8 +135,8 @@ export function DueLabel({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-xs",
-        overdue ? "font-medium text-destructive" : "text-muted-foreground",
+        "inline-flex items-center gap-1",
+        overdue ? "font-medium text-dash-bad" : "text-dash-ink-soft",
       )}
     >
       {overdue ? (
@@ -145,19 +150,6 @@ export function DueLabel({
   );
 }
 
-export function TagChip({ name, color }: { name: string; color: string | null }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
-      <span
-        aria-hidden
-        className="size-2 rounded-full bg-muted-foreground/50"
-        style={color ? { backgroundColor: color } : undefined}
-      />
-      {name}
-    </span>
-  );
-}
-
 export type RowContext = {
   listName: string;
   listIcon: string | null;
@@ -165,10 +157,15 @@ export type RowContext = {
   parentTitle: string | null;
 };
 
+/**
+ * One task (docs/design.md §5f): a round checkbox (its ring tinted by priority), the title, and
+ * one quiet line of details: due date (red with the word "Overdue" when late), repeat, priority,
+ * subtask progress and, in views that mix lists, which list it is in. The whole text opens the
+ * task. Rows have no lines between them; a soft grey shows under the pointer.
+ */
 export function TaskRow({
   task,
   subtasks,
-  tagsById,
   ctx,
   context,
   handle,
@@ -178,7 +175,6 @@ export function TaskRow({
 }: {
   task: TaskRowData;
   subtasks: TaskRowData[];
-  tagsById: TagsById;
   ctx: DateContext;
   /** Where the task lives; shown in views that mix lists (Today, All, ...). */
   context?: RowContext;
@@ -191,7 +187,6 @@ export function TaskRow({
 }) {
   const { done, toggle } = useToggleDone(task.id, task.title, task.status === "done");
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
-  const tagList = task.tagIds.map((id) => tagsById[id]).filter(Boolean);
   const { hrefFor } = useTaskLinks();
   const repeatText = describeStored(task.recurrenceRule, task.recurrenceMode);
 
@@ -202,56 +197,54 @@ export function TaskRow({
       data-task-id={task.id}
       style={liStyle}
       className={cn(
-        "group flex items-start gap-1 border-b bg-background py-1 last:border-b-0",
-        dragging && "relative z-10 rounded-md border shadow-md",
+        "group/row relative -mx-2 flex items-start gap-0.5 rounded-xl px-1 transition-colors duration-150 hover:bg-dash-well/70",
+        dragging &&
+          "z-10 bg-dash-card shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)] ring-1 ring-dash-edge",
       )}
     >
       {handle}
-      <CheckboxButton title={task.title} done={done} onToggle={toggle} />
+      <CheckboxButton title={task.title} done={done} onToggle={toggle} priority={task.priority} />
       <Link
         href={hrefFor(task.id)}
         data-task-link
         scroll={false}
-        className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-md py-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-0"
+        className="flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-lg py-2 pr-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-9"
       >
-        <span className={cn("block break-words", done && "text-muted-foreground line-through")}>
+        <span
+          className={cn(
+            "block text-[15px] leading-snug break-words transition-colors duration-150 md:text-sm",
+            done && "text-dash-ink-soft line-through decoration-dash-ink-soft/60",
+          )}
+        >
           {task.title}
         </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 empty:hidden">
+        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs empty:hidden">
           <DueLabel task={task} ctx={ctx} done={done} />
           {repeatText ? (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-dash-ink-soft">
               <Repeat className="size-3.5" aria-hidden />
               {repeatText}
             </span>
           ) : null}
           {task.priority > 0 ? (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 text-xs",
-                PRIORITY_STYLE[task.priority],
-              )}
-            >
+            <span className={cn("inline-flex items-center gap-1", PRIORITY_STYLE[task.priority])}>
               <Flag className="size-3.5" aria-hidden />
               {PRIORITY_LABELS[task.priority]}
               <span className="sr-only"> priority</span>
             </span>
           ) : null}
           {subtasks.length > 0 ? (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-dash-ink-soft">
               <ListChecks className="size-3.5" aria-hidden />
               <span aria-label={`${subtasksDone} of ${subtasks.length} subtasks done`}>
                 {subtasksDone}/{subtasks.length}
               </span>
             </span>
           ) : null}
-          {tagList.map((t) => (
-            <TagChip key={t.id} name={t.name} color={t.color} />
-          ))}
           {context ? (
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              {context.listIcon ? <span aria-hidden>{context.listIcon}</span> : null}
-              <span>
+            <span className="inline-flex min-w-0 items-center gap-1 text-dash-ink-soft">
+              <ListGlyph icon={context.listIcon} className="size-3.5 shrink-0" />
+              <span className="truncate">
                 {context.parentTitle ? `Subtask of ${context.parentTitle} in ` : "In "}
                 {context.listName}
               </span>

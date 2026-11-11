@@ -50,7 +50,7 @@ async function noSidewaysScroll(page: Page) {
 }
 
 const SCREENS = [
-  "/inbox",
+  "/tasks",
   "/today",
   "/upcoming",
   "/all",
@@ -76,13 +76,20 @@ for (const path of SCREENS) {
   });
 }
 
-test("a list with sections: tap targets, and the View panel", async ({ page }) => {
-  await page.goto("/inbox");
-  await page.getByRole("button", { name: "Open navigation" }).tap();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  expect(await smallTargets(page)).toEqual([]); // the side menu
-  await page.getByRole("link", { name: "Work", exact: true }).tap();
-  await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
+test("the bottom tab bar, the More sheet, a list and its View panel", async ({ page }) => {
+  await page.goto("/tasks");
+  const bar = page.getByRole("navigation", { name: "Main" });
+  await expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("aria-current", "page");
+  await expect(bar.getByRole("link", { name: "Expense Tracker" })).toBeVisible();
+  await bar.getByRole("button", { name: "More" }).tap();
+  await expect(page.getByRole("dialog", { name: "More" })).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]); // the More sheet
+  await page
+    .getByRole("dialog", { name: "More" })
+    .getByRole("link", { name: "Work", exact: true })
+    .tap();
+  await expect(page.getByRole("heading", { level: 2, name: "Work" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await noSidewaysScroll(page);
   expect(await smallTargets(page)).toEqual([]);
@@ -118,21 +125,21 @@ test("the drawer of a repeating task has big enough tap targets", async ({ page 
 });
 
 test("quick add button is always reachable and the dialog fits", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   const add = page.getByRole("button", { name: /Quick add task/ });
   await expect(add).toBeVisible();
   const box = await add.boundingBox();
   expect(box?.width).toBeGreaterThanOrEqual(MIN);
   await add.tap();
-  await expect(page.getByRole("dialog", { name: "Quick add" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Add a task" })).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
 });
 
 test("quick add chips have big enough tap targets", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   await page.getByRole("button", { name: /Quick add task/ }).tap();
-  await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home @bills p1");
+  await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home p1");
   await expect(page.getByRole("list", { name: "Understood from your text" })).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
@@ -173,6 +180,15 @@ test("the log-a-transaction menu and the period picker fit a phone", async ({ pa
 
   await page.getByRole("button", { name: /^Choose period/ }).tap();
   await expect(page.getByRole("dialog", { name: "Choose a period" })).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+});
+
+test("the new list form fits a phone and has big enough tap targets", async ({ page }) => {
+  await page.goto("/tasks");
+  await page.getByRole("button", { name: "New list" }).first().tap();
+  await expect(page.getByRole("dialog", { name: "New list" })).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
   await noSidewaysScroll(page);

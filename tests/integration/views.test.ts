@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { sortByPosition } from "@/lib/ordering";
 import { createList, setListArchived, setListViewSettings, trashList } from "@/server/data/lists";
-import { createSection } from "@/server/data/sections";
-import { createTag, setTaskTags } from "@/server/data/tags";
 import {
   createTask,
   getListTasks,
@@ -16,7 +14,6 @@ import {
   getCompletedTasks,
   getDueBetweenTasks,
   getDueByTasks,
-  getTaggedTasks,
 } from "@/server/data/views";
 import { db } from "@/server/db/client";
 import { lists } from "@/server/db/schema";
@@ -47,21 +44,19 @@ async function taskFor(user: TestUser, listId: string, title: string, extra = {}
 const titles = (rows: { title: string }[]) => rows.map((r) => r.title).sort();
 
 describe("Today and Upcoming queries", () => {
-  it("getDueByTasks returns open tasks due today or earlier, with list context and tags", async () => {
+  it("getDueByTasks returns open tasks due today or earlier, with list context", async () => {
     const home = await listFor(a, "Home");
-    const overdue = await taskFor(a, home.id, "Overdue", { dueDate: "2026-11-01" });
+    await taskFor(a, home.id, "Overdue", { dueDate: "2026-11-01" });
     await taskFor(a, home.id, "Today", { dueDate: "2026-11-10" });
     await taskFor(a, home.id, "Tomorrow", { dueDate: "2026-11-11" });
     await taskFor(a, home.id, "Undated");
     const finished = await taskFor(a, home.id, "Finished", { dueDate: "2026-11-02" });
     await setTaskDone(a.id, finished.id, true);
-    const { tag } = await createTag(a.id, "bills");
-    await setTaskTags(a.id, overdue.id, [tag.id]);
 
     const rows = await getDueByTasks(a.id, "2026-11-10");
     expect(titles(rows)).toEqual(["Overdue", "Today"]);
     const row = rows.find((r) => r.title === "Overdue");
-    expect(row).toMatchObject({ listName: "Home", listIsInbox: false, tagIds: [tag.id] });
+    expect(row).toMatchObject({ listName: "Home", listIsInbox: false });
   });
 
   it("includes dated subtasks, with the parent's title", async () => {
@@ -138,27 +133,6 @@ describe("All and Completed queries", () => {
   });
 });
 
-describe("Tag view query", () => {
-  it("returns the user's tasks with that tag, and nothing for someone else's tag", async () => {
-    const home = await listFor(a);
-    const work = await listFor(a, "Work");
-    const one = await taskFor(a, home.id, "one");
-    const two = await taskFor(a, work.id, "two");
-    await taskFor(a, home.id, "untagged");
-    const { tag } = await createTag(a.id, "bills");
-    await setTaskTags(a.id, one.id, [tag.id]);
-    await setTaskTags(a.id, two.id, [tag.id]);
-
-    expect(titles(await getTaggedTasks(a.id, tag.id))).toEqual(["one", "two"]);
-    expect(await getTaggedTasks(b.id, tag.id)).toEqual([]);
-  });
-
-  it("returns nothing for a tag with no tasks", async () => {
-    const { tag } = await createTag(a.id, "empty");
-    expect(await getTaggedTasks(a.id, tag.id)).toEqual([]);
-  });
-});
-
 describe("reorderTask (drag and drop)", () => {
   async function seedThree() {
     const list = await listFor(a);
@@ -193,28 +167,6 @@ describe("reorderTask (drag and drop)", () => {
     expect(await order(list.id)).toEqual(["one", "two", "three"]);
   });
 
-  it("moves a task into another section of the same list", async () => {
-    const { list, one } = await seedThree();
-    const section = await createSection(a.id, list.id, "Later");
-    const moved = await reorderTask(a.id, one.id, {
-      afterId: null,
-      beforeId: null,
-      sectionId: section?.id ?? null,
-    });
-    expect(moved?.sectionId).toBe(section?.id);
-  });
-
-  it("can clear the section with null, and leaves it alone when omitted", async () => {
-    const { list, one } = await seedThree();
-    const section = await createSection(a.id, list.id, "Later");
-    await reorderTask(a.id, one.id, { sectionId: section?.id ?? null });
-    expect((await getTask(a.id, one.id))?.sectionId).toBe(section?.id);
-    await reorderTask(a.id, one.id, { afterId: null, beforeId: null });
-    expect((await getTask(a.id, one.id))?.sectionId).toBe(section?.id);
-    await reorderTask(a.id, one.id, { sectionId: null });
-    expect((await getTask(a.id, one.id))?.sectionId).toBeNull();
-  });
-
   it("refuses neighbours from another list, another parent, or itself", async () => {
     const { one, two } = await seedThree();
     const other = await listFor(a, "Other");
@@ -226,13 +178,6 @@ describe("reorderTask (drag and drop)", () => {
     expect(await reorderTask(a.id, one.id, { beforeId: child.id })).toBeNull();
     expect(await reorderTask(a.id, one.id, { afterId: one.id })).toBeNull();
     expect(await reorderTask(a.id, two.id, { afterId: crypto.randomUUID() })).toBeNull();
-  });
-
-  it("refuses a section from another list", async () => {
-    const { one } = await seedThree();
-    const other = await listFor(a, "Other");
-    const section = await createSection(a.id, other.id, "Elsewhere");
-    expect(await reorderTask(a.id, one.id, { sectionId: section?.id ?? null })).toBeNull();
   });
 
   it("copes with out-of-order neighbours by placing the task after the first", async () => {
@@ -256,7 +201,7 @@ describe("reorderTask (drag and drop)", () => {
 describe("saved view settings", () => {
   it("are stored on the list and read back", async () => {
     const list = await listFor(a);
-    const settings = { sort: "due", group: "tag", showCompleted: true };
+    const settings = { sort: "due", group: "priority", showCompleted: true };
     expect(await setListViewSettings(a.id, list.id, settings)).toBe(true);
     const [row] = await db.select().from(lists).where(eq(lists.id, list.id));
     expect(parseViewSettings(row.viewSettings)).toMatchObject(settings);

@@ -143,7 +143,7 @@ export function EntriesView(props: EntriesViewProps) {
 
       <section
         aria-labelledby="entries-title"
-        className="min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 sm:p-5 md:rounded-3xl text-dash-ink md:p-6 xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
+        className="min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 shadow-(--dash-card-shadow) sm:p-5 md:rounded-3xl text-dash-ink md:p-6 xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
       >
         <h3 id="entries-title" className="sr-only">
           Entries

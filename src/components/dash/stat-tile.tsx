@@ -17,6 +17,7 @@ export function StatTile({
   figure,
   icon: Icon,
   highlight = false,
+  variant = "well",
   children,
 }: {
   label: string;
@@ -26,6 +27,11 @@ export function StatTile({
   figure?: ReactNode;
   icon: LucideIcon;
   highlight?: boolean;
+  /**
+   * "well": a grey tile inside a card (the Expense Tracker summary). "card": a white card of its
+   * own on the page canvas, larger and less rounded (the Tasks overview).
+   */
+  variant?: "well" | "card";
   children?: ReactNode;
 }) {
   return (
@@ -34,10 +40,13 @@ export function StatTile({
         // Phone: a row.
         "relative flex min-w-0 items-center justify-between gap-3 py-3.5",
         // Wider: a tile.
-        "sm:h-full sm:flex-col sm:items-stretch sm:justify-start sm:gap-3 sm:rounded-[20px] sm:p-4",
+        "sm:h-full sm:flex-col sm:items-stretch sm:justify-start sm:gap-3",
+        variant === "card" ? "sm:rounded-2xl sm:p-5" : "sm:rounded-[20px] sm:p-4",
         highlight
-          ? "mt-2 rounded-xl bg-gradient-to-br from-dash-accent-from to-dash-accent-to px-3.5 text-white sm:mt-0"
-          : "border-b border-dash-edge text-dash-ink sm:border-0 sm:bg-dash-well",
+          ? "mt-2 rounded-xl bg-gradient-to-br from-dash-accent-from to-dash-accent-to px-3.5 text-white first:mt-0 first:mb-1 sm:mt-0 sm:first:mb-0"
+          : variant === "card"
+            ? "border-b border-dash-edge text-dash-ink last:border-b-0 sm:border sm:bg-dash-card sm:shadow-(--dash-card-shadow)"
+            : "border-b border-dash-edge text-dash-ink last:border-b-0 sm:border-0 sm:bg-dash-well",
       )}
     >
       <dt
@@ -51,8 +60,9 @@ export function StatTile({
       <span
         aria-hidden
         className={cn(
-          "absolute top-4 right-4 hidden size-9 place-items-center rounded-full sm:grid",
-          highlight ? "bg-white/20" : "bg-dash-card",
+          "absolute hidden size-9 place-items-center rounded-full sm:grid",
+          variant === "card" ? "top-5 right-5" : "top-4 right-4",
+          highlight ? "bg-white/20" : variant === "card" ? "bg-dash-well" : "bg-dash-card",
         )}
       >
         <Icon className="size-4" />
@@ -62,7 +72,11 @@ export function StatTile({
           className={cn(
             "font-display leading-none font-semibold tracking-tight whitespace-nowrap tabular-nums sm:leading-tight",
             // Long amounts (lakhs) step down a size instead of wrapping onto two lines.
-            value.length > 11 ? "text-base sm:text-xl" : "text-[17px] sm:text-2xl",
+            value.length > 11
+              ? "text-base sm:text-xl"
+              : variant === "card"
+                ? "text-[17px] sm:text-4xl"
+                : "text-[17px] sm:text-2xl",
           )}
         >
           {figure ?? value}

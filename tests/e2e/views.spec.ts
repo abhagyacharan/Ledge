@@ -14,15 +14,15 @@ async function visibleTitles(page: Page): Promise<string[]> {
 
 test("Today shows overdue tasks first, then what is due today", async ({ page }) => {
   await page.goto("/today");
-  await expect(page.getByRole("heading", { level: 1, name: "Today" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Today" })).toBeVisible();
 
   // "Pay rent" was due two days ago: always overdue.
-  const overdue = page.locator("section", { has: page.getByRole("heading", { name: /^Overdue/ }) });
+  const overdue = page.locator("section[aria-labelledby=overdue-heading]");
   await expect(overdue.getByText("Pay rent")).toBeVisible();
   await expect(overdue.getByText("Overdue:").first()).toBeVisible(); // the word, not just a colour
 
   // "Call mom" is due today with no time: never overdue.
-  const today = page.locator("section", { has: page.getByRole("heading", { name: /^Today/ }) });
+  const today = page.locator("section[aria-labelledby=today-heading]");
   await expect(today.getByText("Call mom")).toBeVisible();
   await expect(overdue.getByText("Call mom")).toHaveCount(0);
 
@@ -31,7 +31,7 @@ test("Today shows overdue tasks first, then what is due today", async ({ page })
   await expect(page.getByText("Renew passport")).toHaveCount(0);
 
   // The overdue block comes before the Today block.
-  const headings = await page.getByRole("heading", { level: 2 }).allInnerTexts();
+  const headings = await page.getByRole("heading", { level: 3 }).allInnerTexts();
   const overdueAt = headings.findIndex((h) => h.startsWith("Overdue"));
   const todayAt = headings.findIndex((h) => h.startsWith("Today"));
   expect(overdueAt).toBeGreaterThanOrEqual(0);
@@ -40,7 +40,7 @@ test("Today shows overdue tasks first, then what is due today", async ({ page })
 
 test("Upcoming groups the next days and leaves out undated and overdue tasks", async ({ page }) => {
   await page.goto("/upcoming");
-  await expect(page.getByRole("heading", { level: 1, name: "Upcoming" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Upcoming" })).toBeVisible();
   await expect.poll(() => visibleTitles(page)).toContain("Fix the leaking tap"); // 3 days away
   const titles = await visibleTitles(page);
   expect(titles).toContain("Plan weekend trip"); // 6 days away
@@ -51,14 +51,14 @@ test("Upcoming groups the next days and leaves out undated and overdue tasks", a
 });
 
 test("create a list, then drag-reorder its tasks with the keyboard", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
 
   // Create the list.
-  await page.getByRole("button", { name: "New list" }).click();
+  await page.getByRole("button", { name: "New list" }).first().click();
   await page.getByLabel("Name", { exact: true }).fill("E2E list");
   await page.getByRole("button", { name: "Create list" }).click();
   await expect(page).toHaveURL(/\/lists\/[0-9a-f-]{36}/);
-  await expect(page.getByRole("heading", { level: 1, name: "E2E list" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "E2E list" })).toBeVisible();
 
   // Add three tasks in a row; the field stays ready for the next one.
   const add = page.getByLabel("Add a task");
@@ -85,9 +85,9 @@ test("create a list, then drag-reorder its tasks with the keyboard", async ({ pa
 });
 
 test("a list remembers how it is sorted", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Home" })).toBeVisible();
 
   await page.getByRole("button", { name: /^View/ }).click();
   await page.getByLabel("Sort by").click();
@@ -104,7 +104,7 @@ test("a list remembers how it is sorted", async ({ page }) => {
 
   // After a reload the choice is still there and dragging is switched off.
   await page.reload();
-  await expect(page.getByText("Sections and dragging are available")).toBeVisible();
+  await expect(page.getByText("Dragging works in manual order")).toBeVisible();
   await expect(page.getByRole("button", { name: /^Reorder/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^View/ })).toContainText("1");
 });

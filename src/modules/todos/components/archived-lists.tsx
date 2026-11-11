@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { List } from "@/server/db/schema";
 import { archiveListAction } from "../actions/lists";
 import { run } from "./run-action";
+import { ListGlyph } from "../list-icons";
 
 /** Lists that were archived, with a button to bring each back. */
 export function ArchivedLists({ lists }: { lists: List[] }) {
@@ -15,7 +16,7 @@ export function ArchivedLists({ lists }: { lists: List[] }) {
       {lists.map((list) => (
         <li key={list.id} className="flex items-center justify-between gap-2 py-2">
           <span className="min-w-0 truncate">
-            {list.icon ? <span aria-hidden>{list.icon} </span> : null}
+            <ListGlyph icon={list.icon} className="mr-1.5 inline size-4 align-[-2px]" />
             {list.name}
           </span>
           <Button

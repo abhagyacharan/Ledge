@@ -14,7 +14,7 @@ setup("sign in as the demo user", async ({ page }) => {
     await page.getByLabel("Email").fill("demo@ledge.test");
     await page.getByLabel("Password").fill("demo-password-123");
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page).toHaveURL(/\/inbox/, { timeout: 20_000 });
+    await expect(page).toHaveURL(/\/tasks/, { timeout: 20_000 });
   }).toPass({ timeout: 90_000, intervals: [2_000] });
 
   await page.context().storageState({ path: AUTH_FILE });

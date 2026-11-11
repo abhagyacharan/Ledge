@@ -3,12 +3,13 @@ import { generateKeyBetween } from "fractional-indexing";
 import { db as defaultDb, type Database } from "@/server/db/client";
 import { lists, userSettings } from "@/server/db/schema";
 
-export const INBOX_NAME = "Inbox";
-export const INBOX_ICON = "📥";
+export const INBOX_NAME = "General";
+/** General shows the plain list icon: no emoji (docs/design.md §8). */
+export const INBOX_ICON = null;
 
 /**
  * Creates the rows every account needs: a `user_settings` row (database defaults) and the
- * undeletable Inbox list. Safe to call more than once: existing rows are left alone.
+ * undeletable default list, General (stored as the inbox). Safe to call more than once: existing rows are left alone.
  * Called from the Better Auth "user created" hook (see `auth.ts`).
  */
 export async function ensureUserDefaults(userId: string, database: Database = defaultDb) {

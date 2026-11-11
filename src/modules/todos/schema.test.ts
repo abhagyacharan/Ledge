@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  createListSchema,
-  createTagSchema,
-  createTaskSchema,
-  moveSchema,
-  setTaskTagsSchema,
-  updateTaskSchema,
-} from "./schema";
+import { createListSchema, createTaskSchema, moveSchema, updateTaskSchema } from "./schema";
 
 const uuid = "3f2b8c1e-5d4a-4b7e-9c1d-0a1b2c3d4e5f";
 
@@ -56,15 +49,9 @@ describe("task schemas", () => {
     expect(parsed.priority).toBeUndefined();
     expect(parsed.dueDate).toBeUndefined();
   });
-
-  it("limits the number of tags on a task", () => {
-    const ids = Array.from({ length: 51 }, () => uuid);
-    expect(setTaskTagsSchema.safeParse({ id: uuid, tagIds: ids }).success).toBe(false);
-    expect(setTaskTagsSchema.safeParse({ id: uuid, tagIds: [uuid] }).success).toBe(true);
-  });
 });
 
-describe("list and tag schemas", () => {
+describe("list schemas", () => {
   it("accepts hex colours and null, and rejects other colour strings", () => {
     expect(createListSchema.safeParse({ name: "A", color: "#3b82f6" }).success).toBe(true);
     expect(createListSchema.safeParse({ name: "A", color: null }).success).toBe(true);
@@ -72,11 +59,9 @@ describe("list and tag schemas", () => {
     expect(createListSchema.safeParse({ name: "A", color: "#fff" }).success).toBe(false);
   });
 
-  it("limits list and tag names", () => {
+  it("limits list names", () => {
     expect(createListSchema.safeParse({ name: "" }).success).toBe(false);
     expect(createListSchema.safeParse({ name: "x".repeat(101) }).success).toBe(false);
-    expect(createTagSchema.safeParse({ name: "x".repeat(51) }).success).toBe(false);
-    expect(createTagSchema.parse({ name: "  home " }).name).toBe("home");
   });
 
   it("validates a goal target date", () => {

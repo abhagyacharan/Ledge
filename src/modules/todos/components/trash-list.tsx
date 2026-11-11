@@ -14,6 +14,7 @@ import {
 } from "../actions/trash";
 import { ConfirmDialog } from "./confirm-dialog";
 import { run } from "./run-action";
+import { ListGlyph } from "../list-icons";
 
 export type TrashItem = {
   kind: "list" | "task" | "entry";
@@ -77,7 +78,9 @@ export function TrashList({ items }: { items: TrashItem[] }) {
           >
             <div className="min-w-0 flex-1">
               <p className="break-words">
-                {item.icon ? <span aria-hidden>{item.icon} </span> : null}
+                {item.kind === "list" ? (
+                  <ListGlyph icon={item.icon} className="mr-1.5 inline size-4 align-[-2px]" />
+                ) : null}
                 {item.title}
               </p>
               <p className="text-xs text-muted-foreground">

@@ -30,7 +30,7 @@ describe("new accounts", () => {
   it("get exactly one Inbox list", async () => {
     const mine = await db.select().from(lists).where(eq(lists.userId, a.id));
     expect(mine).toHaveLength(1);
-    expect(mine[0]).toMatchObject({ name: "Inbox", isInbox: true, isArchived: false });
+    expect(mine[0]).toMatchObject({ name: "General", isInbox: true, isArchived: false });
   });
 
   it("each get their own Inbox", async () => {

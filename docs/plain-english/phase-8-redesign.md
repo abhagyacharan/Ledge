@@ -48,6 +48,34 @@ The same idea is the **logo**: the letter L standing on a double line. You will 
 
 All colours, the roundness of corners and the font names are set in one file, `src/app/globals.css`. To adjust the look later (for example a different green) you change a few values in that file and the whole app follows. This is what "design tokens" means (see the glossary).
 
+## The second redesign: the whole app (2026-11-11)
+
+After the Expense Tracker got its new look, you asked for the same care everywhere, and for the tasks part to be simpler. Before building, I asked you four questions; your answers decided what follows.
+
+**The two main parts are now equal.** The side menu (on a computer or tablet) has two sections: **Expense Tracker** first, then **Tasks**. Each opens to show its pages; Tasks also shows your lists. Search, Trash and Settings sit at the bottom with your name. The menu is light now, matching the rest, instead of the dark green panel.
+
+**On a phone there is a bar at the bottom**, like a native app: Expense Tracker, Tasks and More. More opens a sheet with Search, Trash, Settings, your lists, the light/dark switch and Sign out. The old menu button at the top is gone.
+
+**One round + button.** It looks and sits the same everywhere (just above the bottom bar on a phone). On Expense Tracker pages it asks what you want to log; everywhere else it opens Add a task. On a phone, Add a task (and every other small form) slides up from the bottom.
+
+**Inbox is gone; General and the Overview took its place.** Every task still has to live in a list, so the old Inbox list is now called **General** (your existing one was renamed automatically). The menu's first Tasks page is the **Overview**: how many tasks are due today, how many are late, how many are coming in the next 7 days and how many you finished this week; then what needs doing today, what is coming up, every list with a bar showing how much is done, and a small chart of tasks finished each day this week.
+
+**Tags and sections were removed** (your choice), to keep things simple. Lists and priorities do the grouping now. Nothing was deleted from the database: the old tag and section records are just no longer used.
+
+**Every Tasks page has the same top:** the word Tasks, the pages as pill tabs (Overview, Today, Upcoming, All tasks, Completed; icons on a phone), and on the right a **Lists** button that jumps to any list, and Search. Each page is one clean card; a list page starts with a card showing the list's emoji, name, goal date and a bar of how much is done. Rows no longer have lines between them, and the round tick box is red for high priority and amber for medium, so urgent things stand out before you read them.
+
+What was checked: unit and database tests, the browser tests (including the accessibility inspector in light and dark on every page, the new menu, the More sheet and quick add, and the phone tap-size rules), and I looked at the Overview, a list, the More sheet and quick add on a phone-sized screen and a computer screen. Not checked: a real phone in your hand, and a real screen reader.
+
+## Final touches before deployment (2026-11-11)
+
+- **Light mode fixed.** In light mode the rounded bar behind the tabs was the same grey as the page, so the tabs looked like loose buttons. It now has its own darker shade, the chosen tab has a soft shadow that lifts it, and cards have a hairline edge and the faintest shadow, so everything stands out from the background. The light background now has a faint green tint, like a pale echo of the dark theme. Dark mode did not change.
+- **Overview figures.** The four figures on the Tasks Overview (due today, overdue, next 7 days, done this week) are now four separate cards with bigger numbers and smaller corners, without the extra box and padding around them.
+- **The Lists button next to Search is gone** from the Tasks pages. Your lists are in the side menu, the More sheet on a phone, and the Overview.
+- **More space in the side menu**, so a selected item no longer touches the one next to it.
+- **No colour emojis.** Lists now use simple black-and-white line icons (a house, a briefcase, a book and so on), chosen in the list form. Your existing lists were switched to matching icons automatically, and General has no special icon.
+- **Search finds everything.** The search page (side menu, the More sheet on a phone, or the / key) now looks in your expense entries too: names, notes, lenders, platforms and categories. Tapping an entry opens its tab and month, already filtered to it.
+- **A new sign-in page.** The left half is the dark cover; the right half is a soft, grainy blend of greens and oranges that is different every time you open the page, with the form on a white card on top. On a phone the colours fill the screen behind the card.
+
 ## Decisions in plain words
 
 - **One action colour.** Fewer colours means less to decode. Green means "act or good", red means "look here".

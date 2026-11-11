@@ -4,6 +4,7 @@ import { Landmark, Plus, ShoppingBag, TrendingUp, Wallet, type LucideIcon } from
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DropdownMenu as Menu } from "radix-ui";
 import { createContext, use, useCallback, useRef, useState, type ReactNode } from "react";
+import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
 import { cn } from "@/lib/utils";
 import type { EntryKind } from "@/server/db/schema";
 import { KIND_ROUTES } from "../categories";
@@ -73,18 +74,9 @@ export function TransactionLauncher({
       {children}
 
       <Menu.Root open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
-        <Menu.Trigger
-          aria-label="Log a transaction"
-          className="dash fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-30 grid size-14 place-items-center rounded-full bg-dash-ink text-dash-card shadow-[0_10px_30px_-10px_rgb(0_0_0/0.45)] outline-none transition-transform duration-150 ease-snap focus-visible:ring-4 focus-visible:ring-ring/50 active:scale-95 md:right-6 md:bottom-6 md:size-13"
-        >
+        <Menu.Trigger aria-label="Log a transaction" className={FAB_CLASS}>
           {/* The plus turns into a cross while the menu is open. */}
-          <Plus
-            aria-hidden
-            className={cn(
-              "size-6 transition-transform duration-200 ease-snap",
-              menuOpen && "rotate-45",
-            )}
-          />
+          <Plus aria-hidden className={cn(FAB_ICON_CLASS, menuOpen && "rotate-45")} />
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Content

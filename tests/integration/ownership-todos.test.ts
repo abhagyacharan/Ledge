@@ -9,22 +9,6 @@ import {
   updateList,
 } from "@/server/data/lists";
 import {
-  createSection,
-  deleteSection,
-  listSections,
-  moveSection,
-  renameSection,
-} from "@/server/data/sections";
-import {
-  createTag,
-  deleteTag,
-  getTag,
-  listTags,
-  setTaskTags,
-  tagIdsForTasks,
-  updateTag,
-} from "@/server/data/tags";
-import {
   createTask,
   getListTasks,
   getTaskDetail,
@@ -41,7 +25,7 @@ import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users"
 
 /**
  * Ownership for the Phase 3 data functions (CLAUDE.md §5). User B must not be able to read,
- * change, move, tag or delete anything of user A's, and must not be able to attach their own
+ * change, move or delete anything of user A's, and must not be able to attach their own
  * rows to A's. Every attempt must behave as if A's row did not exist.
  */
 
@@ -49,8 +33,6 @@ let a: TestUser;
 let b: TestUser;
 let aList: Awaited<ReturnType<typeof makeList>>;
 let aTask: Awaited<ReturnType<typeof makeTask>>;
-let aSection: NonNullable<Awaited<ReturnType<typeof createSection>>>;
-let aTagId: string;
 
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
@@ -58,12 +40,7 @@ beforeEach(async () => {
   a = await createUser("a@example.com", "A");
   b = await createUser("b@example.com", "B");
   aList = await makeList(a.id, "A's list");
-  const section = await createSection(a.id, aList.id, "A's section");
-  if (!section) throw new Error("setup failed");
-  aSection = section;
   aTask = await makeTask(a.id, aList.id, "A's task");
-  aTagId = (await createTag(a.id, "a-tag")).tag.id;
-  await setTaskTags(a.id, aTask.id, [aTagId]);
 });
 
 describe("lists", () => {
@@ -82,21 +59,6 @@ describe("lists", () => {
 
   it("B's trashed list is invisible to A's reads, and vice versa", async () => {
     expect(await getList(b.id, aList.id, { includeTrashed: true })).toBeNull();
-  });
-});
-
-describe("sections", () => {
-  it("B cannot create a section in A's list", async () => {
-    expect(await createSection(b.id, aList.id, "Sneaky")).toBeNull();
-    expect(await listSections(a.id, aList.id)).toHaveLength(1);
-  });
-
-  it("B cannot see, rename, move or delete A's section", async () => {
-    expect(await listSections(b.id, aList.id)).toEqual([]);
-    expect(await renameSection(b.id, aSection.id, "Hijacked")).toBeNull();
-    expect(await moveSection(b.id, aSection.id, "up")).toBe(false);
-    expect(await deleteSection(b.id, aSection.id)).toBe(false);
-    expect((await listSections(a.id, aList.id))[0].name).toBe("A's section");
   });
 });
 
@@ -128,45 +90,5 @@ describe("tasks", () => {
     expect(await moveTaskToList(b.id, bTask.id, aList.id)).toBeNull();
     expect((await getTaskDetail(a.id, aTask.id))?.task.listId).toBe(aList.id);
     expect((await getTaskDetail(b.id, bTask.id))?.task.listId).toBe(bList.id);
-  });
-
-  it("B cannot put their task into A's section", async () => {
-    const bList = await makeList(b.id, "B's list");
-    const bTask = await makeTask(b.id, bList.id);
-    expect(await updateTask(b.id, bTask.id, { sectionId: aSection.id })).toBeNull();
-    expect(
-      await createTask(b.id, { listId: bList.id, title: "x", sectionId: aSection.id }),
-    ).toBeNull();
-  });
-});
-
-describe("tags", () => {
-  it("B does not see A's tags, and a same-named tag is a separate tag", async () => {
-    expect(await listTags(b.id)).toEqual([]);
-    const theirs = await createTag(b.id, "A-TAG");
-    expect(theirs.created).toBe(true);
-    expect(theirs.tag.id).not.toBe(aTagId);
-  });
-
-  it("B cannot rename, recolor, read or delete A's tag", async () => {
-    expect(await getTag(b.id, aTagId)).toBeNull();
-    expect(await updateTag(b.id, aTagId, { name: "Hijacked" })).toBeNull();
-    expect(await deleteTag(b.id, aTagId)).toBe(false);
-    expect((await getTag(a.id, aTagId))?.name).toBe("a-tag");
-  });
-
-  it("B cannot tag A's task, and cannot use A's tag on their own task", async () => {
-    const bTag = (await createTag(b.id, "b-tag")).tag;
-    expect(await setTaskTags(b.id, aTask.id, [bTag.id])).toBe(false);
-    const bList = await makeList(b.id, "B's list");
-    const bTask = await makeTask(b.id, bList.id);
-    expect(await setTaskTags(b.id, bTask.id, [aTagId])).toBe(false);
-    // Nothing changed for A or B.
-    expect((await tagIdsForTasks(a.id, [aTask.id])).get(aTask.id)).toEqual([aTagId]);
-    expect((await tagIdsForTasks(b.id, [bTask.id])).get(bTask.id)).toBeUndefined();
-  });
-
-  it("B cannot read the tag links of A's tasks", async () => {
-    expect((await tagIdsForTasks(b.id, [aTask.id])).size).toBe(0);
   });
 });

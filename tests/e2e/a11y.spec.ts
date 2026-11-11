@@ -31,7 +31,7 @@ for (const scheme of SCHEMES) {
     });
 
     for (const path of [
-      "/inbox",
+      "/tasks",
       "/today",
       "/upcoming",
       "/all",
@@ -53,10 +53,10 @@ for (const scheme of SCHEMES) {
       });
     }
 
-    test("a list with sections and the View panel", async ({ page }) => {
-      await page.goto("/inbox");
+    test("a list and its View panel", async ({ page }) => {
+      await page.goto("/tasks");
       await page.getByRole("link", { name: "Work", exact: true }).click();
-      await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Work" })).toBeVisible();
       await audit(page, `the Work list (${scheme})`);
 
       await page.getByRole("button", { name: /^View/ }).click();
@@ -92,10 +92,20 @@ for (const scheme of SCHEMES) {
       }
     });
 
+    test("the new list form", async ({ page }) => {
+      await page.goto("/tasks");
+      await page.getByRole("button", { name: "New list" }).first().click();
+      await expect(page.getByRole("dialog", { name: "New list" })).toBeVisible();
+      await page.getByRole("button", { name: "Reading", exact: true }).click();
+      await page.getByRole("radio", { name: "Teal" }).click();
+      await page.waitForTimeout(400); // the dialog zooms in; let it settle
+      await audit(page, `new list form (${scheme})`);
+    });
+
     test("quick add with understood chips", async ({ page }) => {
-      await page.goto("/inbox");
+      await page.goto("/tasks");
       await page.keyboard.press("q");
-      await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home @bills p1");
+      await page.getByLabel("Task", { exact: true }).fill("Pay rent tomorrow 5pm #home p1");
       await expect(page.getByRole("list", { name: "Understood from your text" })).toBeVisible();
       await page.waitForTimeout(400); // the dialog zooms in; let it settle
       await audit(page, `quick add with chips (${scheme})`);
@@ -125,7 +135,7 @@ for (const scheme of SCHEMES) {
     });
 
     test("the command palette and the shortcuts list", async ({ page }) => {
-      await page.goto("/inbox");
+      await page.goto("/tasks");
       await page.keyboard.press("Control+k");
       await expect(page.getByRole("dialog", { name: "Command palette" })).toBeVisible();
       await audit(page, `the command palette (${scheme})`);

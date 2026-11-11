@@ -19,18 +19,21 @@ Not a copy: Ledge keeps its own data, its own navigation (green spine sidebar, P
 
 All colours live as CSS variables under the `.dash` scope in `src/app/globals.css` (so this look can be applied screen by screen without touching the rest of the app yet). Dark values are under `.dark .dash`. When the rollout reaches the whole app, these become the global tokens.
 
-| Token                    | Light                  | Dark                   | Use                                                       |
-| ------------------------ | ---------------------- | ---------------------- | --------------------------------------------------------- |
-| `--dash-card`            | `#ffffff`              | `#1d211f`              | Card background                                           |
-| `--dash-well`            | `#f4f4f2`              | `#282d2a`              | Tiles, chart wells, table header bands                    |
-| `--dash-edge`            | `#ececea`              | `#ffffff1a`            | The soft card edge (1px) and hairlines                    |
-| `--dash-raised`          | `#ffffff`              | `#3b423e`              | The chosen pill of a segmented control (tabs, EMI status) |
-| `--dash-ink`             | `#111214`              | `#f2f4f1`              | Figures, headings, black bars, primary button             |
-| `--dash-ink-soft`        | `#5b5f66`              | `#aeb4ae`              | Labels, captions, axis text (AA on card and well)         |
-| `--dash-accent`          | `#f26b21`              | `#f58445`              | Decorative orange: hatched bars, progress, dots           |
-| `--dash-accent-from/-to` | `#cc420b` to `#a63409` | same                   | Highlighted tile gradient (white text passes AA, 4.8+)    |
-| `--dash-good` / `-bg`    | `#166534` on `#dcfce7` | `#86efac` on `#14532d` | Up-is-good pill                                           |
-| `--dash-bad` / `-bg`     | `#b42318` on `#fee4e2` | `#fca5a5` on `#7f1d1d` | Down-is-bad pill                                          |
+| Token                    | Light                  | Dark                   | Use                                                              |
+| ------------------------ | ---------------------- | ---------------------- | ---------------------------------------------------------------- |
+| `--dash-card`            | `#ffffff`              | `#1d211f`              | Card background                                                  |
+| `--dash-well`            | `#f4f4f2`              | `#282d2a`              | Tiles, chart wells, table header bands                           |
+| `--dash-edge`            | `#ececea`              | `#ffffff1a`            | The soft card edge (1px) and hairlines                           |
+| `--dash-track`           | `#dde1da`              | `#282d2a`              | The track behind pill tabs and the period picker (on the canvas) |
+| `--dash-lift`            | short dark shadow      | `0 1px 2px` black 30%  | Lifts the chosen pill off its track                              |
+| `--dash-card-shadow`     | faint 1px shadow       | none                   | Keeps white cards distinct from the canvas in light mode         |
+| `--dash-raised`          | `#ffffff`              | `#3b423e`              | The chosen pill of a segmented control (tabs, EMI status)        |
+| `--dash-ink`             | `#111214`              | `#f2f4f1`              | Figures, headings, black bars, primary button                    |
+| `--dash-ink-soft`        | `#5b5f66`              | `#aeb4ae`              | Labels, captions, axis text (AA on card and well)                |
+| `--dash-accent`          | `#f26b21`              | `#f58445`              | Decorative orange: hatched bars, progress, dots                  |
+| `--dash-accent-from/-to` | `#cc420b` to `#a63409` | same                   | Highlighted tile gradient (white text passes AA, 4.8+)           |
+| `--dash-good` / `-bg`    | `#166534` on `#dcfce7` | `#86efac` on `#14532d` | Up-is-good pill                                                  |
+| `--dash-bad` / `-bg`     | `#b42318` on `#fee4e2` | `#fca5a5` on `#7f1d1d` | Down-is-bad pill                                                 |
 
 Radius: card 24px (`rounded-3xl`), tile 20px (`rounded-[20px]`), chart well 20px, pill and button full. Elevation: none, or a 1px edge. No heavy shadows.
 
@@ -105,6 +108,25 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 - Tabs: five equal icon-only cells (Lucide line icons at 18px, stroke 1.75) filling the track; the chosen one is the raised pill.
 - Chart: 12px padding and 12px corners for the well, 4px bar gaps, one-letter month labels below 440px.
 
+## 5e. App shell (navigation and the + button)
+
+- **Sidebar (tablet and up):** the soft grey canvas with a hairline right edge. The brand, then one section per module from the registry: Expense Tracker, then Tasks. Each section is a row (icon and name) with a chevron that shows or hides its views; it opens itself when you are inside it. Tasks also shows "Lists" with a + and each list (emoji or icon). At the bottom: Search, Trash, Settings, then the account (initial in an ink circle, name, email, theme button) and Sign out. The current page is a white raised pill with a hairline ring, the same mark as the pill tabs (`NavRow`).
+- **Bottom tab bar (phones):** a solid bar (no blur) with Expense Tracker, Tasks and More; each tab is an icon over a 11px label, the current one has its icon in a raised pill. More opens a sheet with Search tasks, Trash, Settings, the lists, the account, the theme and Sign out. The bar respects the home indicator.
+- **The + button:** a 56px ink circle (52px with a mouse), bottom right, 76px up on phones so it clears the tab bar. Log a transaction on Expense Tracker pages, Add a task elsewhere. The plus turns into a cross while its menu or form is open.
+- **Dialogs:** 16px corners and a soft shadow on desktop; on phones every dialog is a bottom sheet (24px top corners, slides up on the sheet curve, at most 92% of the screen).
+
+## 5f. Tasks
+
+- **Header:** "Tasks", then one row with the pill tabs (Overview, Today, Upcoming, All tasks, Completed; icons only on phones) and, on the right, a well pill holding the Lists picker (popover: each list, a check on the current one, New list) and Search.
+- **Overview:** four figures in the stat tiles (Due today is the orange one; phones show them as statement rows), then two columns from `lg`: Today and Coming up (7 cols), Lists with progress and This week bars (5 cols).
+- **Views and lists:** each is one card (`TaskPanel`) with group headings (`TaskGroup`: label left, count right, Overdue in red with its word) and an inline "Add a task" row at the bottom. A list page starts with a header card: emoji in a well, the name (Bricolage 24px), description, goal date and a done/total bar, with the options menu.
+- **Task row:** a 20px round checkbox in a 44px target (ring red for high priority, amber for medium), the title (15px on phones, 14px on desktop) and one 12px line: due (red with "Overdue:" when late), repeat, priority, subtasks, list. No dividers; a soft grey under the pointer. In manual order a grip appears on hover (always on touch).
+
+## 5g. Sign in and sign up
+
+- Wide screens: the cover panel on the left is always the dark green-black (`#121514`, light text, green kicker). The right side is a grainy gradient: five soft blobs (three orange, two green) at random places over a green-to-orange wash at a random angle, blurred, with fine monochrome grain on top. It is generated on the server for each visit, so no two loads match. The form sits on a solid white card (24px corners, deep soft shadow).
+- Phones: the gradient fills the screen behind the card; the brand moves to the top of the card.
+
 ## 6. Accessibility rules that override the screenshot
 
 - Text on the orange tile must pass 4.5 to 1: use the darker gradient above, never the bright `#f26b21` behind text. The bright orange is for fills that carry no text.
@@ -117,7 +139,7 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 
 1. **Expense Summary** (this change): `DashCard`, `StatTile`, `DeltaPill`, chart and table restyle, scoped `.dash` tokens.
 2. Other expense tabs (Income, EMIs & loans, Expenses, Investments), the expense header and the Log a transaction button: **done 2026-11-11** (§5c) (§5b): overview, list and breakdown cards, chips, the sheet, skeletons.
-3. Task screens and the app shell: promote the `.dash` tokens to the global tokens, then retire the Phase 8 paper-and-ledger palette where it conflicts. The green spine sidebar stays unless O decides otherwise.
+3. Task screens and the app shell: **done 2026-11-11** (§5e, §5f). The dashboard tokens are now the global tokens, the paper-and-ledger palette is retired, and O chose a light sidebar instead of the green spine.
 4. Each step ships with the axe and phone-width checks passing in light and dark.
 
 ## 9. Motion
@@ -128,6 +150,9 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 - `prefers-reduced-motion` turns every transition off (global rule in `globals.css`; NumberFlow honours it too).
 
 ## 8. Do and do not
+
+- **Icons, never colour emojis.** Anything that would be an emoji (list icons, decorations) is a minimal black-and-white line icon from Lucide at stroke 1.75 to 1.85. Lists choose from `src/modules/todos/list-icons.ts`. (O, 2026-11-11.)
+- Light mode needs its own care: things on the canvas (tracks, cards) use `--dash-track`, `--dash-lift` and `--dash-card-shadow`, never a well colour that matches the canvas.
 
 - Do keep one highlighted orange tile per screen at most.
 - Do use cards inside cards sparingly: white card, grey well, nothing deeper.

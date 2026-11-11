@@ -1,10 +1,9 @@
 import { addDaysIso, isOverdue, type IsoDate, type IsoTime } from "@/lib/dates";
-import type { Tag } from "@/server/db/schema";
 import type { ViewSettings } from "./view-settings";
 
 /**
  * Pure functions that turn a flat list of tasks into sorted, grouped, filtered sections for the
- * list, All and Tag views (CLAUDE.md §6.2). No database, no React: easy to test.
+ * list and All views (CLAUDE.md §6.2). No database, no React: easy to test.
  */
 
 export type ViewableTask = {
@@ -16,7 +15,6 @@ export type ViewableTask = {
   dueTime: IsoTime | null;
   position: string;
   createdAt: Date;
-  tagIds: string[];
 };
 
 export type TaskGroup<T> = { key: string; label: string; tasks: T[] };
@@ -46,7 +44,6 @@ export function compareDue(a: ViewableTask, b: ViewableTask): number {
 export function filterTasks<T extends ViewableTask>(tasks: T[], settings: ViewSettings): T[] {
   return tasks.filter((t) => {
     if (!settings.showCompleted && t.status === "done") return false;
-    if (settings.tagId && !t.tagIds.includes(settings.tagId)) return false;
     if (settings.priority !== null && t.priority !== settings.priority) return false;
     if (settings.hasDue === "yes" && t.dueDate === null) return false;
     if (settings.hasDue === "no" && t.dueDate !== null) return false;
@@ -88,7 +85,6 @@ export function groupTasks<T extends ViewableTask>(
   tasks: T[],
   group: ViewSettings["group"],
   info: DateInfo,
-  tagsById: Record<string, Pick<Tag, "id" | "name">>,
 ): TaskGroup<T>[] {
   if (group === "none") return [{ key: "all", label: "", tasks }];
 
@@ -100,30 +96,13 @@ export function groupTasks<T extends ViewableTask>(
     })).filter((g) => g.tasks.length > 0);
   }
 
-  if (group === "priority") {
-    return [3, 2, 1, 0]
-      .map((p) => ({
-        key: `p${p}`,
-        label: PRIORITY_NAMES[p],
-        tasks: tasks.filter((t) => t.priority === p),
-      }))
-      .filter((g) => g.tasks.length > 0);
-  }
-
-  // By tag: one group per tag (a task with two tags appears in both), "No tag" last.
-  const used = new Set(tasks.flatMap((t) => t.tagIds));
-  const named = [...used]
-    .map((id) => tagsById[id])
-    .filter((t): t is Pick<Tag, "id" | "name"> => Boolean(t))
-    .sort((a, b) => byString(a.name.toLowerCase(), b.name.toLowerCase()));
-  const groups: TaskGroup<T>[] = named.map((tag) => ({
-    key: tag.id,
-    label: tag.name,
-    tasks: tasks.filter((t) => t.tagIds.includes(tag.id)),
-  }));
-  const untagged = tasks.filter((t) => t.tagIds.length === 0);
-  if (untagged.length > 0) groups.push({ key: "none", label: "No tag", tasks: untagged });
-  return groups;
+  return [3, 2, 1, 0]
+    .map((p) => ({
+      key: `p${p}`,
+      label: PRIORITY_NAMES[p],
+      tasks: tasks.filter((t) => t.priority === p),
+    }))
+    .filter((g) => g.tasks.length > 0);
 }
 
 /** Open tasks before finished ones, keeping the sort order inside each half. */
@@ -136,10 +115,9 @@ export function applyView<T extends ViewableTask>(
   tasks: T[],
   settings: ViewSettings,
   info: DateInfo,
-  tagsById: Record<string, Pick<Tag, "id" | "name">>,
 ): TaskGroup<T>[] {
   const sorted = sortTasks(filterTasks(tasks, settings), settings.sort);
-  return groupTasks(sorted, settings.group, info, tagsById).map((g) => ({
+  return groupTasks(sorted, settings.group, info).map((g) => ({
     ...g,
     tasks: openFirst(g.tasks),
   }));

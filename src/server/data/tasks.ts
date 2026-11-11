@@ -3,10 +3,8 @@ import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
 import { db } from "@/server/db/client";
-import { lists, taskTags, tasks, type Task } from "@/server/db/schema";
+import { lists, tasks, type Task } from "@/server/db/schema";
 import { getList } from "./lists";
-import { getSection } from "./sections";
-import { tagIdsForTasks } from "./tags";
 
 /**
  * Data functions for tasks. Every function takes the authenticated `userId` and filters by it
@@ -17,7 +15,7 @@ import { tagIdsForTasks } from "./tags";
  * restoring brings back exactly the rows that were trashed together.
  */
 
-export type TaskRow = Task & { tagIds: string[] };
+export type TaskRow = Task;
 
 export type TaskPatch = {
   title?: string;
@@ -25,7 +23,6 @@ export type TaskPatch = {
   priority?: number;
   dueDate?: string | null;
   dueTime?: string | null;
-  sectionId?: string | null;
   /** Canonical rule text (src/lib/recurrence.ts) or null to stop repeating. */
   recurrenceRule?: string | null;
   recurrenceMode?: RecurrenceMode;
@@ -36,14 +33,6 @@ const listIsActive = sql`exists (select 1 from ${lists} where ${lists.id} = ${ta
 
 const activeTask = (userId: string, taskId: string) =>
   and(eq(tasks.userId, userId), eq(tasks.id, taskId), isNull(tasks.deletedAt), listIsActive);
-
-async function withTags(userId: string, rows: Task[]): Promise<TaskRow[]> {
-  const tagMap = await tagIdsForTasks(
-    userId,
-    rows.map((r) => r.id),
-  );
-  return rows.map((r) => ({ ...r, tagIds: tagMap.get(r.id) ?? [] }));
-}
 
 /** Active tasks in a list (top level and subtasks, open and done), in position order. */
 export async function listTasksInList(userId: string, listId: string): Promise<Task[]> {
@@ -62,7 +51,7 @@ export async function listTasksInList(userId: string, listId: string): Promise<T
 }
 
 export async function getListTasks(userId: string, listId: string): Promise<TaskRow[]> {
-  return withTags(userId, await listTasksInList(userId, listId));
+  return listTasksInList(userId, listId);
 }
 
 export async function getTask(userId: string, taskId: string): Promise<Task | null> {
@@ -70,7 +59,7 @@ export async function getTask(userId: string, taskId: string): Promise<Task | nu
   return row ?? null;
 }
 
-/** A task with its tags and its subtasks (for the detail drawer). */
+/** A task and its subtasks (for the detail drawer). */
 export async function getTaskDetail(
   userId: string,
   taskId: string,
@@ -82,8 +71,7 @@ export async function getTaskDetail(
     .from(tasks)
     .where(and(eq(tasks.userId, userId), eq(tasks.parentId, taskId), isNull(tasks.deletedAt)))
     .orderBy(asc(tasks.position));
-  const [withTagsTask, ...subs] = await withTags(userId, [task, ...subtasks]);
-  return { task: withTagsTask, subtasks: subs };
+  return { task, subtasks };
 }
 
 async function lastPositionInGroup(
@@ -112,7 +100,6 @@ export type NewTaskInput = {
   listId: string;
   title: string;
   parentId?: string | null;
-  sectionId?: string | null;
   notes?: string | null;
   priority?: number;
   dueDate?: string | null;
@@ -123,25 +110,19 @@ export type NewTaskInput = {
 
 /**
  * Creates a task at the end of its list (or of its parent's subtasks). Returns null when the list,
- * parent or section is not the user's, or when the parent is itself a subtask.
- * A subtask always lives in its parent's list and has no section.
+ * parent is not the user's, or when the parent is itself a subtask.
+ * A subtask always lives in its parent's list.
  */
 export async function createTask(userId: string, input: NewTaskInput): Promise<Task | null> {
   let listId = input.listId;
-  let sectionId = input.sectionId ?? null;
   const parentId = input.parentId ?? null;
 
   if (parentId) {
     const parent = await getTask(userId, parentId);
     if (!parent || parent.parentId) return null;
     listId = parent.listId;
-    sectionId = null;
   } else {
     if (!(await getList(userId, listId))) return null;
-    if (sectionId) {
-      const section = await getSection(userId, sectionId);
-      if (!section || section.listId !== listId) return null;
-    }
   }
 
   const dueDate = input.dueDate ?? null;
@@ -153,7 +134,6 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
     .values({
       userId,
       listId,
-      sectionId,
       parentId,
       title: input.title,
       notes: input.notes ?? null,
@@ -170,7 +150,7 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
 
 /**
  * Updates fields of a task. Clearing the due date also clears the due time. Returns null when the
- * task is not the user's, or when the section is not in the task's list (or the task is a subtask).
+ * task is not the user's, or the repeat rule cannot apply.
  */
 export async function updateTask(
   userId: string,
@@ -203,14 +183,6 @@ export async function updateTask(
     set.recurrenceRule = null; // a repeating task with no date has nothing to repeat from
   }
   if (patch.recurrenceMode !== undefined) set.recurrenceMode = patch.recurrenceMode;
-  if (patch.sectionId !== undefined) {
-    if (patch.sectionId !== null) {
-      if (current.parentId) return null;
-      const section = await getSection(userId, patch.sectionId);
-      if (!section || section.listId !== current.listId) return null;
-    }
-    set.sectionId = patch.sectionId;
-  }
   if (Object.keys(set).length === 0) return current;
 
   const [row] = await db.update(tasks).set(set).where(activeTask(userId, taskId)).returning();
@@ -230,8 +202,7 @@ export type RecurringCompletion = {
 /**
  * Completing a repeating task (CLAUDE.md §6.2): a finished copy ("snapshot", pointing back at the
  * task through `recurrence_origin_id`) is added to Completed, and the task itself stays open with
- * its due date moved to the next date. Its done subtasks are reopened and the snapshot keeps the
- * tags. Returns null when the task is not the user's, is not a repeating open task, or the rule is
+ * its due date moved to the next date. Its done subtasks are reopened. Returns null when the task is not the user's, is not a repeating open task, or the rule is
  * not understood (then the caller completes it like any other task).
  */
 export async function completeRecurringTask(
@@ -256,7 +227,6 @@ export async function completeRecurringTask(
       .values({
         userId,
         listId: task.listId,
-        sectionId: task.sectionId,
         title: task.title,
         notes: task.notes,
         priority: task.priority,
@@ -268,16 +238,6 @@ export async function completeRecurringTask(
         position: task.position,
       })
       .returning({ id: tasks.id });
-
-    const tagRows = await tx
-      .select({ tagId: taskTags.tagId })
-      .from(taskTags)
-      .where(and(eq(taskTags.userId, userId), eq(taskTags.taskId, task.id)));
-    if (tagRows.length > 0) {
-      await tx
-        .insert(taskTags)
-        .values(tagRows.map((r) => ({ userId, taskId: snapshot.id, tagId: r.tagId })));
-    }
 
     const reopened = await tx
       .update(tasks)
@@ -367,8 +327,8 @@ export async function setTaskDone(
 }
 
 /**
- * Moves a top-level task, with its subtasks, to the end of another list. The section is cleared
- * unless `sectionId` (in the target list) is given. Subtasks cannot be moved on their own.
+ * Moves a top-level task, with its subtasks, to the end of another list. Subtasks cannot be moved
+ * on their own.
  * The database requires a subtask to share its parent's list at every step, so the subtasks are
  * detached, the parent moved, and the subtasks reattached, all in one transaction.
  */
@@ -376,15 +336,10 @@ export async function moveTaskToList(
   userId: string,
   taskId: string,
   listId: string,
-  sectionId: string | null = null,
 ): Promise<Task | null> {
   const task = await getTask(userId, taskId);
   if (!task || task.parentId) return null;
   if (!(await getList(userId, listId))) return null;
-  if (sectionId) {
-    const section = await getSection(userId, sectionId);
-    if (!section || section.listId !== listId) return null;
-  }
   const position = positionAtEnd(await lastPositionInGroup(userId, listId, null));
 
   return db.transaction(async (tx) => {
@@ -400,7 +355,7 @@ export async function moveTaskToList(
     }
     const [moved] = await tx
       .update(tasks)
-      .set({ listId, sectionId, position })
+      .set({ listId, sectionId: null, position })
       .where(and(eq(tasks.userId, userId), eq(tasks.id, taskId)))
       .returning();
     for (const child of children) {
@@ -417,13 +372,12 @@ export async function moveTaskToList(
  * Puts a task between two neighbours (drag and drop). `afterId` is the task that should come
  * right before it and `beforeId` the one right after; either may be null at an edge. Both must be
  * the user's active tasks in the same list with the same parent, otherwise nothing changes and
- * null is returned. `sectionId` (undefined = keep, null = no section) moves it to another section
- * of the same list; subtasks have no section.
+ * null is returned.
  */
 export async function reorderTask(
   userId: string,
   taskId: string,
-  move: { afterId?: string | null; beforeId?: string | null; sectionId?: string | null },
+  move: { afterId?: string | null; beforeId?: string | null },
 ): Promise<Task | null> {
   const task = await getTask(userId, taskId);
   if (!task) return null;
@@ -439,14 +393,6 @@ export async function reorderTask(
   if (after === undefined || before === undefined) return null;
 
   const set: Partial<typeof tasks.$inferInsert> = {};
-  if (move.sectionId !== undefined) {
-    if (move.sectionId !== null) {
-      if (task.parentId) return null;
-      const section = await getSection(userId, move.sectionId);
-      if (!section || section.listId !== task.listId) return null;
-    }
-    set.sectionId = move.sectionId;
-  }
 
   if (after && before && after.position >= before.position) {
     // The two neighbours are tied or out of order (should not happen): put it after the first.

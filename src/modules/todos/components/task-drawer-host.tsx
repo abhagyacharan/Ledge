@@ -1,6 +1,4 @@
 import { listLists } from "@/server/data/lists";
-import { listSections } from "@/server/data/sections";
-import { listTags } from "@/server/data/tags";
 import { getTask, getTaskDetail } from "@/server/data/tasks";
 import { id as uuid } from "../schema";
 import { TaskDrawer, type TaskDetailData } from "./task-drawer";
@@ -20,21 +18,17 @@ export async function TaskDrawerHost({
   ctx: DateContext;
 }) {
   const taskId = uuid.safeParse(taskParam);
-  const [lists, tags, raw] = await Promise.all([
+  const [lists, raw] = await Promise.all([
     listLists(userId),
-    listTags(userId),
     taskId.success ? getTaskDetail(userId, taskId.data) : Promise.resolve(null),
   ]);
 
   let detail: TaskDetailData | null = null;
   if (raw) {
     const { task, subtasks } = raw;
-    const [sections, parent] = await Promise.all([
-      listSections(userId, task.listId),
-      task.parentId ? getTask(userId, task.parentId) : Promise.resolve(null),
-    ]);
-    detail = { task, subtasks, parentTitle: parent?.title ?? null, sections };
+    const parent = task.parentId ? await getTask(userId, task.parentId) : null;
+    detail = { task, subtasks, parentTitle: parent?.title ?? null };
   }
 
-  return <TaskDrawer detail={detail} lists={lists} tags={tags} ctx={ctx} />;
+  return <TaskDrawer detail={detail} lists={lists} ctx={ctx} />;
 }

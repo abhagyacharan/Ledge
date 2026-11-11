@@ -100,7 +100,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Image (Docker).** The finished, packaged copy of a program that Docker starts containers from. Ledge's image is built from the Dockerfile.
 
-**Inbox.** The list every account has from the start. New tasks land here unless you choose another list. It cannot be deleted.
+**Inbox.** The old name of the default list. Since 2026-11-11 it is called **General**, and the Tasks Overview took its place in the menu.
+
+**General.** The list every account has from the start. New tasks land here unless you choose another list. It cannot be deleted.
+
+**Overview (Tasks).** The first Tasks page: how many tasks are due today, late, coming up and done this week, plus today's tasks, what is coming, and each list's progress.
 
 **Index (database).** A shortcut the database keeps so it can find records quickly, like an index at the back of a book.
 
@@ -170,7 +174,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Screen reader.** Software that reads a screen aloud for people who cannot see it well. It relies on every control having a proper name.
 
-**Section.** A heading inside a list that groups tasks, for example "Now", "Next" and "Later".
+**Section.** A heading inside a list that grouped tasks. Removed on 2026-11-11 to keep the app simple.
 
 **Secure (cookie).** A cookie rule: only send the cookie over HTTPS.
 
@@ -198,7 +202,9 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Table.** One drawer in the database, holding one kind of thing, such as tasks.
 
-**Tag.** A label you create and stick on tasks, such as "bills". Names ignore capital letters.
+**Tag.** A label you could stick on tasks, such as "bills". Removed on 2026-11-11; lists and priorities do the grouping now.
+
+**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Expense Tracker, Tasks, More), like a native app.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 

@@ -11,20 +11,21 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { enabledModules, navItemsFor } from "@/config/modules";
+import { enabledModules } from "@/config/modules";
 import { authClient } from "@/lib/auth-client";
 import { ListFormDialog } from "./list-form-dialog";
+import { ListGlyph } from "../list-icons";
 import { QUICK_ADD_EVENT } from "./quick-add-button";
 import { OPEN_HELP_EVENT, OPEN_PALETTE_EVENT } from "./shortcuts";
 import { useTodos } from "./todos-provider";
 
 /**
- * The command palette (Ctrl or Cmd + K, or `/`): jump to any view, list or tag, or run an action.
+ * The command palette (Ctrl or Cmd + K): jump to any page or list, or run an action.
  * Type to filter; Enter runs the highlighted item; Escape closes it.
  */
 export function CommandPalette() {
   const router = useRouter();
-  const { lists, tags } = useTodos();
+  const { lists } = useTodos();
   const { theme = "system", setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [creatingList, setCreatingList] = useState(false);
@@ -35,10 +36,14 @@ export function CommandPalette() {
     return () => window.removeEventListener(OPEN_PALETTE_EVENT, show);
   }, []);
 
+  // "Expense Tracker: Income", "Tasks: Today", ... then the shared places.
   const views = [
-    ...enabledModules("primary").flatMap(navItemsFor),
+    ...enabledModules().flatMap((m) =>
+      m.nav.map((item) => ({ label: `${m.label}: ${item.label}`, route: item.route })),
+    ),
+    { label: "Search", route: "/search" },
+    { label: "Trash", route: "/trash" },
     { label: "Settings", route: "/settings" },
-    ...enabledModules("modules").flatMap((m) => m.paletteRoutes ?? navItemsFor(m)),
   ];
 
   function go(route: string) {
@@ -68,9 +73,9 @@ export function CommandPalette() {
         open={open}
         onOpenChange={setOpen}
         title="Command palette"
-        description="Jump to a view, list or tag, or run an action."
+        description="Jump to a page or list, or run an action."
       >
-        <CommandInput placeholder="Type a command, list or tag" />
+        <CommandInput placeholder="Type a command, page or list" />
         <CommandList>
           <CommandEmpty>Nothing matches that.</CommandEmpty>
 
@@ -109,40 +114,18 @@ export function CommandPalette() {
             ))}
           </CommandGroup>
 
-          {lists.some((l) => !l.isInbox) ? (
-            <>
-              <CommandGroup heading="Lists">
-                {lists
-                  .filter((l) => !l.isInbox)
-                  .map((l) => (
-                    <CommandItem
-                      key={l.id}
-                      value={`list ${l.name}`}
-                      onSelect={() => go(`/lists/${l.id}`)}
-                    >
-                      {l.icon ? <span aria-hidden>{l.icon}</span> : null}
-                      {l.name}
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
-            </>
-          ) : null}
-
-          {tags.length > 0 ? (
-            <>
-              <CommandGroup heading="Tags">
-                {tags.map((t) => (
-                  <CommandItem
-                    key={t.id}
-                    value={`tag ${t.name}`}
-                    onSelect={() => go(`/tags/${t.id}`)}
-                  >
-                    #{t.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </>
-          ) : null}
+          <CommandGroup heading="Lists">
+            {lists.map((l) => (
+              <CommandItem
+                key={l.id}
+                value={`list ${l.name}`}
+                onSelect={() => go(`/lists/${l.id}`)}
+              >
+                <ListGlyph icon={l.icon} className="size-4" />
+                {l.name}
+              </CommandItem>
+            ))}
+          </CommandGroup>
         </CommandList>
       </CommandDialog>
       <ListFormDialog open={creatingList} onOpenChange={setCreatingList} />

@@ -2,7 +2,7 @@
 
 A self-hosted personal life-management app: auth, a to-do/task manager, and an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
 
-**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (lists, sections, tags, subtasks, detail drawer, quick add, six views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. The look was redesigned in Phase 8. Phase 9 (deployment and backups) is built and checked locally; the step-by-step guide for putting it on your server is [docs/deploy-guide.md](docs/deploy-guide.md).
+**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (an overview, lists, subtasks, detail drawer, quick add, five views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. The look was redesigned in Phase 8 and again on 2026-11-11 (the dashboard look across the app, a light sidebar and a phone tab bar). Phase 9 (deployment and backups) is built and checked locally; the step-by-step guide for putting it on your server is [docs/deploy-guide.md](docs/deploy-guide.md).
 
 New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
 

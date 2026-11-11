@@ -35,7 +35,7 @@ export function SignInForm({ signUpOpen }: { signUpOpen: boolean }) {
       );
       return;
     }
-    router.replace("/inbox");
+    router.replace("/tasks");
     router.refresh();
   }
 

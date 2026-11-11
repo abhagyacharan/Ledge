@@ -11,7 +11,7 @@ export default function NotFound() {
         hint="The link may be wrong, or the page may have moved."
         action={
           <Button asChild className="h-11">
-            <Link href="/inbox">Go to your Inbox</Link>
+            <Link href="/tasks">Go to Tasks</Link>
           </Button>
         }
       />

@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Tag } from "@/server/db/schema";
 import {
   DEFAULT_VIEW_SETTINGS,
   DUE_FILTER_LABELS,
@@ -31,7 +30,6 @@ function activeCount(s: ViewSettings, base: ViewSettings): number {
   return [
     s.sort !== base.sort,
     s.group !== base.group,
-    s.tagId !== base.tagId,
     s.priority !== base.priority,
     s.hasDue !== base.hasDue,
     s.showCompleted !== base.showCompleted,
@@ -46,14 +44,12 @@ function activeCount(s: ViewSettings, base: ViewSettings): number {
 export function ViewControls({
   settings,
   base = DEFAULT_VIEW_SETTINGS,
-  tags,
   allowManual,
   onChange,
 }: {
   settings: ViewSettings;
   /** The settings this view starts with; "Reset" returns to them. */
   base?: ViewSettings;
-  tags: Tag[];
   allowManual: boolean;
   onChange: (next: ViewSettings) => void;
 }) {
@@ -64,18 +60,25 @@ export function ViewControls({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-11 gap-2 md:h-8">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 gap-2 rounded-full border-dash-edge bg-dash-card px-3.5 text-dash-ink hover:bg-dash-well md:h-9 dark:bg-dash-card"
+        >
           <SlidersHorizontal aria-hidden />
           View
           {count > 0 ? (
-            <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+            <span className="rounded-full bg-dash-ink px-1.5 text-xs text-dash-card">
               {count}
               <span className="sr-only"> changed</span>
             </span>
           ) : null}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
+      <PopoverContent
+        align="end"
+        className="dash w-80 rounded-2xl border border-dash-edge bg-dash-card p-4 shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)] ring-0"
+      >
         <div className="flex flex-col gap-3">
           <Field label="Sort by" id="view-sort">
             <Select
@@ -114,25 +117,6 @@ export function ViewControls({
           </Field>
 
           <p className="text-sm font-medium">Show only</p>
-
-          <Field label="Tag" id="view-tag">
-            <Select
-              value={settings.tagId ?? ANY}
-              onValueChange={(v) => set({ tagId: v === ANY ? null : v })}
-            >
-              <SelectTrigger id="view-tag" className="h-11 w-full md:h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY}>Any tag</SelectItem>
-                {tags.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
 
           <Field label="Priority" id="view-priority">
             <Select

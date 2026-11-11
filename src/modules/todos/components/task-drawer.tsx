@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useOptimistic, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { DashButton } from "@/components/dash/dash-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,20 +22,19 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import type { List, Section, Tag } from "@/server/db/schema";
+import type { List } from "@/server/db/schema";
 import type { TaskRow } from "@/server/data/tasks";
 import {
   moveTaskAction,
   restoreTaskAction,
-  setTaskTagsAction,
   trashTaskAction,
   updateTaskAction,
 } from "../actions/tasks";
 import { DueDateField } from "./due-date-field";
 import { RepeatField } from "./repeat-field";
 import { InlineAdd } from "./inline-add";
+import { ListGlyph } from "../list-icons";
 import { run, undoToast } from "./run-action";
-import { TagField } from "./tag-field";
 import { TaskCheckbox } from "./task-row";
 import { useTaskLinks } from "./use-task-links";
 import { PRIORITY_LABELS, type DateContext } from "./types";
@@ -45,14 +44,11 @@ export type TaskDetailData = {
   subtasks: TaskRow[];
   /** Title of the parent when this task is a subtask. */
   parentTitle: string | null;
-  /** Sections of the list this task is in. */
-  sections: Section[];
 };
 
 type Props = {
   detail: TaskDetailData | null;
   lists: List[];
-  tags: Tag[];
   ctx: DateContext;
 };
 
@@ -61,7 +57,7 @@ type Props = {
  * own (text on blur, pickers immediately); there is no Save button. The open task is in the URL
  * as `?task=<id>`, so reload and the back button work (CLAUDE.md §6.2).
  */
-export function TaskDrawer({ detail, lists, tags, ctx }: Props) {
+export function TaskDrawer({ detail, lists, ctx }: Props) {
   const router = useRouter();
   const { closeHref } = useTaskLinks();
 
@@ -73,7 +69,7 @@ export function TaskDrawer({ detail, lists, tags, ctx }: Props) {
     <Sheet open={detail !== null} onOpenChange={(open) => !open && close()}>
       <SheetContent
         side="right"
-        className="data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
+        className="dash bg-dash-card data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
         aria-describedby={undefined}
       >
         <SheetHeader>
@@ -83,14 +79,7 @@ export function TaskDrawer({ detail, lists, tags, ctx }: Props) {
           </SheetDescription>
         </SheetHeader>
         {detail ? (
-          <DrawerBody
-            key={detail.task.id}
-            detail={detail}
-            lists={lists}
-            tags={tags}
-            ctx={ctx}
-            close={close}
-          />
+          <DrawerBody key={detail.task.id} detail={detail} lists={lists} ctx={ctx} close={close} />
         ) : null}
       </SheetContent>
     </Sheet>
@@ -102,13 +91,12 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 function DrawerBody({
   detail,
   lists,
-  tags,
   ctx,
   close,
 }: {
   detail: TaskDetailData;
 } & Omit<Props, "detail"> & { close: () => void }) {
-  const { task, subtasks, parentTitle, sections } = detail;
+  const { task, subtasks, parentTitle } = detail;
   const isSubtask = task.parentId !== null;
   const { hrefFor } = useTaskLinks();
   const done = task.status === "done";
@@ -160,13 +148,6 @@ function DrawerBody({
     }
   }
 
-  function saveTags(tagIds: string[]) {
-    startTransition(async () => {
-      applyPatch({ tagIds });
-      await run(setTaskTagsAction({ id: task.id, tagIds }));
-    });
-  }
-
   async function trash() {
     const result = await run(trashTaskAction({ id: task.id }));
     if (!result.ok) return;
@@ -177,7 +158,7 @@ function DrawerBody({
   async function moveTo(listId: string) {
     if (listId === task.listId) return;
     const target = lists.find((l) => l.id === listId);
-    const from = { listId: task.listId, sectionId: task.sectionId };
+    const from = { listId: task.listId };
     const result = await run(moveTaskAction({ id: task.id, listId }));
     if (result.ok) {
       undoToast(
@@ -219,7 +200,7 @@ function DrawerBody({
             maxLength={500}
             aria-invalid={titleError ? true : undefined}
             aria-describedby={titleError ? "task-title-error" : undefined}
-            className="h-11 text-base font-medium md:h-9"
+            className="h-11 rounded-xl border-transparent bg-transparent px-2 font-display text-xl font-semibold shadow-none hover:bg-dash-well focus-visible:bg-dash-well md:h-11 md:text-xl"
           />
           {titleError ? (
             <p id="task-title-error" role="alert" className="mt-1 text-sm text-destructive">
@@ -229,7 +210,7 @@ function DrawerBody({
         </div>
       </div>
 
-      <p className="-mt-3 text-xs text-muted-foreground" role="status" aria-live="polite">
+      <p className="-mt-3 pl-12 text-xs text-dash-ink-soft" role="status" aria-live="polite">
         {saveState === "saving"
           ? "Saving…"
           : saveState === "saved"
@@ -275,7 +256,7 @@ function DrawerBody({
             value={String(view.priority)}
             onValueChange={(v) => void save({ priority: Number(v) })}
           >
-            <SelectTrigger id="task-priority" className="h-11 w-full md:h-8">
+            <SelectTrigger id="task-priority" className="h-11 w-full rounded-xl md:h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -292,13 +273,13 @@ function DrawerBody({
           <div className="flex flex-col gap-2">
             <Label htmlFor="task-list">List</Label>
             <Select value={view.listId} onValueChange={(v) => void moveTo(v)}>
-              <SelectTrigger id="task-list" className="h-11 w-full md:h-8">
+              <SelectTrigger id="task-list" className="h-11 w-full rounded-xl md:h-10">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {lists.map((l) => (
                   <SelectItem key={l.id} value={l.id}>
-                    {l.icon ? `${l.icon} ` : ""}
+                    <ListGlyph icon={l.icon} className="size-4" />
                     {l.name}
                   </SelectItem>
                 ))}
@@ -306,33 +287,6 @@ function DrawerBody({
             </Select>
           </div>
         )}
-
-        {isSubtask || sections.length === 0 ? null : (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="task-section">Section</Label>
-            <Select
-              value={view.sectionId ?? "none"}
-              onValueChange={(v) => void save({ sectionId: v === "none" ? null : v })}
-            >
-              <SelectTrigger id="task-section" className="h-11 w-full md:h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No section</SelectItem>
-                {sections.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>Tags</Label>
-        <TagField allTags={tags} selectedIds={view.tagIds} onChange={saveTags} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -345,11 +299,15 @@ function DrawerBody({
           rows={5}
           maxLength={10000}
           placeholder="Plain text. Add details, links, or steps."
+          className="rounded-xl"
         />
       </div>
 
       {isSubtask ? null : (
-        <section aria-labelledby="subtasks-heading" className="flex flex-col gap-1">
+        <section
+          aria-labelledby="subtasks-heading"
+          className="flex flex-col gap-1 rounded-2xl bg-dash-well/60 p-3"
+        >
           <h2 id="subtasks-heading" className="text-sm font-medium">
             Subtasks{" "}
             {subtasks.length > 0 ? (
@@ -360,7 +318,7 @@ function DrawerBody({
           </h2>
           <ul>
             {subtasks.map((s) => (
-              <li key={s.id} className="flex items-center gap-1 border-b last:border-b-0">
+              <li key={s.id} className="flex items-center gap-0.5">
                 <TaskCheckbox taskId={s.id} title={s.title} done={s.status === "done"} size="sm" />
                 <Link
                   href={hrefFor(s.id)}
@@ -376,15 +334,10 @@ function DrawerBody({
         </section>
       )}
 
-      <div className="mt-2 border-t pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 gap-2 text-destructive md:h-8"
-          onClick={() => void trash()}
-        >
+      <div className="mt-2 border-t border-dash-edge pt-4">
+        <DashButton variant="danger" onClick={() => void trash()}>
           <Trash2 /> Move to Trash
-        </Button>
+        </DashButton>
       </div>
     </div>
   );

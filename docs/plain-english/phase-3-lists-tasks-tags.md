@@ -2,6 +2,8 @@
 
 **Status:** Done on 2026-11-10.
 
+> **Later change (2026-11-11):** at your request, **tags and sections were removed** and the **Inbox became a list called General**, with a new Tasks Overview page in its place. The rest of this page describes the original version; see [the redesign page](phase-8-redesign.md) for what changed.
+
 ## What this phase is for
 
 Phases 0 to 2 built the workshop, the front door and the filing cabinet. Phase 3 is the first time you can **actually use Ledge**: write tasks down, tick them off, group them in lists, label them, and open any task to change every detail.

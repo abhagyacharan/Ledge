@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  CalendarDays,
-  ChartPie,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Landmark,
-  ReceiptIndianRupee,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import Link from "next/link";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Popover } from "radix-ui";
-import { useEffect, useOptimistic, useRef, useState, type ReactNode } from "react";
+import { useOptimistic, useState, type ReactNode } from "react";
+import { PillTabs } from "@/components/dash/pill-tabs";
+import { modules } from "@/config/modules";
 import { cn } from "@/lib/utils";
-import { KIND_LABELS, KIND_ROUTES } from "../categories";
 import {
   MAX_YEAR,
   MIN_YEAR,
@@ -28,14 +17,6 @@ import {
   type Period,
 } from "../periods";
 import { usePending } from "./pending";
-
-const TABS = [
-  { label: "Summary", icon: ChartPie, route: "/expenses" },
-  { label: KIND_LABELS.income.tab, icon: Wallet, route: KIND_ROUTES.income },
-  { label: KIND_LABELS.emi.tab, icon: Landmark, route: KIND_ROUTES.emi },
-  { label: KIND_LABELS.expense.tab, icon: ReceiptIndianRupee, route: KIND_ROUTES.expense },
-  { label: KIND_LABELS.investment.tab, icon: TrendingUp, route: KIND_ROUTES.investment },
-];
 
 /** Keeps only the period in the query string (filters belong to one tab). */
 function periodQuery(search: URLSearchParams): string {
@@ -49,65 +30,25 @@ function periodQuery(search: URLSearchParams): string {
 }
 
 /**
- * The five sections as one pill bar (docs/design.md §5c). The chosen tab is a raised pill that
- * slides to the next one. On a phone the bar scrolls sideways and keeps the chosen tab in view.
- * The chosen period travels with you from tab to tab.
+ * The five sections as one pill bar (docs/design.md §5c), from the module registry. The chosen
+ * period travels with you from tab to tab.
  */
 export function ExpensesTabs() {
   const pathname = usePathname();
   const search = useSearchParams();
   const query = periodQuery(new URLSearchParams(search.toString()));
-  const reduce = useReducedMotion();
-  const scroller = useRef<HTMLElement>(null);
-  const active = useRef<HTMLAnchorElement>(null);
-
-  useEffect(() => {
-    const bar = scroller.current;
-    const tab = active.current;
-    if (!bar || !tab || bar.scrollWidth <= bar.clientWidth) return;
-    bar.scrollTo({
-      left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2,
-      behavior: reduce ? "auto" : "smooth",
-    });
-  }, [pathname, reduce]);
-
+  const expenses = modules.find((m) => m.id === "expenses");
   return (
-    <nav
-      ref={scroller}
-      aria-label="Expense sections"
-      className="no-scrollbar -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0"
-    >
-      <ul className="flex w-full gap-1 rounded-full bg-dash-well p-1 sm:inline-flex sm:w-auto">
-        {TABS.map((tab) => {
-          const current = pathname === tab.route;
-          return (
-            <li key={tab.route} className="flex-1 sm:flex-none">
-              <Link
-                ref={current ? active : undefined}
-                href={`${tab.route}${query}`}
-                aria-current={current ? "page" : undefined}
-                className={cn(
-                  "relative z-0 flex h-11 items-center justify-center rounded-full px-4 text-sm font-medium whitespace-nowrap outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9",
-                  current ? "text-dash-ink" : "text-dash-ink-soft hover:text-dash-ink",
-                )}
-              >
-                {current ? (
-                  <motion.span
-                    aria-hidden
-                    layoutId="expenses-tab-pill"
-                    transition={{ type: "spring", duration: 0.35, bounce: 0 }}
-                    className="absolute inset-0 -z-10 rounded-full bg-dash-raised shadow-[0_1px_2px_rgb(0_0_0/0.08)]"
-                  />
-                ) : null}
-                {/* Phones show a line icon so all five fit; the name is still read out. */}
-                <tab.icon aria-hidden className="size-[18px] sm:hidden" strokeWidth={1.75} />
-                <span className="max-sm:sr-only">{tab.label}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <PillTabs
+      label="Expense sections"
+      id="expenses-tab"
+      tabs={(expenses?.nav ?? []).map((item) => ({
+        label: item.label,
+        icon: item.icon,
+        href: `${item.route}${query}`,
+        current: pathname === item.route,
+      }))}
+    />
   );
 }
 
@@ -170,7 +111,7 @@ export function PeriodPicker({ fallback }: { fallback: Period }) {
     <div
       role="group"
       aria-label="Period"
-      className="flex w-full items-center gap-1 rounded-full bg-dash-well p-1 sm:w-auto sm:self-start lg:self-auto"
+      className="flex w-full items-center gap-1 rounded-full bg-dash-track p-1 shadow-[inset_0_0_0_1px_var(--dash-track-edge)] sm:w-auto sm:self-start lg:self-auto"
     >
       <RoundButton label={`Previous ${stepLabel}`} onClick={() => go(shiftPeriod(period, -1))}>
         <ChevronLeft className="size-4" />

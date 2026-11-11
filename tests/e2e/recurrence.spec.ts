@@ -19,7 +19,7 @@ async function addTask(page: Page, title: string) {
 test("a weekly task moves on when completed, keeps a copy in Completed, and undo puts it back", async ({
   page,
 }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await addTask(page, "E2E repeater");
 
   // Open it and make it repeat every week, starting today.
@@ -57,7 +57,7 @@ test("a weekly task moves on when completed, keeps a copy in Completed, and undo
   await expect(page.getByRole("link", { name: /^E2E repeater/ })).toHaveCount(0);
 
   // Complete it for real: now Completed has the finished copy.
-  await page.goto("/inbox");
+  await page.goto("/all");
   await page.getByRole("checkbox", { name: "E2E repeater: mark done" }).click();
   await expect(toast(page)).toContainText('Done "E2E repeater"');
   await page.goto("/completed");
@@ -67,7 +67,7 @@ test("a weekly task moves on when completed, keeps a copy in Completed, and undo
 test("a custom repeat: every 2 weeks on chosen weekdays, counted from when it is finished", async ({
   page,
 }) => {
-  await page.goto("/inbox");
+  await page.goto("/all");
   await addTask(page, "E2E custom repeat");
   await page.getByRole("link", { name: /^E2E custom repeat/ }).click();
   const dialog = page.getByRole("dialog");

@@ -366,14 +366,14 @@ test("the round button asks what to log, then opens that form", async ({ page })
 
   // The task quick add is still one key away.
   await page.keyboard.press("q");
-  await expect(page.getByRole("dialog", { name: "Quick add" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Add a task" })).toBeVisible();
 });
 
 test("the command palette can jump to an expense tab", async ({ page }) => {
-  await page.goto("/inbox");
+  await page.goto("/tasks");
   await page.keyboard.press("Control+k");
   await expect(page.getByRole("dialog", { name: "Command palette" })).toBeVisible();
-  await page.keyboard.type("Expenses: Investments");
+  await page.keyboard.type("Expense Tracker: Investments");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/expenses\/investments/);
   await expect(page.getByRole("link", { name: "Investments" })).toHaveAttribute(

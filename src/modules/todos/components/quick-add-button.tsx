@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DashButton } from "@/components/dash/dash-button";
 
 export const QUICK_ADD_EVENT = "ledge:quick-add";
 
@@ -9,20 +9,17 @@ export const QUICK_ADD_EVENT = "ledge:quick-add";
 export type QuickAddPrefill = {
   title?: string;
   listId?: string;
-  sectionId?: string | null;
   dueDate?: string | null;
-  tagIds?: string[];
 };
 
-/** Opens the global quick-add dialog. Used as the action in empty states. */
+/** Opens the global quick-add form. Used as the action in empty states. */
 export function QuickAddButton({ label = "Add a task" }: { label?: string }) {
   return (
-    <Button
-      type="button"
-      className="h-11 gap-1 md:h-8"
+    <DashButton
+      variant="secondary"
       onClick={() => window.dispatchEvent(new Event(QUICK_ADD_EVENT))}
     >
       <Plus /> {label}
-    </Button>
+    </DashButton>
   );
 }

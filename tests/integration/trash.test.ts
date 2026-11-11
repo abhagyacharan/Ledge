@@ -53,7 +53,7 @@ describe("listTrash", () => {
     expect(trash.lists.map((l) => [l.name, l.taskCount])).toEqual([["Doomed", 2]]);
     // The tasks inside the trashed list come back with the list, so they are not listed alone.
     expect(trash.tasks.map((t) => t.title)).toEqual(["loose"]);
-    expect(trash.tasks[0]).toMatchObject({ listName: "Inbox", parentTitle: null });
+    expect(trash.tasks[0]).toMatchObject({ listName: "General", parentTitle: null });
   });
 
   it("does not list subtasks that were trashed together with their parent", async () => {

@@ -2,17 +2,16 @@ import * as chrono from "chrono-node";
 import { formatDue, type IsoDate, type IsoTime } from "@/lib/dates";
 
 /**
- * Natural-language quick add (CLAUDE.md §6.2): "pay rent tomorrow 5pm #home @bills p1".
+ * Natural-language quick add (CLAUDE.md §6.2): "pay rent tomorrow 5pm #home p1".
  * Pure and client-safe. It finds, in this order of meaning:
  *   p1 p2 p3        priority (p1 = high, p2 = medium, p3 = low)
  *   #list           a list, matched by name (case, spaces and dashes ignored)
- *   @tag            a tag; a name nobody has used yet becomes a new tag
  *   a date / time   by chrono-node ("tomorrow", "next friday", "25 dec", "in 3 days 6pm")
  * Whatever is left is the title. Only words that really were understood become tokens, so
  * "#unknown" or "p4" stay in the title. A token the person removed (`ignored`) is plain text again.
  */
 
-export type TokenKind = "date" | "priority" | "list" | "tag";
+export type TokenKind = "date" | "priority" | "list";
 
 export type QuickAddToken = {
   kind: TokenKind;
@@ -31,10 +30,6 @@ export type ParsedQuickAdd = {
   /** 0 to 3, or null when no priority was typed. */
   priority: number | null;
   listId: string | null;
-  /** Existing tags by id. */
-  tagIds: string[];
-  /** Tag names nobody has yet (create them on submit). */
-  newTagNames: string[];
   tokens: QuickAddToken[];
 };
 
@@ -43,7 +38,6 @@ export type ParseContext = {
   timeNow: IsoTime;
   locale?: string;
   lists: { id: string; name: string }[];
-  tags: { id: string; name: string }[];
   /** Keys from `tokenKey` for tokens the person removed. */
   ignored?: ReadonlySet<string>;
 };
@@ -79,8 +73,6 @@ export function parseQuickAdd(input: string, ctx: ParseContext): ParsedQuickAdd 
   const tokens: QuickAddToken[] = [];
   let priority: number | null = null;
   let listId: string | null = null;
-  const tagIds: string[] = [];
-  const newTagNames: string[] = [];
 
   const add = (token: QuickAddToken) => {
     if (ignored.has(tokenKey(token))) return false;
@@ -116,19 +108,6 @@ export function parseQuickAdd(input: string, ctx: ParseContext): ParsedQuickAdd 
       add({ kind: "list", raw: m[0], start, end: start + m[0].length, label: `List: ${list.name}` })
     ) {
       listId = list.id;
-    }
-  }
-
-  for (const m of input.matchAll(/(?<=^|\s)@([\p{L}\p{N}_-]+)/gu)) {
-    const name = m[1];
-    const start = m.index ?? 0;
-    const existing = ctx.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
-    const label = existing ? `Tag: ${existing.name}` : `New tag: ${name}`;
-    if (!add({ kind: "tag", raw: m[0], start, end: start + m[0].length, label })) continue;
-    if (existing) {
-      if (!tagIds.includes(existing.id)) tagIds.push(existing.id);
-    } else if (!newTagNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
-      newTagNames.push(name);
     }
   }
 
@@ -175,8 +154,6 @@ export function parseQuickAdd(input: string, ctx: ParseContext): ParsedQuickAdd 
       dueTime: null,
       priority: null,
       listId: null,
-      tagIds: [],
-      newTagNames: [],
       tokens: [],
     };
   }
@@ -187,8 +164,6 @@ export function parseQuickAdd(input: string, ctx: ParseContext): ParsedQuickAdd 
     dueTime,
     priority,
     listId,
-    tagIds,
-    newTagNames,
     tokens: tokens.sort((a, b) => a.start - b.start),
   };
 }
