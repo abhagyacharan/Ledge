@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DashCard } from "@/components/dash/dash-card";
 import { Button } from "@/components/ui/button";
 import { loadMoneyContext } from "@/modules/expenses/context";
 import {
   BreakdownTable,
   CashFlowChart,
-  InvestingTiles,
-  SummaryTiles,
+  SummaryStats,
   TrendTable,
 } from "@/modules/expenses/components/summary-sections";
 import { parsePeriod, periodLabel, periodRange, periodToParams } from "@/modules/expenses/periods";
@@ -15,6 +15,7 @@ import {
   emiProgress,
   expenseBreakdown,
   periodTotals,
+  previousMonthTotals,
 } from "@/modules/expenses/summary";
 import { categoryTotals, emiStatusTotals, monthlyTotals } from "@/server/data/finance";
 import { requireUser } from "@/server/session";
@@ -28,13 +29,17 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
   const range = periodRange(period);
   const fmt = { currency: money.currency, locale: money.locale };
 
-  const [monthly, expenseRows, emiRows] = await Promise.all([
+  const [monthly, previousYear, expenseRows, emiRows] = await Promise.all([
     monthlyTotals(userId, period.year),
+    // Only January needs last year, to compare with December.
+    period.month === 1 ? monthlyTotals(userId, period.year - 1) : Promise.resolve([]),
     categoryTotals(userId, "expense", range),
     emiStatusTotals(userId, range),
   ]);
 
   const totals = periodTotals(monthly, period.month);
+  const previous =
+    period.month === "all" ? null : previousMonthTotals(monthly, previousYear, period.month);
   const trend = annualTrend(monthly);
   const breakdown = expenseBreakdown(expenseRows);
   const emi = emiProgress(emiRows);
@@ -42,7 +47,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
   const query = `?${periodToParams(period).toString()}`;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       <h2 className="sr-only">Summary for {periodLabel(period)}</h2>
 
       {nothingYet ? (
@@ -56,27 +61,41 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
         </div>
       ) : null}
 
-      <section aria-labelledby="tiles-heading" className="flex flex-col gap-3">
-        <h3 id="tiles-heading" className="text-sm font-semibold">
-          {periodLabel(period)} at a glance
-        </h3>
-        <SummaryTiles totals={totals} emi={emi} fmt={fmt} />
-        <InvestingTiles totals={totals} fmt={fmt} />
-      </section>
+      {/* The dashboard look (docs/design.md): four blocks, two rows, one column on small screens. */}
+      <div className="dash grid gap-4 xl:grid-cols-12">
+        <DashCard
+          id="tiles"
+          title={`${periodLabel(period)} at a glance`}
+          hideTitle
+          className="xl:col-span-5"
+        >
+          <SummaryStats totals={totals} previous={previous} emi={emi} fmt={fmt} />
+        </DashCard>
 
-      <div className="grid gap-8 xl:grid-cols-2">
-        <section aria-labelledby="breakdown-heading" className="flex min-w-0 flex-col gap-3">
-          <h3 id="breakdown-heading" className="text-sm font-semibold">
-            Expense breakdown by category
-          </h3>
+        <DashCard
+          id="cash-flow"
+          title="Annual cash flow"
+          subtitle={`Inflow against outflow for each month of ${period.year}`}
+          className="xl:col-span-7"
+        >
+          <CashFlowChart months={trend.months} selectedMonth={period.month} fmt={fmt} />
+        </DashCard>
+
+        <DashCard
+          id="breakdown"
+          title="Expense breakdown by category"
+          subtitle={periodLabel(period)}
+          className="xl:col-span-5"
+        >
           <BreakdownTable rows={breakdown.rows} total={breakdown.total} fmt={fmt} />
-        </section>
+        </DashCard>
 
-        <section aria-labelledby="trend-heading" className="flex min-w-0 flex-col gap-3">
-          <h3 id="trend-heading" className="text-sm font-semibold">
-            Annual cash flow trend, {period.year}
-          </h3>
-          <CashFlowChart months={trend.months} selectedMonth={period.month} />
+        <DashCard
+          id="details"
+          title={`Annual cash flow trend, ${period.year}`}
+          subtitle="Month by month, with the full-year total"
+          className="xl:col-span-7"
+        >
           <TrendTable
             months={trend.months}
             total={trend.total}
@@ -84,7 +103,7 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
             year={period.year}
             fmt={fmt}
           />
-        </section>
+        </DashCard>
       </div>
     </div>
   );

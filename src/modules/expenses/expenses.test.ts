@@ -11,10 +11,12 @@ import {
 import { createEntrySchema, parseEntryFilters, updateEntrySchema } from "./schema";
 import {
   annualTrend,
+  changePercent,
   emiProgress,
   expenseBreakdown,
   fillYear,
   periodTotals,
+  previousMonthTotals,
   type MonthTotals,
 } from "./summary";
 
@@ -320,5 +322,33 @@ describe("tab filters from the URL", () => {
       category: null,
       q: "",
     });
+  });
+});
+
+describe("change against the month before", () => {
+  it("is a percentage with one decimal", () => {
+    expect(changePercent(110, 100)).toBe(10);
+    expect(changePercent(93, 100)).toBe(-7);
+    expect(changePercent(1050, 1000)).toBe(5);
+    expect(changePercent(1, 3)).toBe(-66.7);
+  });
+
+  it("has nothing to say when the month before was zero", () => {
+    expect(changePercent(500, 0)).toBeNull();
+    expect(changePercent(0, 0)).toBeNull();
+  });
+
+  it("reads a recovery from a negative figure as a rise", () => {
+    expect(changePercent(-50, -100)).toBe(50);
+    expect(changePercent(50, -100)).toBe(150);
+  });
+
+  it("picks the month before, and December of last year for January", () => {
+    const thisYear = [m(1, 100), m(2, 200), m(3, 300)];
+    const lastYear = [m(12, 999)];
+    expect(previousMonthTotals(thisYear, lastYear, 3).income).toBe(200);
+    expect(previousMonthTotals(thisYear, lastYear, 2).income).toBe(100);
+    expect(previousMonthTotals(thisYear, lastYear, 1).income).toBe(999);
+    expect(previousMonthTotals(thisYear, [], 1).income).toBe(0);
   });
 });

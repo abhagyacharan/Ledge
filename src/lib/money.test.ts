@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatAmount,
+  formatCompact,
   formatMoney,
   formatPercent,
   minorDigits,
@@ -133,5 +134,14 @@ describe("formatPercent", () => {
     expect(formatPercent(0)).toBe("0.0%");
     expect(formatPercent(-12.5)).toBe("-12.5%");
     expect(formatPercent(null)).toBe("—");
+  });
+});
+
+describe("formatCompact (chart axes)", () => {
+  it("keeps it short and keeps the currency", () => {
+    expect(formatCompact(5_000_000)).toContain("50");
+    expect(formatCompact(5_000_000)).toMatch(/₹/);
+    expect(formatCompact(5_000_000).length).toBeLessThan(8);
+    expect(formatCompact(0)).toContain("0");
   });
 });

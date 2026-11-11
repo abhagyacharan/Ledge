@@ -1,87 +1,67 @@
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Landmark,
+  PiggyBank,
+  ShoppingBag,
+  Wallet,
+} from "lucide-react";
 import type { ReactNode } from "react";
-import { formatAmount, formatMoney, formatPercent } from "@/lib/money";
+import { DeltaPill } from "@/components/dash/delta-pill";
+import { StatTile } from "@/components/dash/stat-tile";
+import { formatAmount, formatCompact, formatMoney, formatPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { MONTH_NAMES } from "../periods";
-import type { BreakdownRow, CategoryRow, EmiProgress, PeriodTotals, TrendRow } from "../summary";
+import {
+  changePercent,
+  type BreakdownRow,
+  type CategoryRow,
+  type EmiProgress,
+  type PeriodTotals,
+  type TrendRow,
+} from "../summary";
 
 type Fmt = { currency: string; locale: string };
 
 const money = (minor: number, f: Fmt) => formatMoney(minor, f.currency, f.locale);
 const amount = (minor: number, f: Fmt) => formatAmount(minor, f.currency, f.locale);
 
-type Emphasis = "plain" | "good" | "bad";
-
-function Tile({
-  label,
-  value,
-  caption,
-  emphasis = "plain",
-  bottomLine = false,
-  children,
-}: {
-  label: string;
-  value: string;
-  caption: string;
-  emphasis?: Emphasis;
-  /** The figure is a final total, so it gets the accountant's double rule. */
-  bottomLine?: boolean;
-  children?: ReactNode;
-}) {
-  const filled = emphasis !== "plain";
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-1.5 rounded-lg border p-4",
-        emphasis === "plain" && "bg-card",
-        emphasis === "good" && "border-transparent bg-primary text-primary-foreground",
-        emphasis === "bad" && "border-transparent bg-destructive text-white",
-      )}
-    >
-      <dt className={cn("label-caps", filled ? "opacity-90" : "text-muted-foreground")}>{label}</dt>
-      <dd className="flex flex-col gap-1.5">
-        <span
-          className={cn(
-            "self-start font-display text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl",
-            bottomLine && "rule-double",
-          )}
-        >
-          {value}
-        </span>
-        <span className={cn("text-xs", filled ? "opacity-90" : "text-muted-foreground")}>
-          {caption}
-        </span>
-        {children}
-      </dd>
-    </div>
-  );
-}
-
-/** The five headline numbers, same meaning as the sheet. */
-export function SummaryTiles({
+/**
+ * The four tiles (docs/design.md): income, EMIs and loans, expenses, and the orange savings tile.
+ * Each shows its change against the previous month when `previous` is given. Savings also carries
+ * the savings rate and the investing figures, so nothing from the old tiles is lost.
+ */
+export function SummaryStats({
   totals,
+  previous,
   emi,
   fmt,
 }: {
   totals: PeriodTotals;
+  /** The month before, or null in the whole-year view (nothing fair to compare to). */
+  previous: PeriodTotals | null;
   emi: EmiProgress;
   fmt: Fmt;
 }) {
   const overspent = totals.netSavings < 0;
+  const delta = (current: number, before: number | undefined) =>
+    previous === null || before === undefined ? null : changePercent(current, before);
   return (
-    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-      <Tile
-        label="Total inflows"
-        value={money(totals.income, fmt)}
-        caption="Salary, bonuses and other income"
-      />
-      <Tile
-        label="Total EMIs & loans"
-        value={money(totals.emi, fmt)}
-        caption="Fixed debt obligations"
-      >
+    <dl className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2">
+      <StatTile label="Total inflows" value={money(totals.income, fmt)} icon={Wallet}>
+        <DeltaPill
+          change={delta(totals.income, previous?.income)}
+          goodWhen="up"
+          locale={fmt.locale}
+        />
+        <Line>Salary, bonuses and other income</Line>
+      </StatTile>
+
+      <StatTile label="Total EMIs & loans" value={money(totals.emi, fmt)} icon={Landmark}>
+        <DeltaPill change={delta(totals.emi, previous?.emi)} goodWhen="down" locale={fmt.locale} />
         {totals.emi > 0 ? (
-          <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span className="flex flex-col gap-1 text-xs text-dash-ink-soft">
             <span className="inline-flex items-center gap-1">
               <CheckCircle2 className="size-3.5" aria-hidden />
               {money(emi.paidMinor, fmt)} paid
@@ -91,54 +71,65 @@ export function SummaryTiles({
               {money(emi.remainingMinor, fmt)} to pay
             </span>
             {emi.delayedCount > 0 ? (
-              <span className="inline-flex items-center gap-1 font-medium text-destructive">
+              <span className="inline-flex items-center gap-1 font-medium text-dash-bad">
                 <AlertTriangle className="size-3.5" aria-hidden />
                 {emi.delayedCount} delayed
               </span>
             ) : null}
           </span>
-        ) : null}
-      </Tile>
-      <Tile label="Living expenses" value={money(totals.expense, fmt)} caption="Monthly outflows" />
-      <Tile
+        ) : (
+          <Line>Fixed debt obligations</Line>
+        )}
+      </StatTile>
+
+      <StatTile label="Living expenses" value={money(totals.expense, fmt)} icon={ShoppingBag}>
+        <DeltaPill
+          change={delta(totals.expense, previous?.expense)}
+          goodWhen="down"
+          locale={fmt.locale}
+        />
+        <Line>Monthly outflows</Line>
+      </StatTile>
+
+      <StatTile
         label="Net savings"
-        emphasis={overspent ? "bad" : "good"}
-        bottomLine
         value={money(totals.netSavings, fmt)}
-        caption={overspent ? "Overspent: you spent more than you earned" : "Retained cash flow"}
+        icon={PiggyBank}
+        highlight
       >
-        {overspent ? (
-          <span className="flex items-center gap-1 text-xs font-medium">
-            <AlertTriangle className="size-3.5" aria-hidden />
-            Overspent
+        <DeltaPill
+          change={delta(totals.netSavings, previous?.netSavings)}
+          goodWhen="up"
+          locale={fmt.locale}
+          onAccent
+        />
+        <span className="flex flex-col gap-1 text-xs text-white">
+          {overspent ? (
+            <span className="inline-flex items-center gap-1 font-medium">
+              <AlertTriangle className="size-3.5" aria-hidden />
+              Overspent: you spent more than you earned
+            </span>
+          ) : null}
+          <span>
+            Savings rate{" "}
+            <span className="font-semibold">
+              {totals.savingsRate === null
+                ? "none yet (no income)"
+                : formatPercent(totals.savingsRate, fmt.locale)}
+            </span>
           </span>
-        ) : null}
-      </Tile>
-      <Tile
-        label="Savings rate"
-        value={formatPercent(totals.savingsRate, fmt.locale)}
-        caption={totals.savingsRate === null ? "No income recorded yet" : "Efficiency ratio"}
-      />
+          <span>
+            {money(totals.investment, fmt)} invested, {money(totals.leftAfterInvesting, fmt)} left
+            after investing
+          </span>
+        </span>
+      </StatTile>
     </dl>
   );
 }
 
-/** Investing, which is kept apart from the savings rate (as in the sheet). */
-export function InvestingTiles({ totals, fmt }: { totals: PeriodTotals; fmt: Fmt }) {
-  return (
-    <dl className="grid grid-cols-2 gap-3 sm:max-w-xl">
-      <Tile
-        label="Invested"
-        value={money(totals.investment, fmt)}
-        caption="Money put into investments"
-      />
-      <Tile
-        label="Left after investing"
-        value={money(totals.leftAfterInvesting, fmt)}
-        caption="Net savings minus invested"
-      />
-    </dl>
-  );
+function Line({ children }: { children: ReactNode }) {
+  return <span className="text-xs text-dash-ink-soft">{children}</span>;
 }
 
 function ScrollRegion({ label, children }: { label: string; children: ReactNode }) {
@@ -148,15 +139,17 @@ function ScrollRegion({ label, children }: { label: string; children: ReactNode 
       role="region"
       aria-label={label}
       tabIndex={0}
-      className="overflow-x-auto rounded-lg border bg-card outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="overflow-x-auto rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       {children}
     </div>
   );
 }
 
-const th = "label-caps px-3 py-2 text-left text-muted-foreground";
-const num = "figures px-3 py-2 text-right";
+/** Header cells form a grey band with rounded ends, like the table in the design. */
+const th =
+  "bg-dash-well px-2.5 py-2 text-left text-xs font-medium text-dash-ink-soft first:rounded-l-xl last:rounded-r-xl";
+const num = "figures px-2.5 py-2.5 text-right";
 
 /** Spending by category, with a bar for the share. Categories with no spending stay in the list. */
 export function BreakdownTable({
@@ -172,7 +165,7 @@ export function BreakdownTable({
     <ScrollRegion label="Expense breakdown by category">
       <table className="w-full min-w-[22rem] text-sm">
         <caption className="sr-only">Expense breakdown by category for the chosen period</caption>
-        <thead className="bg-muted">
+        <thead>
           <tr>
             <th scope="col" className={th}>
               Expense category
@@ -191,18 +184,18 @@ export function BreakdownTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-dash-edge">
           {rows.map((row) => (
-            <tr key={row.category} className={row.amountMinor === 0 ? "text-muted-foreground" : ""}>
-              <th scope="row" className="px-3 py-2 text-left font-normal">
+            <tr key={row.category} className={row.amountMinor === 0 ? "text-dash-ink-soft" : ""}>
+              <th scope="row" className="px-2.5 py-2.5 text-left font-normal">
                 {row.category}
               </th>
               <td className={num}>{amount(row.amountMinor, fmt)}</td>
               <td className={num}>{formatPercent(row.percent, fmt.locale)}</td>
-              <td className="hidden w-40 px-3 py-2 sm:table-cell">
-                <div aria-hidden className="h-3 rounded-sm bg-muted">
+              <td className="hidden w-36 px-2.5 py-2.5 sm:table-cell">
+                <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-dash-well">
                   <div
-                    className="h-3 rounded-sm bg-foreground/70"
+                    className="dash-hatch h-full rounded-full"
                     style={{ width: `${Math.max(0, Math.min(100, row.percent ?? 0))}%` }}
                   />
                 </div>
@@ -211,9 +204,9 @@ export function BreakdownTable({
             </tr>
           ))}
         </tbody>
-        <tfoot className="border-t bg-muted font-semibold">
+        <tfoot className="border-t border-dash-edge font-semibold">
           <tr>
-            <th scope="row" className="px-3 py-2 text-left">
+            <th scope="row" className="px-2.5 py-2.5 text-left">
               Total living expenses
             </th>
             <td className={cn(num, "rule-double")}>{amount(total.amountMinor, fmt)}</td>
@@ -227,7 +220,7 @@ export function BreakdownTable({
   );
 }
 
-/** January to December with a full-year row. The chosen month is marked with text and colour. */
+/** January to December with a full-year row. The chosen month is marked with text and a tint. */
 export function TrendTable({
   months,
   total,
@@ -243,9 +236,9 @@ export function TrendTable({
 }) {
   return (
     <ScrollRegion label={`Annual cash flow trend for ${year}`}>
-      <table className="w-full min-w-[36rem] text-sm">
+      <table className="w-full min-w-[31rem] text-sm">
         <caption className="sr-only">Cash flow for each month of {year}</caption>
-        <thead className="bg-muted">
+        <thead>
           <tr>
             <th scope="col" className={th}>
               Month
@@ -267,7 +260,7 @@ export function TrendTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-dash-edge">
           {months.map((row) => {
             const selected = selectedMonth === row.month;
             const empty = row.income + row.emi + row.expense === 0;
@@ -276,14 +269,16 @@ export function TrendTable({
                 key={row.month}
                 aria-current={selected ? "true" : undefined}
                 className={cn(
-                  selected && "bg-accent font-medium",
-                  empty && !selected && "text-muted-foreground",
+                  selected && "bg-dash-well font-medium",
+                  empty && !selected && "text-dash-ink-soft",
                 )}
               >
-                <th scope="row" className="px-3 py-2 text-left font-normal">
+                <th scope="row" className="px-2.5 py-2.5 text-left font-normal">
                   {MONTH_NAMES[row.month - 1]}
                   {selected ? (
-                    <span className="ml-2 rounded-full border px-1.5 text-xs">Selected</span>
+                    <span className="ml-2 rounded-full border border-dash-edge bg-dash-card px-2 text-xs">
+                      Selected
+                    </span>
                   ) : null}
                 </th>
                 <td className={num}>{amount(row.income, fmt)}</td>
@@ -295,9 +290,9 @@ export function TrendTable({
             );
           })}
         </tbody>
-        <tfoot className="border-t bg-muted font-semibold">
+        <tfoot className="border-t border-dash-edge font-semibold">
           <tr>
-            <th scope="row" className="px-3 py-2 text-left">
+            <th scope="row" className="px-2.5 py-2.5 text-left">
               Full year total
             </th>
             <td className={cn(num, "rule-double")}>{amount(total.income, fmt)}</td>
@@ -314,56 +309,94 @@ export function TrendTable({
   );
 }
 
+/** A round upper limit for the chart (1, 2, 2.5 or 5 times a power of ten), split in four steps. */
+function niceCeiling(peakMinor: number): number {
+  const steps = 4;
+  const raw = Math.max(1, peakMinor) / steps;
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  const unit = [1, 2, 2.5, 5, 10].find((m) => m * magnitude >= raw) ?? 10;
+  return Math.round(unit * magnitude) * steps;
+}
+
 /**
- * Inflow against outflow (EMIs plus expenses) for each month. A picture of the table below it,
- * so it is hidden from screen readers; the table has the same numbers.
+ * Inflow (solid) against outflow, EMIs plus expenses (orange hatch), for each month. A picture of
+ * the details table, so it is hidden from screen readers; the table has the same numbers.
  */
 export function CashFlowChart({
   months,
   selectedMonth,
+  fmt,
 }: {
   months: TrendRow[];
   selectedMonth: number | "all";
+  fmt: Fmt;
 }) {
-  const peak = Math.max(1, ...months.map((m) => Math.max(m.income, m.emi + m.expense)));
+  const peak = Math.max(0, ...months.map((m) => Math.max(m.income, m.emi + m.expense)));
+  const top = niceCeiling(peak);
+  const ticks = [0, 1, 2, 3, 4];
   return (
-    <figure aria-hidden className="rounded-lg border bg-card p-4">
-      <div className="flex h-36 items-end gap-1 sm:gap-2">
-        {months.map((m) => {
-          const out = m.emi + m.expense;
-          return (
-            <div
-              key={m.month}
-              className={cn(
-                "flex h-full flex-1 flex-col items-center justify-end gap-1 rounded-md px-0.5",
-                selectedMonth === m.month && "bg-accent",
-              )}
-            >
-              <div className="flex h-full w-full items-end justify-center gap-0.5">
-                <div
-                  className="w-1/2 max-w-3 rounded-t-sm bg-inflow"
-                  style={{ height: `${(m.income / peak) * 100}%` }}
-                />
-                <div
-                  className="w-1/2 max-w-3 rounded-t-sm bg-outflow"
-                  style={{ height: `${(out / peak) * 100}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground">
-                {MONTH_NAMES[m.month - 1][0]}
-              </span>
-            </div>
-          );
-        })}
+    <figure aria-hidden className="rounded-[20px] bg-dash-well p-4">
+      <div className="mb-3 flex flex-wrap justify-end gap-4 text-xs text-dash-ink-soft">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm bg-dash-ink" /> Inflow
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="dash-hatch size-2.5 rounded-sm" /> EMIs and expenses
+        </span>
       </div>
-      <figcaption className="mt-3 flex gap-4 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-inflow" /> Inflow
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="size-2.5 rounded-sm bg-outflow" /> EMIs and expenses
-        </span>
-      </figcaption>
+      <div className="flex gap-3">
+        <div className="flex h-48 flex-col-reverse justify-between text-[11px] text-dash-ink-soft tabular-nums">
+          {ticks.map((i) => (
+            <span key={i} className="leading-none">
+              {i === 0 ? "0" : formatCompact((top / 4) * i, fmt.currency, fmt.locale)}
+            </span>
+          ))}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="relative h-48">
+            {ticks.map((i) => (
+              <div
+                key={i}
+                className="absolute inset-x-0 border-t border-dashed border-dash-edge"
+                style={{ bottom: `${i * 25}%` }}
+              />
+            ))}
+            <div className="relative flex h-full items-end gap-1 sm:gap-2">
+              {months.map((m) => (
+                <div
+                  key={m.month}
+                  className={cn(
+                    "flex h-full flex-1 items-end justify-center gap-0.5 rounded-md px-0.5",
+                    selectedMonth === m.month && "bg-dash-card/70",
+                  )}
+                >
+                  <div
+                    className="w-1/2 max-w-4 rounded-t-md bg-dash-ink"
+                    style={{ height: `${(m.income / top) * 100}%` }}
+                  />
+                  <div
+                    className="dash-hatch w-1/2 max-w-4 rounded-t-md"
+                    style={{ height: `${((m.emi + m.expense) / top) * 100}%` }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-2 flex gap-1 sm:gap-2">
+            {months.map((m) => (
+              <span
+                key={m.month}
+                className={cn(
+                  "flex-1 text-center text-[11px] text-dash-ink-soft",
+                  selectedMonth === m.month && "font-semibold text-dash-ink",
+                )}
+              >
+                {MONTH_NAMES[m.month - 1].slice(0, 3)}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
     </figure>
   );
 }

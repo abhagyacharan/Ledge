@@ -358,6 +358,12 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** The quick-add dialog now has due date and time, priority, list, tags, repeat and notes, next to the sentence box; controls win over parsed values (manual due, priority) and tags are the union. The inline "Add a task" row keeps its fast Enter-to-add and gains a "More options" button that opens the dialog through the existing quick-add event, carrying title, list, section, date and tags. `createTask` and `createTaskSchema` accept a repeat rule and mode with the same checks as `updateTask`. The provider also passes `weekStartsOn` for the date picker.
 - **Reason:** O's request: the plus button should offer what editing a task offers. Sections and subtasks were left out of the dialog on purpose (sections need server data; subtasks belong to an existing task).
 
+## 2026-11-11: Dashboard look for the expense Summary
+
+- **Decision:** O supplied a dashboard screenshot and asked for the expense Summary in that language, with only four blocks: four tiles (inflows, EMIs and loans, expenses, orange net savings), the annual cash flow bar chart alone, the expense breakdown, and the annual details table. The language is written in `docs/design.md` (white `rounded-3xl` cards, grey wells, near-black ink, one orange, pastel delta pills, black bars with orange hatched bars) and implemented as `src/components/dash/` (`DashCard`, `StatTile`, `DeltaPill`) plus colour tokens scoped to a `.dash` class in `globals.css`, with dark values. Scoped on purpose: O said to do only the Summary now, so the rest of the app keeps the Phase 8 look until the rollout in `docs/design.md`. Each tile shows its change against the previous month (January compares with December of the year before; whole-year view shows none); `changePercent` and `previousMonthTotals` are pure and tested. The old Savings rate, Invested and Left after investing tiles became lines on the orange tile.
+- **Accessibility adaptation:** white text on the screenshot's bright orange fails WCAG AA, so text-bearing orange uses a darker gradient (`#cc420b` to `#a63409`, 4.8 to 1 or better) and the bright orange is only used for fills without text. Pills carry an arrow and screen-reader words as well as colour.
+- **Reason:** O's request in chat; axe audit and phone checks pass in both themes.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

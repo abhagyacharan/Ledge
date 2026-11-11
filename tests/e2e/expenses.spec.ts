@@ -35,17 +35,17 @@ test("the summary for this month matches the sample sheet", async ({ page }) => 
   await page.goto("/expenses");
   await expect(page.getByRole("heading", { level: 1, name: "Expenses" })).toBeVisible();
 
-  // The five tiles from the sheet.
+  // The four tiles (the sheet's five, with the savings rate and investing on the orange tile).
   await expect(tile(page, "Total inflows")).toContainText("₹28,000.00");
   await expect(tile(page, "Total EMIs & loans")).toContainText("₹10,142.00");
   await expect(tile(page, "Total EMIs & loans")).toContainText("₹9,142.00 paid");
   await expect(tile(page, "Total EMIs & loans")).toContainText("₹1,000.00 to pay");
   await expect(tile(page, "Living expenses")).toContainText("₹4,600.00");
   await expect(tile(page, "Net savings")).toContainText("₹13,258.00");
-  await expect(tile(page, "Savings rate")).toContainText("47.4%");
+  await expect(tile(page, "Net savings")).toContainText("Savings rate 47.4%");
   // The extra row for investing.
-  await expect(tile(page, "Invested")).toContainText("₹5,000.00");
-  await expect(tile(page, "Left after investing")).toContainText("₹8,258.00");
+  await expect(tile(page, "Net savings")).toContainText("₹5,000.00 invested");
+  await expect(tile(page, "Net savings")).toContainText("₹8,258.00 left after investing");
 
   // Expense breakdown: every category listed, shares as in the sheet.
   const breakdown = page.getByRole("table", { name: /Expense breakdown/ });
@@ -180,9 +180,9 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   await expect(tile(page, "Total EMIs & loans")).toContainText("₹12,000.00 paid");
   await expect(tile(page, "Living expenses")).toContainText("₹8,000.50");
   await expect(tile(page, "Net savings")).toContainText("₹29,999.50");
-  await expect(tile(page, "Savings rate")).toContainText("60.0%");
-  await expect(tile(page, "Invested")).toContainText("₹5,000.00");
-  await expect(tile(page, "Left after investing")).toContainText("₹24,999.50");
+  await expect(tile(page, "Net savings")).toContainText("Savings rate 60.0%");
+  await expect(tile(page, "Net savings")).toContainText("₹5,000.00 invested");
+  await expect(tile(page, "Net savings")).toContainText("₹24,999.50 left after investing");
   const breakdown = page.getByRole("table", { name: /Expense breakdown/ });
   await expect(breakdown.getByRole("row", { name: /Food & Groceries/ })).toContainText("100.0%");
 });

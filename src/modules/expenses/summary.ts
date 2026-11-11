@@ -64,6 +64,24 @@ export function periodTotals(year: MonthTotals[], month: number | "all"): Period
   );
 }
 
+/**
+ * Percent change from `previous` to `current`, one decimal. Null when `previous` is zero, because
+ * a rise from nothing has no honest percentage. A fall from a negative number reads as a rise.
+ */
+export function changePercent(current: number, previous: number): number | null {
+  if (previous === 0) return null;
+  return Math.round(((current - previous) * 1000) / Math.abs(previous)) / 10;
+}
+
+/** Totals for the month before `month`; January looks at December of the year before. */
+export function previousMonthTotals(
+  year: MonthTotals[],
+  previousYear: MonthTotals[],
+  month: number,
+): PeriodTotals {
+  return month === 1 ? periodTotals(previousYear, 12) : periodTotals(year, month - 1);
+}
+
 export type TrendRow = PeriodTotals & { month: number };
 
 /** The January to December table, plus the full-year total row. */

@@ -43,6 +43,18 @@
   --color-inflow: var(--inflow);
   --color-outflow: var(--outflow);
   --color-brass: var(--brass);
+  --color-dash-card: var(--dash-card);
+  --color-dash-well: var(--dash-well);
+  --color-dash-edge: var(--dash-edge);
+  --color-dash-ink: var(--dash-ink);
+  --color-dash-ink-soft: var(--dash-ink-soft);
+  --color-dash-accent: var(--dash-accent);
+  --color-dash-accent-from: var(--dash-accent-from);
+  --color-dash-accent-to: var(--dash-accent-to);
+  --color-dash-good: var(--dash-good);
+  --color-dash-good-bg: var(--dash-good-bg);
+  --color-dash-bad: var(--dash-bad);
+  --color-dash-bad-bg: var(--dash-bad-bg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -133,6 +145,37 @@
 }
 
 /*
+ * The dashboard look (docs/design.md): white rounded cards, grey wells, near-black ink and one
+ * orange. Scoped to `.dash` so screens can move to it one at a time.
+ */
+.dash {
+  --dash-card: #ffffff;
+  --dash-well: #f4f4f2;
+  --dash-edge: #ececea;
+  --dash-ink: #111214;
+  --dash-ink-soft: #5b5f66;
+  --dash-accent: #f26b21;
+  --dash-accent-from: #cc420b;
+  --dash-accent-to: #a63409;
+  --dash-good: #166534;
+  --dash-good-bg: #dcfce7;
+  --dash-bad: #b42318;
+  --dash-bad-bg: #fee4e2;
+}
+.dark .dash {
+  --dash-card: #1d211f;
+  --dash-well: #282d2a;
+  --dash-edge: #ffffff1a;
+  --dash-ink: #f2f4f1;
+  --dash-ink-soft: #aeb4ae;
+  --dash-accent: #f58445;
+  --dash-good: #86efac;
+  --dash-good-bg: #14532d;
+  --dash-bad: #fca5a5;
+  --dash-bad-bg: #7f1d1d;
+}
+
+/*
  * The sidebar is always a dark panel, even in the light theme. Components inside it (tags, theme
  * button, sign out) use the ordinary tokens, so inside the panel those tokens are re-pointed at the
  * sidebar palette. Menus that open in a portal sit outside the panel and keep the page theme.
@@ -189,6 +232,14 @@
     text-transform: uppercase;
   }
   /* Money and dates line up in columns. */
+  /* Orange diagonal hatching: the outflow bars and the unfilled part of progress bars. */
+  .dash-hatch {
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--dash-accent) 0 3px,
+      color-mix(in oklab, var(--dash-accent) 38%, var(--dash-well)) 3px 6px
+    );
+  }
   .figures {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;

@@ -103,6 +103,20 @@ export function percentOf(part: number, whole: number): number | null {
   return Math.round((part * 1000) / whole) / 10;
 }
 
+/** Short money for chart axes, such as 50K or 1.2L (the locale decides the style). */
+export function formatCompact(
+  minor: number,
+  currency: string = DEFAULT_CURRENCY,
+  locale: string = DEFAULT_LOCALE,
+): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(minor / minorPerMajor(currency));
+}
+
 /** "47.4%" or "—" for null. */
 export function formatPercent(value: number | null, locale: string = DEFAULT_LOCALE): string {
   if (value === null) return "—";
