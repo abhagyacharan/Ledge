@@ -73,28 +73,28 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
         </DashCard>
 
         <DashCard
-          id="cash-flow"
-          title="Annual cash flow"
-          subtitle={`Inflow against outflow for each month of ${period.year}`}
-          className="xl:col-span-7"
-        >
-          <CashFlowChart months={trend.months} selectedMonth={period.month} fmt={fmt} />
-        </DashCard>
-
-        <DashCard
           id="breakdown"
           title="Expense breakdown by category"
           subtitle={periodLabel(period)}
-          className="xl:col-span-5"
+          className="xl:col-span-7"
         >
           <BreakdownTable rows={breakdown.rows} total={breakdown.total} fmt={fmt} />
+        </DashCard>
+
+        <DashCard
+          id="cash-flow"
+          title="Annual cash flow"
+          subtitle={`Money in and out, each month of ${period.year}`}
+          className="flex flex-col xl:col-span-4"
+        >
+          <CashFlowChart months={trend.months} selectedMonth={period.month} fmt={fmt} />
         </DashCard>
 
         <DashCard
           id="details"
           title={`Annual cash flow trend, ${period.year}`}
           subtitle="Month by month, with the full-year total"
-          className="xl:col-span-7"
+          className="xl:col-span-8"
         >
           <TrendTable
             months={trend.months}

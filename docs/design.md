@@ -47,16 +47,16 @@ Uses the faces from Phase 8 (do not add a new one):
 
 ## 4. Components (in `src/components/dash/`)
 
-| Component    | What it is                                                                                                                                                                                                                                                  |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DashCard`   | White card: optional title, subtitle and right-side action, then content. Renders a labelled `<section>` with an `<h3>`.                                                                                                                                    |
-| `StatTile`   | A grey well tile: label top left, icon in a white circle top right, big figure, a delta pill with muted context, optional extra lines. `highlight` makes it the orange gradient tile (white text, translucent white pill). Parent is a `<dl>`.              |
-| `DeltaPill`  | Arrow plus percentage. Colour says good or bad (it depends on the metric: more income is good, more spending is bad), the arrow says up or down, and screen-reader text says it in words. Never colour alone.                                               |
-| Chart well   | Grey well with legend top right, faint horizontal grid lines with small axis labels (compact money, e.g. `50k`), and bars. Bars are hidden from screen readers; the matching table is the accessible version.                                               |
-| Bars         | Inflow: solid `--dash-ink`. Outflow: orange diagonal hatch (`.dash-hatch`). The selected month gets a slightly lighter well behind it plus its month label in ink.                                                                                          |
-| Table card   | A `DashCard` holding a table: header band in `--dash-well` with rounded ends, hairline row separators, figures in Plex Mono, a totals row with the double rule from Phase 8 (the one signature kept). Wraps in a focusable scroll region on narrow screens. |
-| Progress bar | Track in `--dash-well`, fill in `--dash-accent`, remaining part hatched, the percentage as text beside it (used in the breakdown).                                                                                                                          |
-| Buttons      | Primary: pill, `--dash-ink` background, white text. Secondary: pill, white with an edge.                                                                                                                                                                    |
+| Component    | What it is                                                                                                                                                                                                                                                                                                                              |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DashCard`   | White card: optional title, subtitle and right-side action, then content. Renders a labelled `<section>` with an `<h3>`.                                                                                                                                                                                                                |
+| `StatTile`   | A grey well tile: label top left, icon in a white circle top right, big figure, a delta pill with muted context, optional extra lines. `highlight` makes it the orange gradient tile (white text, translucent white pill). Parent is a `<dl>`.                                                                                          |
+| `DeltaPill`  | Arrow plus percentage. Colour says good or bad (it depends on the metric: more income is good, more spending is bad), the arrow says up or down, and screen-reader text says it in words. Never colour alone.                                                                                                                           |
+| Chart well   | Grey well with legend top right, faint horizontal grid lines with small axis labels (compact money, e.g. `50k`), and bars. Bars are hidden from screen readers; the matching table is the accessible version.                                                                                                                           |
+| Bars         | One bar per month with two bars stacked inside it, as in the screenshot: money in (solid `--dash-ink`, bottom) and money out, EMIs plus expenses (orange diagonal hatch `.dash-hatch`, top). The bar's height is the sum, so it moves with both. The selected month gets a slightly lighter well behind it plus its month label in ink. |
+| Table card   | A `DashCard` holding a table: header band in `--dash-well` with rounded ends, hairline row separators, figures in Plex Mono, a totals row with the double rule from Phase 8 (the one signature kept). Wraps in a focusable scroll region on narrow screens.                                                                             |
+| Progress bar | Track in `--dash-well`, fill in `--dash-accent`, remaining part hatched, the percentage as text beside it (used in the breakdown).                                                                                                                                                                                                      |
+| Buttons      | Primary: pill, `--dash-ink` background, white text. Secondary: pill, white with an edge.                                                                                                                                                                                                                                                |
 
 ## 5. Layout of the expense Summary (first screen in this language)
 
@@ -64,17 +64,19 @@ Four blocks, two rows, on a 12-column grid at desktop width (`xl`), one column o
 
 ```
 +------------------------+--------------------------------------+
-| 1. Four stat tiles     | 2. Annual cash flow (bar chart only) |
-|    Income | EMIs       |                                      |
+| 1. Four stat tiles     | 2. Expense breakdown                 |
+|    Income | EMIs       |    (table with share bars)           |
 |    Expenses | Savings* |                                      |
-+------------------------+--------------------------------------+
-| 3. Expense breakdown   | 4. Annual cash flow details (table)  |
-|    (table with bars)   |    January to December + full year   |
-+------------------------+--------------------------------------+
++-----------------+------+--------------------------------------+
+| 3. Annual cash  | 4. Annual cash flow details (table,         |
+|    flow (one    |    January to December + full year)         |
+|    stacked bar  |                                             |
+|    per month)   |                                             |
++-----------------+---------------------------------------------+
   * Savings is the highlighted orange tile
 ```
 
-Columns: left blocks span 5, right blocks span 7. The period picker and the tab bar stay above, unchanged.
+Columns (of 12): tiles 5 and breakdown 7 on the first row; chart 4 and details table 8 on the second, so the table gets the room it needs. The chart stretches to the height of its row. The period picker and the tab bar stay above, unchanged.
 
 The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and delayed lines), **Living expenses**, **Net savings** (highlighted; it also carries the savings rate, how much was invested and what is left after investing, so nothing from the old tiles is lost). Each tile shows a delta pill against the previous month (not shown in "Whole year" view, where there is nothing fair to compare to).
 

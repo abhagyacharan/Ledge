@@ -364,6 +364,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Accessibility adaptation:** white text on the screenshot's bright orange fails WCAG AA, so text-bearing orange uses a darker gradient (`#cc420b` to `#a63409`, 4.8 to 1 or better) and the bright orange is only used for fills without text. Pills carry an arrow and screen-reader words as well as colour.
 - **Reason:** O's request in chat; axe audit and phone checks pass in both themes.
 
+## 2026-11-11: Summary layout changed after review
+
+- **Decision:** On the Summary, the expense breakdown and the cash flow chart swapped places: row one is the tiles (5 of 12 columns) and the breakdown (7); row two is the chart (4, narrower) and the details table (8, wider). The chart is now one bar per month with money in (solid) and money out (orange hatch) stacked inside it, as in the screenshot, instead of two side-by-side bars, and it stretches to the height of its row.
+- **Reason:** O's request after seeing the first version.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

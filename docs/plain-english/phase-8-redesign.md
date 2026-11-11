@@ -82,9 +82,9 @@ After the first redesign you sent a screenshot of a finance dashboard you liked 
 What the Summary looks like now: four blocks.
 
 1. **Top left: four tiles.** Total inflows, Total EMIs & loans, Living expenses, and **Net savings as the one orange tile**. Each shows a small pill with how it changed **compared with last month** (for example "up 12.0%"). Green means a good change (more income, less spending) and red a bad one; the arrow and the words say up or down, so colour is never the only clue. The savings tile also holds the savings rate and the invested and left-after-investing amounts, so nothing from the old extra tiles was lost. In "Whole year" view there is no comparison pill, because there is nothing fair to compare to.
-2. **Top right: the annual cash flow bar chart** (the chart only). Black bars are money in, orange hatched bars are EMIs and expenses, with faint dashed grid lines and short money labels on the side (such as 40K). The chosen month is highlighted.
-3. **Bottom left: expense breakdown by category**, as before, with orange hatched share bars.
-4. **Bottom right: the January to December details table** with the full-year total, as before.
+2. **Second row, left: the annual cash flow bar chart** (the chart only, now narrower). Each month is one bar with two parts stacked inside it: black is money in, orange hatched is money out (EMIs and expenses), so the bar rises and falls with both. with faint dashed grid lines and short money labels on the side (such as 40K). The chosen month is highlighted.
+3. **Top right: expense breakdown by category**, as before, with orange hatched share bars.
+4. **Second row, right: the January to December details table** with the full-year total, now wider.
 
 On a phone the four blocks stack in one column. Light and dark both work. The orange is a deeper shade where white text sits on it, so the text stays readable (a rule from the accessibility check). The new colours are only used inside the Summary for now, so nothing else changed. The other expense tabs and the to-do screens will be moved to this look later, when you ask.
 

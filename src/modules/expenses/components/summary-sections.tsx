@@ -319,8 +319,9 @@ function niceCeiling(peakMinor: number): number {
 }
 
 /**
- * Inflow (solid) against outflow, EMIs plus expenses (orange hatch), for each month. A picture of
- * the details table, so it is hidden from screen readers; the table has the same numbers.
+ * One bar per month, made of two bars stacked in it (as in the design): money in (solid, bottom)
+ * and money out, EMIs plus expenses (orange hatch, on top). The bar grows and shrinks with both.
+ * A picture of the details table, so it is hidden from screen readers; the table has the numbers.
  */
 export function CashFlowChart({
   months,
@@ -331,29 +332,29 @@ export function CashFlowChart({
   selectedMonth: number | "all";
   fmt: Fmt;
 }) {
-  const peak = Math.max(0, ...months.map((m) => Math.max(m.income, m.emi + m.expense)));
+  const peak = Math.max(0, ...months.map((m) => m.income + m.emi + m.expense));
   const top = niceCeiling(peak);
   const ticks = [0, 1, 2, 3, 4];
   return (
-    <figure aria-hidden className="rounded-[20px] bg-dash-well p-4">
-      <div className="mb-3 flex flex-wrap justify-end gap-4 text-xs text-dash-ink-soft">
+    <figure aria-hidden className="flex flex-1 flex-col rounded-[20px] bg-dash-well p-4">
+      <div className="mb-3 flex flex-wrap justify-end gap-x-4 gap-y-1 text-xs text-dash-ink-soft">
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-dash-ink" /> Inflow
+          <span className="size-2.5 rounded-sm bg-dash-ink" /> Money in
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="dash-hatch size-2.5 rounded-sm" /> EMIs and expenses
+          <span className="dash-hatch size-2.5 rounded-sm" /> Money out
         </span>
       </div>
-      <div className="flex gap-3">
-        <div className="flex h-48 flex-col-reverse justify-between text-[11px] text-dash-ink-soft tabular-nums">
+      <div className="flex flex-1 gap-2">
+        <div className="flex min-h-64 flex-col-reverse justify-between text-[10px] text-dash-ink-soft tabular-nums">
           {ticks.map((i) => (
             <span key={i} className="leading-none">
               {i === 0 ? "0" : formatCompact((top / 4) * i, fmt.currency, fmt.locale)}
             </span>
           ))}
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="relative h-48">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="relative min-h-64 flex-1">
             {ticks.map((i) => (
               <div
                 key={i}
@@ -361,33 +362,32 @@ export function CashFlowChart({
                 style={{ bottom: `${i * 25}%` }}
               />
             ))}
-            <div className="relative flex h-full items-end gap-1 sm:gap-2">
+            <div className="absolute inset-0 flex items-end gap-1">
               {months.map((m) => (
                 <div
                   key={m.month}
                   className={cn(
-                    "flex h-full flex-1 items-end justify-center gap-0.5 rounded-md px-0.5",
+                    "flex h-full flex-1 items-end justify-center rounded-md",
                     selectedMonth === m.month && "bg-dash-card/70",
                   )}
                 >
                   <div
-                    className="w-1/2 max-w-4 rounded-t-md bg-dash-ink"
-                    style={{ height: `${(m.income / top) * 100}%` }}
-                  />
-                  <div
-                    className="dash-hatch w-1/2 max-w-4 rounded-t-md"
-                    style={{ height: `${((m.emi + m.expense) / top) * 100}%` }}
-                  />
+                    className="flex w-full max-w-5 flex-col-reverse overflow-hidden rounded-t-md"
+                    style={{ height: `${((m.income + m.emi + m.expense) / top) * 100}%` }}
+                  >
+                    <div className="bg-dash-ink" style={{ flexGrow: m.income }} />
+                    <div className="dash-hatch" style={{ flexGrow: m.emi + m.expense }} />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="mt-2 flex gap-1 sm:gap-2">
+          <div className="mt-2 flex gap-1">
             {months.map((m) => (
               <span
                 key={m.month}
                 className={cn(
-                  "flex-1 text-center text-[11px] text-dash-ink-soft",
+                  "flex-1 text-center text-[10px] text-dash-ink-soft",
                   selectedMonth === m.month && "font-semibold text-dash-ink",
                 )}
               >
