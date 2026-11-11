@@ -19,17 +19,18 @@ Not a copy: Ledge keeps its own data, its own navigation (green spine sidebar, P
 
 All colours live as CSS variables under the `.dash` scope in `src/app/globals.css` (so this look can be applied screen by screen without touching the rest of the app yet). Dark values are under `.dark .dash`. When the rollout reaches the whole app, these become the global tokens.
 
-| Token                    | Light                  | Dark                   | Use                                                    |
-| ------------------------ | ---------------------- | ---------------------- | ------------------------------------------------------ |
-| `--dash-card`            | `#ffffff`              | `#1d211f`              | Card background                                        |
-| `--dash-well`            | `#f4f4f2`              | `#282d2a`              | Tiles, chart wells, table header bands                 |
-| `--dash-edge`            | `#ececea`              | `#ffffff1a`            | The soft card edge (1px) and hairlines                 |
-| `--dash-ink`             | `#111214`              | `#f2f4f1`              | Figures, headings, black bars, primary button          |
-| `--dash-ink-soft`        | `#5b5f66`              | `#aeb4ae`              | Labels, captions, axis text (AA on card and well)      |
-| `--dash-accent`          | `#f26b21`              | `#f58445`              | Decorative orange: hatched bars, progress, dots        |
-| `--dash-accent-from/-to` | `#cc420b` to `#a63409` | same                   | Highlighted tile gradient (white text passes AA, 4.8+) |
-| `--dash-good` / `-bg`    | `#166534` on `#dcfce7` | `#86efac` on `#14532d` | Up-is-good pill                                        |
-| `--dash-bad` / `-bg`     | `#b42318` on `#fee4e2` | `#fca5a5` on `#7f1d1d` | Down-is-bad pill                                       |
+| Token                    | Light                  | Dark                   | Use                                                       |
+| ------------------------ | ---------------------- | ---------------------- | --------------------------------------------------------- |
+| `--dash-card`            | `#ffffff`              | `#1d211f`              | Card background                                           |
+| `--dash-well`            | `#f4f4f2`              | `#282d2a`              | Tiles, chart wells, table header bands                    |
+| `--dash-edge`            | `#ececea`              | `#ffffff1a`            | The soft card edge (1px) and hairlines                    |
+| `--dash-raised`          | `#ffffff`              | `#3b423e`              | The chosen pill of a segmented control (tabs, EMI status) |
+| `--dash-ink`             | `#111214`              | `#f2f4f1`              | Figures, headings, black bars, primary button             |
+| `--dash-ink-soft`        | `#5b5f66`              | `#aeb4ae`              | Labels, captions, axis text (AA on card and well)         |
+| `--dash-accent`          | `#f26b21`              | `#f58445`              | Decorative orange: hatched bars, progress, dots           |
+| `--dash-accent-from/-to` | `#cc420b` to `#a63409` | same                   | Highlighted tile gradient (white text passes AA, 4.8+)    |
+| `--dash-good` / `-bg`    | `#166534` on `#dcfce7` | `#86efac` on `#14532d` | Up-is-good pill                                           |
+| `--dash-bad` / `-bg`     | `#b42318` on `#fee4e2` | `#fca5a5` on `#7f1d1d` | Down-is-bad pill                                          |
 
 Radius: card 24px (`rounded-3xl`), tile 20px (`rounded-[20px]`), chart well 20px, pill and button full. Elevation: none, or a 1px edge. No heavy shadows.
 
@@ -56,7 +57,10 @@ Uses the faces from Phase 8 (do not add a new one):
 | Bars         | One bar per month with two rounded bars stacked inside it and a 2px gap, as in the screenshot: money in (solid `--dash-ink`, bottom) and money out, EMIs plus expenses (orange diagonal hatch `.dash-hatch`, top). At most 24px wide, 8px between bars; the total height is the sum, so it moves with both. Nothing sits behind a bar: the selected month is shown only by its month label in ink. |
 | Table card   | A `DashCard` holding a table: header band in `--dash-well` with rounded ends, hairline row separators, figures in Plex Mono, a totals row with the double rule from Phase 8 (the one signature kept). Wraps in a focusable scroll region on narrow screens.                                                                                                                                        |
 | Progress bar | Track in `--dash-well`, fill in `--dash-accent`, remaining part hatched, the percentage as text beside it (used in the breakdown).                                                                                                                                                                                                                                                                 |
-| Buttons      | Primary: pill, `--dash-ink` background, white text. Secondary: pill, white with an edge.                                                                                                                                                                                                                                                                                                           |
+| Buttons      | `DashButton` (`src/components/dash/dash-button.tsx`). Primary: pill, `--dash-ink` background, white text. Secondary: pill, white with an edge. Also `well`, `ghost` and `danger`. All press to scale 0.97; 44px tall on phones, 36px with a mouse.                                                                                                                                                 |
+| Sheet        | `Sheet`, `SheetHeader`, `SheetBody`, `SheetFooter` (`sheet.tsx`, Base UI Drawer). Phones: bottom sheet, 24px top corners, grab handle, swipe down to close, keyboard aware, at most 92% of the screen. Mouse: a 28rem panel from the right. 400ms (phone) or 300ms (desktop) on `--ease-sheet`. It carries `.dash` itself because it is portalled.                                                 |
+| Chips        | Filters and choices. Unselected: `--dash-well`; selected: `--dash-ink` with white text. In forms they are real radio buttons. A segmented variant (a well holding a white selected pill) is used for short exclusive sets such as EMI status.                                                                                                                                                      |
+| Skeleton     | `.dash-skeleton`: a well-coloured block that breathes (opacity 1 to 0.55 over 1.6s). Skeletons copy the real layout's geometry (`src/modules/expenses/components/skeletons.tsx`).                                                                                                                                                                                                                  |
 
 ## 5. Layout of the expense Summary (first screen in this language)
 
@@ -78,6 +82,22 @@ Columns (of 12): every block is 6 wide, so each row is 50/50. The four tiles str
 
 The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and delayed lines), **Living expenses**, **Net savings** (highlighted; it also carries the savings rate, how much was invested and what is left after investing, so nothing from the old tiles is lost). Each tile shows a delta pill against the previous month (not shown in "Whole year" view, where there is nothing fair to compare to).
 
+## 5b. Layout of the entry tabs (Income, EMIs & loans, Expenses, Investments)
+
+Three blocks. Phones and tablets get one column in this order: overview, list, breakdown (so the list starts high). At `xl`: the overview (4 columns) above the breakdown (4 columns) on the left, and the list (8 columns) on the right spanning both rows.
+
+- **Overview card:** "Spent in November 2026" (13px, soft), the total (Bricolage 34px; the digits roll when it changes), the entry count, and the Add button (full width on phones and in the side column, right-aligned between `sm` and `xl`).
+- **List card:** a search pill (well) and a sort pill (white with an edge) on one row; category chips below, scrolling sideways with faded edges; then the rows. A row is a 40px icon circle (well), the name (14px medium) over one meta line (13px soft, truncated), and the amount (Plex Mono) on the right; EMI rows add a status pill under the amount. Rows are fully clickable (they open the sheet); on `md+` a ghost `⋯` appears on hover or focus. Expenses group by day with the day's total. Rows fold in and out over 220ms on `--ease-snap`.
+- **Breakdown card:** share rows (label, amount, percent, and a 6px flat orange bar grown with `scaleX`) or, for EMIs, the paid-so-far progress bar (orange fill, hatched rest) with paid, to-pay and delayed lines.
+
+## 5c. The expense header and the Log a transaction button
+
+- **Header:** the page title, then one row (from `lg`; stacked below) with the tabs on the left and the period on the right.
+- **Tabs:** a well-coloured pill track holding five links. The chosen one is a `--dash-raised` pill with a hairline shadow that slides to the next tab (spring, 350ms, no bounce). 44px tall on phones, 36px with a mouse. On a phone the track scrolls sideways and keeps the chosen tab centred.
+- **Period:** one well pill: round previous and next buttons around a button showing a calendar icon, the period ("November 2026") and a chevron. It opens a 19.5rem card: year stepper, a 3 by 4 grid of short month names (chosen month filled ink; an orange dot marks the current month), then Whole year and This month.
+- **Log a transaction:** a 56px ink circle bottom right (52px with a mouse), clear of the phone's home bar. It opens a menu above itself (scaling from the button): a small "Log a transaction" label, then Income, Expense, EMI or loan and Investment, each a 40px icon circle with the name and a one-line hint. The plus rotates into a cross while the menu is open. Choosing opens the add sheet for that kind.
+- **Summary chart:** on screens from `md` each month is a button; pointing or keyboard focus shows a dark tooltip (month, in, out, net) above the bar and fades the other months to 35%; clicking opens that month. On phones the chart is a picture only.
+
 ## 6. Accessibility rules that override the screenshot
 
 - Text on the orange tile must pass 4.5 to 1: use the darker gradient above, never the bright `#f26b21` behind text. The bright orange is for fills that carry no text.
@@ -89,9 +109,16 @@ The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and
 ## 7. Rollout
 
 1. **Expense Summary** (this change): `DashCard`, `StatTile`, `DeltaPill`, chart and table restyle, scoped `.dash` tokens.
-2. Other expense tabs (Income, EMIs & loans, Expenses, Investments): entries tables as table cards, add buttons as black pills, filter and search as pills.
+2. Other expense tabs (Income, EMIs & loans, Expenses, Investments), the expense header and the Log a transaction button: **done 2026-11-11** (§5c) (§5b): overview, list and breakdown cards, chips, the sheet, skeletons.
 3. Task screens and the app shell: promote the `.dash` tokens to the global tokens, then retire the Phase 8 paper-and-ledger palette where it conflicts. The green spine sidebar stays unless O decides otherwise.
 4. Each step ships with the axe and phone-width checks passing in light and dark.
+
+## 9. Motion
+
+- Two curves: `--ease-snap` (`cubic-bezier(0.23, 1, 0.32, 1)`) for UI and `--ease-sheet` (`cubic-bezier(0.32, 0.72, 0, 1)`) for sheets. Never ease-in.
+- Press feedback 150ms; chips and colours 150ms; rows 220ms; sheets 300 to 400ms; bars 500ms, with transforms only.
+- What moves: the sheet, rows being added or removed, the tab underline sliding, totals rolling, and the dim of a view while the next period loads (after 150ms, so fast loads never blink). Nothing else animates, and keyboard actions never animate.
+- `prefers-reduced-motion` turns every transition off (global rule in `globals.css`; NumberFlow honours it too).
 
 ## 8. Do and do not
 

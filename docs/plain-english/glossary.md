@@ -18,6 +18,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Better Auth.** The ready-made login system used for sign-in, sign-up, and sessions.
 
+**Bottom sheet.** A panel that slides up from the bottom of a phone screen, used here for the add and edit form. You can drag it down to close it.
+
 **Build.** Turning the code into the finished, optimised version that actually runs for daily use.
 
 **Cascade.** When deleting one record automatically deletes the records that depend on it, for example deleting a list deletes its tasks.
@@ -27,6 +29,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Cloudflare Tunnel.** A way to reach your home server from the internet without opening any door on your router. Your server connects out to Cloudflare, and Cloudflare passes visitors down that connection, with HTTPS included.
 
 **Collation.** The rule a database uses to decide alphabetical order, for example whether capital letters count the same as small ones.
+
+**Chip.** A small rounded button with a word on it, used for quick choices (a category, a payment method) or filters. A filled black chip is the chosen one.
 
 **Command palette.** A search box that pops up (Ctrl+K or `/`) to jump to any view, list or tag, or to run an action, without using the menu.
 

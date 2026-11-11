@@ -1,6 +1,6 @@
 import { loadMoneyContext } from "../context";
 import { CATEGORIES_BY_KIND, KIND_LABELS } from "../categories";
-import { parsePeriod, periodLabel, periodRange } from "../periods";
+import { parsePeriod, periodLabel, periodRange, periodToParams } from "../periods";
 import { parseEntryFilters } from "../schema";
 import { emiProgress } from "../summary";
 import {
@@ -11,11 +11,12 @@ import {
 } from "@/server/data/finance";
 import { requireUser } from "@/server/session";
 import type { EntryKind } from "@/server/db/schema";
+import type { Breakdown } from "./entries-overview";
 import { EntriesView } from "./entries-view";
 
 /**
  * Server half of an entries tab: reads the period and filters from the URL, loads the entries and
- * the small totals shown under the heading, and hands everything to the interactive view.
+ * the overview figures, and hands everything to the interactive view.
  */
 export async function EntriesPage({
   kind,
@@ -30,55 +31,56 @@ export async function EntriesPage({
   const range = periodRange(period);
   const filters = parseEntryFilters(params, CATEGORIES_BY_KIND[kind]);
   const everything = { sort: "newest" as const, category: null, q: "" };
+  const filtered = Boolean(filters.category || filters.q);
 
-  const [entries, all] = await Promise.all([
+  const [entries, all, breakdown] = await Promise.all([
     listEntries(userId, kind, range, filters),
-    filters.category || filters.q ? listEntries(userId, kind, range, everything) : null,
+    filtered ? listEntries(userId, kind, range, everything) : null,
+    loadBreakdown(userId, kind, range),
   ]);
-  const periodTotalMinor = (all ?? entries).reduce((sum, e) => sum + e.amountMinor, 0);
-
-  let summary: { label: string; amountMinor: number }[] = [];
-  if (kind === "expense") {
-    summary = (await paymentMethodTotals(userId, range)).map((r) => ({
-      label: r.method,
-      amountMinor: r.amountMinor,
-    }));
-  } else if (kind === "emi") {
-    const progress = emiProgress(await emiStatusTotals(userId, range));
-    summary =
-      periodTotalMinor > 0
-        ? [
-            { label: "Paid", amountMinor: progress.paidMinor },
-            { label: "To pay", amountMinor: progress.remainingMinor },
-            ...(progress.delayedCount > 0
-              ? [
-                  {
-                    label: `Delayed (${progress.delayedCount})`,
-                    amountMinor: progress.delayedMinor,
-                  },
-                ]
-              : []),
-          ]
-        : [];
-  } else {
-    summary = (await categoryTotals(userId, kind, range))
-      .sort((a, b) => b.amountMinor - a.amountMinor)
-      .map((r) => ({ label: r.category, amountMinor: r.amountMinor }));
-  }
+  const inPeriod = all ?? entries;
 
   return (
     <EntriesView
       kind={kind}
       entries={entries}
       periodLabel={periodLabel(period)}
+      periodKey={periodToParams(period).toString()}
       currency={money.currency}
       locale={money.locale}
       today={money.today}
       filters={filters}
-      summary={summary}
-      periodTotalMinor={periodTotalMinor}
+      breakdown={breakdown}
+      periodTotalMinor={inPeriod.reduce((sum, e) => sum + e.amountMinor, 0)}
+      periodCount={inPeriod.length}
+      categoriesUsed={[...new Set(inPeriod.map((e) => e.category))]}
     />
   );
+}
+
+/** The one breakdown each tab's overview shows. */
+async function loadBreakdown(
+  userId: string,
+  kind: EntryKind,
+  range: { from: string; to: string },
+): Promise<Breakdown> {
+  if (kind === "emi") {
+    return { type: "emi", progress: emiProgress(await emiStatusTotals(userId, range)) };
+  }
+  if (kind === "expense") {
+    const rows = await paymentMethodTotals(userId, range);
+    return {
+      type: "shares",
+      title: "By payment method",
+      rows: rows.map((r) => ({ label: r.method, amountMinor: r.amountMinor })),
+    };
+  }
+  const rows = await categoryTotals(userId, kind, range);
+  return {
+    type: "shares",
+    title: kind === "investment" ? "By type" : "By category",
+    rows: rows.map((r) => ({ label: r.category, amountMinor: r.amountMinor })),
+  };
 }
 
 export function entriesMetadata(kind: EntryKind) {

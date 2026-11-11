@@ -10,9 +10,11 @@ import {
 import type { ReactNode } from "react";
 import { DeltaPill } from "@/components/dash/delta-pill";
 import { StatTile } from "@/components/dash/stat-tile";
-import { formatAmount, formatCompact, formatMoney, formatPercent } from "@/lib/money";
+import { formatAmount, formatMoney, formatPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { CategoryIcon } from "../category-icons";
 import { MONTH_NAMES } from "../periods";
+import { MoneyFlow } from "./money-flow";
 import {
   changePercent,
   type BreakdownRow,
@@ -49,8 +51,13 @@ export function SummaryStats({
     previous === null || before === undefined ? null : changePercent(current, before);
   // The gap between tiles equals the card padding (p-5, md:p-6), so the spacing is even all round.
   return (
-    <dl className="grid flex-1 grid-cols-1 gap-5 min-[420px]:grid-cols-2 min-[420px]:grid-rows-2 md:gap-6">
-      <StatTile label="Total inflows" value={money(totals.income, fmt)} icon={Wallet}>
+    <dl className="grid flex-1 grid-cols-2 gap-3 sm:grid-rows-2 sm:gap-5 md:gap-6">
+      <StatTile
+        label="Total inflows"
+        value={money(totals.income, fmt)}
+        figure={<MoneyFlow minor={totals.income} fmt={fmt} />}
+        icon={Wallet}
+      >
         <DeltaPill
           change={delta(totals.income, previous?.income)}
           goodWhen="up"
@@ -59,7 +66,12 @@ export function SummaryStats({
         <Line>Salary, bonuses and other income</Line>
       </StatTile>
 
-      <StatTile label="Total EMIs & loans" value={money(totals.emi, fmt)} icon={Landmark}>
+      <StatTile
+        label="Total EMIs & loans"
+        value={money(totals.emi, fmt)}
+        figure={<MoneyFlow minor={totals.emi} fmt={fmt} />}
+        icon={Landmark}
+      >
         <DeltaPill change={delta(totals.emi, previous?.emi)} goodWhen="down" locale={fmt.locale} />
         {totals.emi > 0 ? (
           <span className="flex flex-col gap-1 text-xs text-dash-ink-soft">
@@ -83,7 +95,12 @@ export function SummaryStats({
         )}
       </StatTile>
 
-      <StatTile label="Living expenses" value={money(totals.expense, fmt)} icon={ShoppingBag}>
+      <StatTile
+        label="Living expenses"
+        value={money(totals.expense, fmt)}
+        figure={<MoneyFlow minor={totals.expense} fmt={fmt} />}
+        icon={ShoppingBag}
+      >
         <DeltaPill
           change={delta(totals.expense, previous?.expense)}
           goodWhen="down"
@@ -95,6 +112,7 @@ export function SummaryStats({
       <StatTile
         label="Net savings"
         value={money(totals.netSavings, fmt)}
+        figure={<MoneyFlow minor={totals.netSavings} fmt={fmt} />}
         icon={PiggyBank}
         highlight
       >
@@ -129,8 +147,9 @@ export function SummaryStats({
   );
 }
 
+/** A quiet description under a tile's figure; phones skip it to keep the tiles short. */
 function Line({ children }: { children: ReactNode }) {
-  return <span className="text-xs text-dash-ink-soft">{children}</span>;
+  return <span className="hidden text-xs text-dash-ink-soft sm:inline">{children}</span>;
 }
 
 function ScrollRegion({ label, children }: { label: string; children: ReactNode }) {
@@ -181,30 +200,50 @@ export function BreakdownTable({
               % of total
             </th>
             <th scope="col" className={cn(th, "hidden sm:table-cell")}>
-              Visual share
+              Share
             </th>
-            <th scope="col" className={cn(th, "hidden text-right sm:table-cell")}>
-              Item count
+            <th
+              scope="col"
+              className={cn(th, "hidden text-right sm:table-cell xl:hidden 2xl:table-cell")}
+            >
+              Items
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-dash-edge">
           {rows.map((row) => (
             <tr key={row.category} className={row.amountMinor === 0 ? "text-dash-ink-soft" : ""}>
-              <th scope="row" className="px-2.5 py-2.5 text-left font-normal">
-                {row.category}
+              <th scope="row" className="px-2.5 py-2 text-left font-normal">
+                <span className="flex items-center gap-2.5 whitespace-nowrap">
+                  <span
+                    aria-hidden
+                    className="grid size-7 shrink-0 place-items-center rounded-full bg-dash-well"
+                  >
+                    <CategoryIcon
+                      kind="expense"
+                      category={row.category}
+                      className="size-3.5"
+                      strokeWidth={2}
+                    />
+                  </span>
+                  {row.category}
+                </span>
               </th>
               <td className={num}>{amount(row.amountMinor, fmt)}</td>
               <td className={num}>{formatPercent(row.percent, fmt.locale)}</td>
-              <td className="hidden w-36 px-2.5 py-2.5 sm:table-cell">
+              <td className="hidden w-28 px-2.5 py-2.5 sm:table-cell">
                 <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-dash-well">
                   <div
-                    className="dash-fill-soft h-full rounded-full"
-                    style={{ width: `${Math.max(0, Math.min(100, row.percent ?? 0))}%` }}
+                    className="dash-fill-soft h-full origin-left rounded-full transition-transform duration-500 ease-snap"
+                    style={{
+                      transform: `scaleX(${Math.max(0, Math.min(100, row.percent ?? 0)) / 100})`,
+                    }}
                   />
                 </div>
               </td>
-              <td className={cn(num, "hidden sm:table-cell")}>{row.count}</td>
+              <td className={cn(num, "hidden sm:table-cell xl:hidden 2xl:table-cell")}>
+                {row.count}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -216,7 +255,9 @@ export function BreakdownTable({
             <td className={cn(num, "rule-double")}>{amount(total.amountMinor, fmt)}</td>
             <td className={num}>{total.amountMinor > 0 ? "100.0%" : formatPercent(null)}</td>
             <td className="hidden sm:table-cell" />
-            <td className={cn(num, "hidden sm:table-cell")}>{total.count}</td>
+            <td className={cn(num, "hidden sm:table-cell xl:hidden 2xl:table-cell")}>
+              {total.count}
+            </td>
           </tr>
         </tfoot>
       </table>
@@ -244,7 +285,7 @@ export function TrendTable({
         <caption className="sr-only">Cash flow for each month of {year}</caption>
         <thead>
           <tr>
-            <th scope="col" className={cn(th, "w-20")}>
+            <th scope="col" className={cn(th, "sticky left-0 z-10 w-20")}>
               Month
             </th>
             <th scope="col" className={cn(th, "px-2 text-right")}>
@@ -274,7 +315,13 @@ export function TrendTable({
                   empty && !selected && "text-dash-ink-soft",
                 )}
               >
-                <th scope="row" className="px-2.5 py-2.5 text-left font-normal">
+                <th
+                  scope="row"
+                  className={cn(
+                    "sticky left-0 px-2.5 py-2.5 text-left font-normal",
+                    selected ? "bg-dash-well" : "bg-dash-card",
+                  )}
+                >
                   {MONTH_NAMES[row.month - 1]}
                   {/* The tint shows the chosen month; this says it in words for screen readers. */}
                   {selected ? <span className="sr-only"> (selected)</span> : null}
@@ -289,7 +336,7 @@ export function TrendTable({
         </tbody>
         <tfoot className="border-t border-dash-edge font-semibold">
           <tr>
-            <th scope="row" className="px-2.5 py-2.5 text-left">
+            <th scope="row" className="sticky left-0 bg-dash-card px-2.5 py-2.5 text-left">
               Full year total
             </th>
             <td className={cn(tnum, "rule-double")}>{amount(total.income, fmt)}</td>
@@ -300,98 +347,5 @@ export function TrendTable({
         </tfoot>
       </table>
     </ScrollRegion>
-  );
-}
-
-/** A round upper limit for the chart (1, 2, 2.5 or 5 times a power of ten), split in four steps. */
-function niceCeiling(peakMinor: number): number {
-  const steps = 4;
-  const raw = Math.max(1, peakMinor) / steps;
-  const magnitude = 10 ** Math.floor(Math.log10(raw));
-  const unit = [1, 2, 2.5, 5, 10].find((m) => m * magnitude >= raw) ?? 10;
-  return Math.round(unit * magnitude) * steps;
-}
-
-/**
- * One bar per month, made of two rounded bars stacked in it with a small gap (as in the design):
- * money in (solid, bottom) and money out, EMIs plus expenses (orange hatch, on top). The bar grows and shrinks with both.
- * A picture of the details table, so it is hidden from screen readers; the table has the numbers.
- */
-export function CashFlowChart({
-  months,
-  selectedMonth,
-  fmt,
-}: {
-  months: TrendRow[];
-  selectedMonth: number | "all";
-  fmt: Fmt;
-}) {
-  const peak = Math.max(0, ...months.map((m) => m.income + m.emi + m.expense));
-  const top = niceCeiling(peak);
-  const ticks = [0, 1, 2, 3, 4];
-  return (
-    <figure aria-hidden className="flex flex-1 flex-col rounded-[20px] bg-dash-well p-4">
-      <div className="mb-3 flex flex-wrap justify-end gap-x-4 gap-y-1 text-xs text-dash-ink-soft">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-sm bg-dash-ink" /> Money in
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="dash-hatch size-2.5 rounded-sm" /> Money out
-        </span>
-      </div>
-      <div className="flex flex-1 gap-2">
-        <div className="flex min-h-64 flex-col-reverse justify-between text-[10px] text-dash-ink-soft tabular-nums">
-          {ticks.map((i) => (
-            <span key={i} className="leading-none">
-              {i === 0 ? "0" : formatCompact((top / 4) * i, fmt.currency, fmt.locale)}
-            </span>
-          ))}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative min-h-64 flex-1">
-            {ticks.map((i) => (
-              <div
-                key={i}
-                className="absolute inset-x-0 border-t border-dashed border-dash-edge"
-                style={{ bottom: `${i * 25}%` }}
-              />
-            ))}
-            <div className="absolute inset-0 flex items-end gap-2">
-              {months.map((m) => (
-                <div key={m.month} className="flex h-full flex-1 items-end justify-center">
-                  <div
-                    className="flex w-full max-w-[24px] flex-col-reverse gap-0.5"
-                    style={{ height: `${((m.income + m.emi + m.expense) / top) * 100}%` }}
-                  >
-                    {m.income > 0 ? (
-                      <div className="rounded-md bg-dash-ink" style={{ flexGrow: m.income }} />
-                    ) : null}
-                    {m.emi + m.expense > 0 ? (
-                      <div
-                        className="dash-hatch rounded-md"
-                        style={{ flexGrow: m.emi + m.expense }}
-                      />
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-2 flex gap-2">
-            {months.map((m) => (
-              <span
-                key={m.month}
-                className={cn(
-                  "flex-1 text-center text-[10px] text-dash-ink-soft",
-                  selectedMonth === m.month && "font-semibold text-dash-ink",
-                )}
-              >
-                {MONTH_NAMES[m.month - 1].slice(0, 3)}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </figure>
   );
 }

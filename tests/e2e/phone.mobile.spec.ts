@@ -157,3 +157,23 @@ test("the expense tabs scroll sideways inside their own bar, not the page", asyn
   await expect(page).toHaveURL(/\/expenses\/investments/);
   await noSidewaysScroll(page);
 });
+
+test("the log-a-transaction menu and the period picker fit a phone", async ({ page }) => {
+  await page.goto("/expenses");
+  await page.getByRole("button", { name: "Log a transaction" }).tap();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+  await page.getByRole("menuitem", { name: /^Expense/ }).tap();
+  await expect(page.getByRole("dialog", { name: "Add expense" })).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await page.getByRole("button", { name: "Close" }).tap();
+
+  await page.getByRole("button", { name: /^Choose period/ }).tap();
+  await expect(page.getByRole("dialog", { name: "Choose a period" })).toBeVisible();
+  await settle(page);
+  expect(await smallTargets(page)).toEqual([]);
+  await noSidewaysScroll(page);
+});

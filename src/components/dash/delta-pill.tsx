@@ -48,7 +48,11 @@ export function DeltaPill({
           {flat ? " no change" : up ? " up" : " down"} {context}
         </span>
       </span>
-      <span aria-hidden className={onAccent ? "text-white" : "text-dash-ink-soft"}>
+      {/* On a phone the tiles are narrow: the pill alone says it (screen readers still hear the context). */}
+      <span
+        aria-hidden
+        className={cn("hidden sm:inline", onAccent ? "text-white" : "text-dash-ink-soft")}
+      >
         {context}
       </span>
     </span>

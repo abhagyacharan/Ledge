@@ -64,6 +64,19 @@ for (const scheme of SCHEMES) {
       await audit(page, `the View panel (${scheme})`);
     });
 
+    test("the log-a-transaction menu and the period picker", async ({ page }) => {
+      await page.goto("/expenses");
+      await page.getByRole("button", { name: "Log a transaction" }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      await page.waitForTimeout(300); // the menu pops in; let it settle
+      await audit(page, `log a transaction menu (${scheme})`);
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: /^Choose period/ }).click();
+      await expect(page.getByRole("dialog", { name: "Choose a period" })).toBeVisible();
+      await page.waitForTimeout(300);
+      await audit(page, `period picker (${scheme})`);
+    });
+
     test("the add-entry dialogs on the expense tabs", async ({ page }) => {
       for (const [path, button] of [
         ["/expenses/income", "Add income"],

@@ -39,13 +39,21 @@ Below the tiles:
 
 ## The four entry tabs
 
-Each of Income, EMIs & loans, Expenses and Investments shows the entries of the chosen period. On a computer they are a table; on a phone they are cards. Each has:
+Each of Income, EMIs & loans, Expenses and Investments shows the entries of the chosen period. They were redesigned on 2026-11-11 in the same "dashboard" look as the Summary (white rounded cards, grey wells, one orange), because the first version felt cluttered: too many boxes, buttons on every row, and too many places to look. Now each tab has only three things:
 
-- the **total** for the period and the **number of entries** at the top,
-- an **Add** button that opens a small form, and clicking a row opens the same form to **edit**,
-- **Delete**, with an **Undo** message for 5 seconds. Deleted entries go to the **Trash**,
-- a **category filter**, a **sort** (newest, oldest, biggest, smallest) and a **search box** over the name and notes. These are kept in the web address too,
-- a friendly empty message with one action when there is nothing yet.
+1. **A short top card**: what you earned, owed, spent or invested in the period as one big number, how many entries make it up, and the **Add** button (a black pill; full width on a phone, so your thumb finds it). When you change month, the digits of the total roll to the new value instead of jumping.
+2. **The list**, in one card:
+   - a **search box** (it searches as you type, a moment after you stop; Enter searches at once) and a **sort** button (newest, oldest, biggest, smallest),
+   - a row of **category chips** ("All", then only the categories you actually used that month). On a phone the chips scroll sideways inside their row,
+   - the **entries**. Each row shows a small icon for its category, the name, one grey line of details (category, payment method or platform or lender, and the date) and the amount on the right. A small note icon means the entry has notes. On the Expenses tab the rows are grouped by day ("Today · 11 Nov") with each day's total. On EMIs & loans each row has a status label: **Paid**, **Scheduled**, **Overdue** or **Delayed** (always a word and an icon, never colour alone).
+   - When a filter is on, a line says what you are looking at ("2 of 14 shown · ₹53,000.00") with a **Clear filters** button.
+3. **One breakdown card**: how the money splits (by payment method on Expenses, by category on Income, by type on Investments), or, on EMIs & loans, how much is **paid so far** with a progress bar and the paid, to-pay and delayed amounts. On a phone this card comes after the list, so the list starts near the top of the screen; on a wide screen it sits under the top card, beside the list.
+
+**Opening, editing and deleting.** Tap or click any row to open it. On a computer, each row also has a quiet **⋯** button (it appears when you point at the row) with Edit, Mark paid and Delete; unpaid EMIs also keep a **Mark paid** button on the row. Delete still has an **Undo** message for 5 seconds, and deleted entries go to the **Trash**. A deleted row folds away smoothly instead of vanishing.
+
+**The add and edit form is now a sheet.** On a phone it slides up from the bottom, and you can drag it down to close it, like a native app. On a computer it slides in from the right. The **amount** comes first and large, because it is what you type most. Choices (category, payment method, EMI type, status) are **chips you tap**, not drop-down menus. Next to the date there are **Today** and **Yesterday** shortcuts. For EMIs, "Also add for the next months" has minus and plus buttons. When editing, the bottom row has Delete and (for an unpaid EMI) Mark paid.
+
+**Loading.** While a tab loads, grey placeholder shapes ("skeletons") show where the cards and rows will be, so nothing jumps when the data arrives. When you change month or filter, the current figures stay on screen, slightly faded, until the new ones are ready (no blank flash).
 
 The fields, as you described them:
 
@@ -58,6 +66,12 @@ The fields, as you described them:
 - **Investments:** you left these fields to me, so: date, investment name, type (mutual fund, stocks, fixed deposit, recurring deposit, retirement such as PPF, EPF or NPS, gold, crypto, real estate, other), platform (the broker or app), amount, notes. This tab shows the total by type.
 
 The **categories** are fixed lists. The nine expense categories are the ones from your sheet (Housing & Utilities, Food & Groceries, Transportation, Healthcare, Dining & Entertainment, Shopping, Personal Care, Subscriptions & Tech, Miscellaneous). I chose the lists for income, EMIs and investments. Letting you add your own categories is parked in `docs/ideas.md`.
+
+## The top of every Expenses screen (redesigned 2026-11-11)
+
+- **Tabs.** Summary, Income, EMIs & loans, Expenses and Investments sit in one rounded bar. The tab you are on is a white pill that slides when you switch. On a phone the bar scrolls sideways and keeps your tab in the middle.
+- **Month and year.** One rounded control: arrows for the previous and next month (or year), and in the middle the month you are looking at. Tap it to open a small calendar of months: pick a month, step to another year with the arrows, or choose **Whole year** or **This month**. A small orange dot marks the current month.
+- **The Summary** got the same care. On a phone the four tiles sit two by two, so you see all four at once. The big numbers roll to their new values when you change month. On a computer, point at a bar in the cash-flow chart to see that month's money in, money out and what was left; click it to open that month. (On a phone the chart is a picture, because the bars are too thin to tap reliably; use the month control instead.) The breakdown has a small icon per category, and in the yearly table the month names stay put while you scroll the numbers sideways.
 
 ## How money is handled (so the numbers are always exact)
 
@@ -92,6 +106,9 @@ The automatic accessibility inspector and the phone-size checks (both from Phase
 - **Investments are not spending.** Putting money into a fund is saving, not losing; so it has its own tiles and does not reduce your savings rate.
 - **Fixed categories for now.** Cleaner data today; your own categories can come later without redoing the database.
 - **Delete has Undo instead of a question.** The same as tasks: one click, a 5-second Undo, and 30 days in the Trash.
+- **Fewer things on screen (2026-11-11 redesign).** Edit and delete moved off every row into the sheet and a quiet menu; the chips show only categories you used; the breakdown is one card. The aim: one big number, one list, one breakdown.
+- **Three small helper libraries were added for the redesign.** Base UI (made by the team behind Material UI) for the sheet that you can swipe down; Motion for the rows folding away and the tab underline sliding; NumberFlow for the rolling total. All three are on the curated list you asked me to use (Emil Kowalski's), and all three respect your phone's "reduce motion" setting.
+- **The round button logs a transaction on expense screens (your choice, 2026-11-11).** On any Expenses screen, the round black button at the bottom right asks what you want to log: Income, Expense, EMI or loan, or Investment. Pick one and its form opens. If what you logged belongs to another tab or month, the "Added" message has a **View** button that takes you there. On every other screen the round button still adds a task, and the **q** key adds a task everywhere.
 
 ## How you can see it working
 
@@ -99,7 +116,7 @@ The automatic accessibility inspector and the phone-size checks (both from Phase
 2. Use the arrows and menus to move to earlier months and to "Whole year". Watch the table and the bar chart.
 3. On **EMIs & loans**, press **Mark paid** on a scheduled loan and watch the summary tile change. Add a new EMI with "Repeat monthly for 3 more months".
 4. Delete an expense, press **Undo**; delete it again and find it in **Trash**.
-5. Shrink the window to phone width and try the tabs, the cards and the add form.
+5. Shrink the window to phone width (or open it on your phone) and try the tabs, the chips, and the add sheet: drag it down to close it.
 6. Run `pnpm test` and `pnpm test:e2e`.
 
 ## What was checked, and what was not

@@ -45,6 +45,7 @@
   --color-brass: var(--brass);
   --color-dash-card: var(--dash-card);
   --color-dash-well: var(--dash-well);
+  --color-dash-raised: var(--dash-raised);
   --color-dash-edge: var(--dash-edge);
   --color-dash-ink: var(--dash-ink);
   --color-dash-ink-soft: var(--dash-ink-soft);
@@ -62,6 +63,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Motion curves (docs/design.md): a strong ease-out for UI, and the iOS sheet curve. */
+  --ease-snap: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /*
@@ -151,6 +155,8 @@
 .dash {
   --dash-card: #ffffff;
   --dash-well: #f4f4f2;
+  /* A surface lifted off a well: the selected pill of a segmented control. */
+  --dash-raised: #ffffff;
   --dash-edge: #ececea;
   --dash-ink: #111214;
   --dash-ink-soft: #5b5f66;
@@ -165,6 +171,7 @@
 .dark .dash {
   --dash-card: #1d211f;
   --dash-well: #282d2a;
+  --dash-raised: #3b423e;
   --dash-edge: #ffffff1a;
   --dash-ink: #f2f4f1;
   --dash-ink-soft: #aeb4ae;
@@ -205,6 +212,19 @@
   }
   html {
     @apply font-sans;
+    /* Phones paint a grey flash over tapped controls; our controls have their own press state. */
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Taps fire at once (no double-tap-zoom wait), and holding a button does not select its label. */
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+  }
+  button,
+  [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
   }
   /* Page titles use the display face; everything else stays in the quiet body face. */
   h1 {
@@ -247,6 +267,34 @@
   .figures {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+  }
+  /* Loading placeholders in the dashboard look: a grey well that breathes gently. */
+  .dash-skeleton {
+    background-color: var(--dash-well);
+    border-radius: 0.5rem;
+    animation: dash-breathe 1.6s ease-in-out infinite;
+  }
+  /* Sideways chip rows fade at the edges instead of being cut off. */
+  .dash-fade-x {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 1.25rem,
+      #000 calc(100% - 1.25rem),
+      transparent
+    );
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes dash-breathe {
+  50% {
+    opacity: 0.55;
   }
 }
 

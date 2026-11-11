@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DashCard } from "@/components/dash/dash-card";
-import { Button } from "@/components/ui/button";
 import { loadMoneyContext } from "@/modules/expenses/context";
 import {
   BreakdownTable,
-  CashFlowChart,
   SummaryStats,
   TrendTable,
 } from "@/modules/expenses/components/summary-sections";
-import { parsePeriod, periodLabel, periodRange, periodToParams } from "@/modules/expenses/periods";
+import { CashFlowChart } from "@/modules/expenses/components/cash-flow-chart";
+import { SummaryEmpty } from "@/modules/expenses/components/summary-empty";
+import { parsePeriod, periodLabel, periodRange } from "@/modules/expenses/periods";
 import {
   annualTrend,
   emiProgress,
@@ -44,25 +43,15 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
   const breakdown = expenseBreakdown(expenseRows);
   const emi = emiProgress(emiRows);
   const nothingYet = totals.income + totals.emi + totals.expense + totals.investment === 0;
-  const query = `?${periodToParams(period).toString()}`;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="dash flex flex-col gap-4">
       <h2 className="sr-only">Summary for {periodLabel(period)}</h2>
 
-      {nothingYet ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed p-4">
-          <p className="text-sm">
-            Nothing recorded for {periodLabel(period)} yet. Start with your income.
-          </p>
-          <Button asChild className="h-11 md:h-8">
-            <Link href={`/expenses/income${query}`}>Add income</Link>
-          </Button>
-        </div>
-      ) : null}
+      {nothingYet ? <SummaryEmpty periodLabel={periodLabel(period)} /> : null}
 
       {/* The dashboard look (docs/design.md): four blocks, two rows, one column on small screens. */}
-      <div className="dash grid gap-4 xl:grid-cols-12">
+      <div className="grid gap-4 xl:grid-cols-12">
         <DashCard
           id="tiles"
           title={`${periodLabel(period)} at a glance`}
@@ -78,7 +67,12 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           subtitle={`Money in and out, each month of ${period.year}`}
           className="flex flex-col xl:col-span-6"
         >
-          <CashFlowChart months={trend.months} selectedMonth={period.month} fmt={fmt} />
+          <CashFlowChart
+            months={trend.months}
+            year={period.year}
+            selectedMonth={period.month}
+            fmt={fmt}
+          />
         </DashCard>
 
         <DashCard

@@ -90,16 +90,19 @@ export function QuickAdd() {
 
   return (
     <>
-      <Button
-        type="button"
-        size="icon"
-        aria-label="Quick add task (shortcut: q)"
-        title="Quick add (q)"
-        onClick={() => show()}
-        className="fixed right-4 bottom-4 z-30 size-14 rounded-full shadow-lg md:size-12"
-      >
-        <Plus className="size-6" />
-      </Button>
+      {/* On expense screens the round button logs a transaction instead; q still adds a task. */}
+      {pathname.startsWith("/expenses") ? null : (
+        <Button
+          type="button"
+          size="icon"
+          aria-label="Quick add task (shortcut: q)"
+          title="Quick add (q)"
+          onClick={() => show()}
+          className="fixed right-4 bottom-4 z-30 size-14 rounded-full shadow-lg md:size-12"
+        >
+          <Plus className="size-6" />
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-lg">
           {open ? (

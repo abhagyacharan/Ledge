@@ -18,10 +18,30 @@ function tile(page: Page, label: string): Locator {
 
 const toast = (page: Page) => page.locator("[data-sonner-toast]").first();
 
-/** Picks an option in one of the dialog's selects (Radix select, not a native one). */
-async function choose(dialog: Locator, page: Page, label: string, option: string) {
-  await dialog.getByLabel(label, { exact: true }).click();
-  await page.getByRole("option", { name: option, exact: true }).click();
+/** The chips for one choice in the sheet (real radio buttons underneath). */
+const choices = (dialog: Locator, label: string) =>
+  dialog.getByRole("radiogroup", { name: label, exact: true });
+
+/** Taps one chip in the sheet. */
+async function choose(dialog: Locator, label: string, option: string) {
+  await choices(dialog, label).getByRole("radio", { name: option, exact: true }).check();
+}
+
+/** The period button between the arrows ("Choose period: November 2026"). */
+const periodButton = (page: Page) => page.getByRole("button", { name: /^Choose period/ });
+
+/** Opens the month grid and picks a month ("Mar") or "Whole year", in the year it shows. */
+async function pickPeriod(page: Page, choice: string) {
+  await periodButton(page).click();
+  const picker = page.getByRole("dialog", { name: "Choose a period" });
+  await picker.getByRole("button", { name: new RegExp(`^${choice}`) }).click();
+  await expect(picker).toBeHidden();
+}
+
+/** Runs an action from a row's "more" menu (wide screens). */
+async function rowAction(page: Page, title: string, action: string) {
+  await page.getByRole("button", { name: `More actions for ${title}` }).click();
+  await page.getByRole("menuitem", { name: action }).click();
 }
 
 async function openAdd(page: Page, name: RegExp) {
@@ -79,8 +99,7 @@ test("the five tabs, and the period picker that follows you around", async ({ pa
   await expect(tabs.getByRole("link", { name: "Summary" })).toHaveAttribute("aria-current", "page");
 
   // Whole year: the tiles add up every month.
-  await page.getByLabel("Month", { exact: true }).click();
-  await page.getByRole("option", { name: "Whole year" }).click();
+  await pickPeriod(page, "Whole year");
   await expect(page).toHaveURL(/m=all/);
   await expect(page.getByRole("heading", { name: `${YEAR} at a glance` })).toBeVisible();
 
@@ -90,18 +109,23 @@ test("the five tabs, and the period picker that follows you around", async ({ pa
   await expect(page.getByRole("heading", { name: `Income in ${YEAR}` })).toBeVisible();
 
   // Previous and next month.
-  await page.getByLabel("Month", { exact: true }).click();
-  await page.getByRole("option", { name: "March" }).click();
+  await pickPeriod(page, "March");
+  await expect(periodButton(page)).toContainText(`March ${YEAR}`);
   await page.getByRole("button", { name: "Next month" }).click();
-  await expect(page.getByLabel("Month", { exact: true })).toContainText("April");
+  await expect(periodButton(page)).toContainText("April");
   await page.getByRole("button", { name: "Previous month" }).click();
   await page.getByRole("button", { name: "Previous month" }).click();
-  await expect(page.getByLabel("Month", { exact: true })).toContainText("February");
+  await expect(periodButton(page)).toContainText("February");
+  // "This month" comes straight back, and the bars of the chart open a month too.
+  await periodButton(page).click();
+  await page.getByRole("button", { name: "This month", exact: true }).click();
+  await expect(page).not.toHaveURL(/m=2(&|$)/);
 
   // A year with nothing in it shows an empty state with an action.
   await page.goto("/expenses?y=2020&m=6");
   await expect(page.getByText("Nothing recorded for June 2020 yet")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Add income" })).toBeVisible();
+  await page.getByRole("button", { name: "Add income" }).click();
+  await expect(page.getByRole("dialog", { name: "Add income" })).toBeVisible();
 });
 
 test("add income, an EMI series, an expense and an investment, and the summary follows", async ({
@@ -115,9 +139,9 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   let dialog = await openAdd(page, /^Add income$/);
   await dialog.getByLabel("Date").fill("2025-03-01");
   await dialog.getByLabel("Income stream").fill("E2E salary");
-  await expect(dialog.getByLabel("Category")).toHaveText("Choose…"); // empty until picked
-  await choose(dialog, page, "Category", "Salary");
-  await expect(dialog.getByLabel("Category")).toHaveText("Salary");
+  await expect(choices(dialog, "Category").getByRole("radio", { checked: true })).toHaveCount(0);
+  await choose(dialog, "Category", "Salary");
+  await expect(choices(dialog, "Category").getByRole("radio", { name: "Salary" })).toBeChecked();
   await dialog.getByLabel("Amount").fill("50,000");
   await dialog.getByRole("button", { name: "Add income" }).click();
   await expect(toast(page)).toContainText("Added");
@@ -127,11 +151,11 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   // EMI that repeats for two more months
   await page.goto(`/expenses/emis${march}`);
   dialog = await openAdd(page, /^Add EMI or loan payment$/);
-  await choose(dialog, page, "Type", "Fixed EMI");
+  await choose(dialog, "Type", "Fixed EMI");
   await dialog.getByLabel("Due date").fill("2025-03-05");
   await dialog.getByLabel("Loan or debt").fill("E2E loan");
   await dialog.getByLabel("Lender (optional)").fill("Test Bank");
-  await choose(dialog, page, "Category", "Personal loan");
+  await choose(dialog, "Category", "Personal loan");
   await dialog.getByLabel("Amount").fill("12000");
   await dialog.getByLabel("Also add for the next months").fill("2");
   await dialog.getByRole("button", { name: "Add EMI or loan payment" }).click();
@@ -142,7 +166,7 @@ test("add income, an EMI series, an expense and an investment, and the summary f
 
   // The series continues into April and May
   await page.getByRole("button", { name: "Next month" }).click();
-  await expect(page.getByLabel("Month", { exact: true })).toContainText("April");
+  await expect(periodButton(page)).toContainText("April");
   await expect(page.getByRole("button", { name: "Edit E2E loan", exact: true })).toHaveCount(1);
   await page.getByRole("button", { name: "Previous month" }).click();
 
@@ -157,8 +181,8 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   dialog = await openAdd(page, /^Add expense$/);
   await dialog.getByLabel("Date").fill("2025-03-10");
   await dialog.getByLabel("Item").fill("E2E groceries");
-  await choose(dialog, page, "Category", "Food & Groceries");
-  await choose(dialog, page, "Payment method", "UPI");
+  await choose(dialog, "Category", "Food & Groceries");
+  await choose(dialog, "Payment method", "UPI");
   await dialog.getByLabel("Amount").fill("8,000.50");
   await dialog.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByRole("button", { name: "Edit E2E groceries", exact: true })).toBeVisible();
@@ -168,7 +192,7 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   dialog = await openAdd(page, /^Add investment$/);
   await dialog.getByLabel("Date").fill("2025-03-12");
   await dialog.getByLabel("Investment").fill("E2E fund");
-  await choose(dialog, page, "Type", "Mutual fund");
+  await choose(dialog, "Type", "Mutual fund");
   await dialog.getByLabel("Platform (optional)").fill("Groww");
   await dialog.getByLabel("Amount").fill("5000");
   await dialog.getByRole("button", { name: "Add investment" }).click();
@@ -204,8 +228,8 @@ test("a form refuses bad input with clear messages, then edit and delete with Un
 
   // A malformed amount is explained.
   await dialog.getByLabel("Item").fill("Bad amount");
-  await choose(dialog, page, "Category", "Shopping");
-  await choose(dialog, page, "Payment method", "Cash");
+  await choose(dialog, "Category", "Shopping");
+  await choose(dialog, "Payment method", "Cash");
   await dialog.getByLabel("Date").fill("2025-04-02");
   await dialog.getByLabel("Amount").fill("12.345");
   await dialog.getByRole("button", { name: "Add expense" }).click();
@@ -223,23 +247,23 @@ test("a form refuses bad input with clear messages, then edit and delete with Un
   // Edit it.
   await page.getByRole("button", { name: "Edit Bad amount", exact: true }).click();
   const editor = page.getByRole("dialog");
-  await expect(editor.getByLabel("Amount")).toHaveValue("1250.75");
+  await expect(editor.getByLabel("Amount", { exact: true })).toHaveValue("1250.75");
   await editor.getByLabel("Item").fill("Fixed name");
-  await editor.getByLabel("Amount").fill("1300");
+  await editor.getByLabel("Amount", { exact: true }).fill("1300");
   await editor.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("listitem").filter({ hasText: "Fixed name" })).toContainText(
     "1,300.00",
   );
 
   // Delete, then Undo.
-  await page.getByRole("button", { name: "Delete Fixed name" }).click();
+  await rowAction(page, "Fixed name", "Delete");
   await expect(toast(page)).toContainText('Deleted "Fixed name"');
   await expect(page.getByRole("button", { name: "Edit Fixed name", exact: true })).toHaveCount(0);
   await toast(page).getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("button", { name: "Edit Fixed name", exact: true })).toBeVisible();
 
   // Delete again: it is in the Trash, where it can be restored.
-  await page.getByRole("button", { name: "Delete Fixed name" }).click();
+  await rowAction(page, "Fixed name", "Delete");
   await page.goto("/trash");
   await expect(page.getByText("Fixed name")).toBeVisible();
   await expect(page.getByText(/Expenses entry, 2 Apr 2025/)).toBeVisible();
@@ -255,8 +279,8 @@ test("filter by category, sort, and search", async ({ page }) => {
     const dialog = await openAdd(page, /^Add expense$/);
     await dialog.getByLabel("Date").fill("2025-05-03");
     await dialog.getByLabel("Item").fill(item);
-    await choose(dialog, page, "Category", category);
-    await choose(dialog, page, "Payment method", "UPI");
+    await choose(dialog, "Category", category);
+    await choose(dialog, "Payment method", "UPI");
     await dialog.getByLabel("Amount").fill(amount);
     if (notes) await dialog.getByLabel("Notes (optional)").fill(notes);
     await dialog.getByRole("button", { name: "Add expense" }).click();
@@ -266,9 +290,7 @@ test("filter by category, sort, and search", async ({ page }) => {
   await add("Big TV", "Shopping", "50000", "Black Friday deal");
   await add("Mid shoes", "Shopping", "3000");
 
-  // The title buttons have text; the pencil buttons next to them only have an icon.
-  const order = async () =>
-    (await page.locator("main li button[aria-label^='Edit ']").allInnerTexts()).filter(Boolean);
+  const order = async () => await page.locator("main li [data-entry-title]").allInnerTexts();
 
   // Sort by amount.
   await page.getByLabel("Sort by").click();
@@ -278,26 +300,73 @@ test("filter by category, sort, and search", async ({ page }) => {
   await page.getByRole("option", { name: "Lowest amount" }).click();
   await expect.poll(order).toEqual(["Cheap lunch", "Mid shoes", "Big TV"]);
 
-  // Filter by category: the heading's total follows the filter.
-  await page.getByLabel("Category", { exact: true }).click();
-  await page.getByRole("option", { name: "Shopping" }).click();
+  // Filter by category: the count and total of what is shown follow the filter.
+  const chips = page.getByRole("group", { name: "Category" });
+  await chips.getByRole("button", { name: "Shopping" }).click();
   await expect.poll(order).toEqual(["Mid shoes", "Big TV"]);
-  await expect(page.getByText("across 2 entries (filtered)")).toBeVisible();
-  await expect(page.getByText("₹53,000.00").first()).toBeVisible();
+  await expect(page.getByText("2 of 3 shown · ₹53,000.00")).toBeVisible();
+  await expect(chips.getByRole("button", { name: "Shopping" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 
   // Search in names and notes.
-  await page.getByLabel("Category", { exact: true }).click();
-  await page.getByRole("option", { name: "All categories" }).click();
-  await page.getByLabel("Search").fill("black friday");
-  await page.getByLabel("Search").press("Enter");
+  await chips.getByRole("button", { name: "All", exact: true }).click();
+  await expect.poll(order).toEqual(["Cheap lunch", "Mid shoes", "Big TV"]); // still lowest first
+  const search = page.getByLabel("Search", { exact: true });
+  await search.fill("black friday");
+  await search.press("Enter");
   await expect.poll(order).toEqual(["Big TV"]);
-  await page.getByLabel("Search").fill("zzz nothing");
-  await page.getByLabel("Search").press("Enter");
+  // Typing alone searches too, a moment after the last key.
+  await search.fill("zzz nothing");
   await expect(page.getByText("No entries match these filters")).toBeVisible();
 
   // The choices are in the address, so a reload keeps them.
   await page.reload();
   await expect(page.getByText("No entries match these filters")).toBeVisible();
+});
+
+test("the chart's bars open a month", async ({ page }) => {
+  await page.goto(`/expenses?y=${YEAR}&m=all`);
+  await page.getByRole("button", { name: new RegExp(`^March ${YEAR}:`) }).click();
+  await expect(page).toHaveURL(/m=3/);
+  await expect(periodButton(page)).toContainText(`March ${YEAR}`);
+  await expect(page.getByRole("button", { name: new RegExp(`^March ${YEAR}:`) })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
+test("the round button asks what to log, then opens that form", async ({ page }) => {
+  await page.goto("/expenses/spending?y=2025&m=7");
+  // On expense screens the round button logs a transaction instead of adding a task.
+  await expect(page.getByRole("button", { name: /Quick add task/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Log a transaction" }).click();
+  const menu = page.getByRole("menu");
+  for (const kind of ["Income", "Expense", "EMI or loan", "Investment"]) {
+    await expect(menu.getByRole("menuitem", { name: new RegExp(`^${kind}`) })).toBeVisible();
+  }
+  await menu.getByRole("menuitem", { name: /^Income/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Add income" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Amount", { exact: true })).toBeFocused();
+
+  // Logged from the Expenses tab, so the toast offers a way to see it.
+  await dialog.getByLabel("Date").fill("2025-07-04");
+  await dialog.getByLabel("Income stream").fill("Launcher income");
+  await choose(dialog, "Category", "Freelance");
+  await dialog.getByLabel("Amount", { exact: true }).fill("1500");
+  await dialog.getByRole("button", { name: "Add income" }).click();
+  await expect(toast(page)).toContainText("Added");
+  await toast(page).getByRole("button", { name: "View" }).click();
+  await expect(page).toHaveURL(/\/expenses\/income\?y=2025&m=7/);
+  await expect(
+    page.getByRole("button", { name: "Edit Launcher income", exact: true }),
+  ).toBeVisible();
+
+  // The task quick add is still one key away.
+  await page.keyboard.press("q");
+  await expect(page.getByRole("dialog", { name: "Quick add" })).toBeVisible();
 });
 
 test("the command palette can jump to an expense tab", async ({ page }) => {
