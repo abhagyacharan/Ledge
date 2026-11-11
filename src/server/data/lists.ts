@@ -160,20 +160,6 @@ export async function setListViewSettings(
   return rows.length > 0;
 }
 
-/** Remembers whether this list is shown as a list or as a board (columns = sections). */
-export async function setListViewMode(
-  userId: string,
-  listId: string,
-  viewMode: "list" | "board",
-): Promise<boolean> {
-  const rows = await db
-    .update(lists)
-    .set({ viewMode })
-    .where(and(owned(userId, listId), isNull(lists.deletedAt)))
-    .returning({ id: lists.id });
-  return rows.length > 0;
-}
-
 /** Moves a list one step up or down in the sidebar order. */
 export async function moveList(
   userId: string,

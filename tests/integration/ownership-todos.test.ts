@@ -5,7 +5,6 @@ import {
   moveList,
   restoreList,
   setListArchived,
-  setListViewMode,
   trashList,
   updateList,
 } from "@/server/data/lists";
@@ -79,14 +78,6 @@ describe("lists", () => {
     expect(row.name).toBe("A's list");
     expect(row.isArchived).toBe(false);
     expect(row.deletedAt).not.toBeNull(); // still trashed: B could not restore it
-  });
-
-  it("B cannot switch A's list between list and board, A can, and it is remembered", async () => {
-    expect(await setListViewMode(b.id, aList.id, "board")).toBe(false);
-    expect((await getList(a.id, aList.id))?.viewMode).toBe("list");
-    expect(await setListViewMode(a.id, aList.id, "board")).toBe(true);
-    expect((await getList(a.id, aList.id))?.viewMode).toBe("board");
-    expect(await setListViewMode(a.id, aList.id, "list")).toBe(true);
   });
 
   it("B's trashed list is invisible to A's reads, and vice versa", async () => {

@@ -348,6 +348,11 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Decision:** `src/lib/recurrence.ts` (pure, 20 tests) owns a strict RRULE subset (`FREQ`, `INTERVAL`, `BYDAY` weekly, `BYMONTHDAY` monthly and yearly, `BYMONTH` yearly); anything else parses to null. New rules are anchored on the due date (weekday, day of month, month) so month-end clamping never drifts. Completing goes through `completeRecurringTask` in one transaction: insert a done snapshot (`recurrence_origin_id` = the task, tags copied, no rule), reopen done subtasks, move the due date. `fixed` takes the first scheduled date after `max(due date, today)`; `after_completion` adds one interval to the completion day (weekday and day-of-month settings are ignored in that mode). Undo deletes the snapshot and restores date, time and subtask ticks. A rule needs a due date and a top-level task; clearing the date clears the rule. The completion day is "today" in the user's timezone, worked out on the server.
 - **Reason:** §6.2. Weekday toggle buttons use the visible text ("Mon") as their accessible name, because axe rejects a longer label ("Monday") that does not contain the visible text as a whole word.
 
+## 2026-11-11: Board view removed
+
+- **Decision:** O did not like the board view and found it not functional enough, so the whole feature was removed (reverting the code, tests and docs of the board commit). The `lists.view_mode` column from Phase 2 stays in the schema (it is in §6.3) but nothing reads or writes it. The main content area keeps `min-w-0` so wide content can never stretch the page.
+- **Reason:** O's instruction in chat. History: the board commit and its decisions entry remain in git.
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

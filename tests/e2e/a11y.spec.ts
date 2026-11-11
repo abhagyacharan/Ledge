@@ -64,17 +64,6 @@ for (const scheme of SCHEMES) {
       await audit(page, `the View panel (${scheme})`);
     });
 
-    test("a list shown as a board", async ({ page }) => {
-      await page.goto("/inbox");
-      await page.getByRole("link", { name: "Work", exact: true }).click();
-      await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
-      await page.getByRole("button", { name: "Board view" }).click();
-      await expect(page.getByRole("region", { name: "Board" })).toBeVisible();
-      await audit(page, `the Work list as a board (${scheme})`);
-      await page.getByRole("button", { name: "List view" }).click(); // leave it as it was
-      await expect(page.getByRole("region", { name: "Board" })).toHaveCount(0);
-    });
-
     test("the add-entry dialogs on the expense tabs", async ({ page }) => {
       for (const [path, button] of [
         ["/expenses/income", "Add income"],

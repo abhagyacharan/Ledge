@@ -129,23 +129,6 @@ test("quick add button is always reachable and the dialog fits", async ({ page }
   expect(await smallTargets(page)).toEqual([]);
 });
 
-test("the board view scrolls sideways inside its own box, not the page", async ({ page }) => {
-  await page.goto("/inbox");
-  await page.getByRole("button", { name: "Open navigation" }).tap();
-  await page.getByRole("link", { name: "Work", exact: true }).tap();
-  await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
-  await page.getByRole("button", { name: "Board view" }).tap();
-  const board = page.getByRole("region", { name: "Board" });
-  await expect(board).toBeVisible();
-  await page.waitForLoadState("networkidle");
-  await noSidewaysScroll(page);
-  expect(await smallTargets(page)).toEqual([]);
-  // The columns are wider than the screen, so the box itself scrolls.
-  expect(await board.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
-  await page.getByRole("button", { name: "List view" }).tap(); // leave it as it was
-  await expect(board).toHaveCount(0);
-});
-
 test("quick add chips have big enough tap targets", async ({ page }) => {
   await page.goto("/inbox");
   await page.getByRole("button", { name: /Quick add task/ }).tap();

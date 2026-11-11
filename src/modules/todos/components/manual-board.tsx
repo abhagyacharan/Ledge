@@ -43,8 +43,6 @@ type Props = {
   subtasksOf: (id: string) => TaskRowData[];
   tagsById: TagsById;
   ctx: DateContext;
-  /** "stack": sections one below the other. "columns": the board view, one column per section. */
-  layout?: "stack" | "columns";
 };
 
 /**
@@ -53,16 +51,7 @@ type Props = {
  * (Space to pick up, arrow keys to move, Space to drop, Escape to cancel).
  * The new order shows at once; if saving fails the old order comes back with an error message.
  */
-export function ManualBoard({
-  listId,
-  sections,
-  tasks,
-  subtasksOf,
-  tagsById,
-  ctx,
-  layout = "stack",
-}: Props) {
-  const columns = layout === "columns";
+export function ManualBoard({ listId, sections, tasks, subtasksOf, tagsById, ctx }: Props) {
   const containers = [
     { id: NO_SECTION, sectionId: null as string | null, section: null as Section | null },
     ...sections.map((s) => ({ id: s.id, sectionId: s.id as string | null, section: s })),
@@ -205,28 +194,6 @@ export function ManualBoard({
         />
       </Container>
     );
-    if (columns) {
-      // One column per section, plus a first column for tasks that have no section.
-      return (
-        <div
-          key={c.id}
-          className="w-[82vw] max-w-72 shrink-0 rounded-lg border bg-muted/40 p-2 sm:w-72"
-        >
-          {c.section ? (
-            <SectionBlock section={c.section} count={rows.length} className="mt-0">
-              {list}
-            </SectionBlock>
-          ) : (
-            <section aria-labelledby="section-none">
-              <h2 id="section-none" className="border-b pb-1 pl-1 text-sm font-semibold">
-                No section <span className="font-normal text-muted-foreground">{rows.length}</span>
-              </h2>
-              {list}
-            </section>
-          )}
-        </div>
-      );
-    }
     return c.section ? (
       <SectionBlock key={c.id} section={c.section} count={rows.length}>
         {list}
@@ -244,21 +211,7 @@ export function ManualBoard({
       onDragEnd={onDragEnd}
       accessibility={{ announcements, screenReaderInstructions: instructions }}
     >
-      {columns ? (
-        // Scrolls sideways inside its own box, so the page itself never does. `relative` makes this
-        // box contain absolutely placed hidden text too, which would otherwise widen the page.
-        // Focusable so a keyboard user can scroll it.
-        <div
-          role="region"
-          aria-label="Board"
-          tabIndex={0}
-          className="relative -mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:mx-0 md:px-0"
-        >
-          {containers.map(renderContainer)}
-        </div>
-      ) : (
-        containers.map(renderContainer)
-      )}
+      {containers.map(renderContainer)}
     </DndContext>
   );
 }

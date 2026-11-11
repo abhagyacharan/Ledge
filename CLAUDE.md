@@ -188,7 +188,7 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 
 - P0: **Inbox**, **Today** (overdue block first, then today, sorted by time then priority), **Upcoming** (next 14 days grouped by day, with undated tasks excluded), **All tasks**, **Completed** (grouped by completion day), each **List**, each **Tag**.
 - P0: **List view** (default) for every list.
-- P1: **Board view** per list (columns = sections, drag cards between columns). Choice is remembered per list.
+- ~~P1: Board view per list~~ Built, then removed at O's request (2026-11-11): not useful enough. Do not rebuild without asking.
 - P1: **Search** (title and notes) via Postgres full-text search, reachable with `/`.
 - P2: Calendar (week and month) view. Do not build.
 
@@ -531,7 +531,7 @@ Exit: app reachable over HTTPS; a backup was restored successfully into a scratc
 Do in this order, one at a time, each with tests and §15 done: natural-language quick add, board view, search, recurrence, export, bulk actions. Other P1 items in §6.2 (duplicate, move, list progress, extra shortcuts, sign out everywhere, delete account, Today header counts) may be slotted in after these, in O's order of preference. Exporting the expense data (JSON and CSV) belongs with the export item.
 
 - [x] Natural-language quick add (chrono-node; chips; parser unit tests) (2026-11-11)
-- [x] Board view (2026-11-11)
+- [-] Board view: built, then removed at O's request (2026-11-11)
 - [x] Search (Postgres full-text, `/`) (2026-11-11)
 - [x] Recurrence (fixed and after_completion; next-date unit tests) (2026-11-11)
 - [ ] Export (JSON and CSV; tasks and expense entries)

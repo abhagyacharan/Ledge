@@ -6,7 +6,6 @@ import {
   getList,
   moveList,
   restoreList,
-  setListViewMode,
   setListViewSettings,
   setListArchived,
   trashList,
@@ -16,7 +15,6 @@ import {
   archiveListSchema,
   createListSchema,
   listIdSchema,
-  listViewModeSchema,
   listViewSettingsSchema,
   moveSchema,
   updateListSchema,
@@ -80,15 +78,6 @@ export async function trashListAction(input: unknown) {
 export async function restoreListAction(input: unknown) {
   return guarded(listIdSchema, input, async ({ id }, userId) => {
     if (!(await restoreList(userId, id))) return fail(NOT_FOUND);
-    refresh();
-    return ok();
-  });
-}
-
-/** Remembers whether this list is shown as a list or as a board. */
-export async function setListViewModeAction(input: unknown) {
-  return guarded(listViewModeSchema, input, async ({ id, mode }, userId) => {
-    if (!(await setListViewMode(userId, id, mode))) return fail(NOT_FOUND);
     refresh();
     return ok();
   });
