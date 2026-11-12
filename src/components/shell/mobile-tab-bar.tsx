@@ -1,12 +1,13 @@
 "use client";
 
-import { Menu, Search, Settings, Trash2 } from "lucide-react";
+import { Search, Settings, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Sheet, SheetBody, SheetHeader } from "@/components/dash/sheet";
 import { enabledModules } from "@/config/modules";
 import { cn } from "@/lib/utils";
+import { LedgeMark } from "./brand";
 import { NavRow } from "./nav-row";
 import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
@@ -59,7 +60,9 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
               className={tabClass(!inModule || more)}
             >
               <TabIcon current={!inModule || more}>
-                <Menu aria-hidden className="size-5" strokeWidth={1.85} />
+                {/* The Ledge mark stands in for the menu icon (O, 2026-11-13): the L in the text
+                    colour, so light on dark and dark on light, with its orange rule. */}
+                <LedgeMark className="text-foreground" />
               </TabIcon>
               More
             </button>

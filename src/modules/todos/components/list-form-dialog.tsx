@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { isTouchDevice } from "@/lib/touch";
 import type { List } from "@/server/db/schema";
 import { createListAction, updateListAction } from "../actions/lists";
 import { LIST_ICONS, ListGlyph } from "../list-icons";
@@ -116,7 +117,7 @@ function ListForm({ list, close }: { list?: List; close: () => void }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
-              autoFocus
+              autoFocus={!isTouchDevice()}
               placeholder="List name"
               aria-invalid={errors.name ? true : undefined}
               aria-describedby={errors.name ? "list-name-error" : undefined}

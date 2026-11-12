@@ -124,6 +124,7 @@ export default async function TasksOverviewPage({ searchParams }: PageProps<"/ta
             {overdue.length + today.length === 0 ? (
               <EmptyState
                 icon={Sun}
+                compact
                 title="Nothing due today"
                 hint="You're clear. Add something, or look at what's coming up."
                 action={<QuickAddButton />}

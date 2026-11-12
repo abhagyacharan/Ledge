@@ -131,6 +131,14 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 
 - A module that is planned but not built has a registry entry with no views, so it shows in the sidebar, the phone tab bar and the palette like any other part of the app. Its page is the page title and one card holding an `EmptyState`: the module's icon, "Coming soon", and one sentence on what will live there. (Blog used this from 2026-11-12 until Journal took its place the same day; no module is a placeholder now.)
 
+## 5e1. Overlays and the keyboard (2026-11-13)
+
+- Every overlay (dash sheet, dialog, side sheet, alert dialog, the Log a transaction menu) dims and blurs the page behind it: `bg-black/15` (`/35` in dark) with `backdrop-blur-[6px]`. The panel itself stays sharp. The Log a transaction menu keeps the round button above its backdrop (it turns into a cross).
+- On a touch screen nothing inside a sheet or dialog is focused when it opens, so the keyboard stays closed and the whole form is visible; the user taps a field to type. The Search page does the same. Mouse and keyboard users still start in the first field. Code: `src/lib/touch.ts`.
+- Phone tab bar: the last tab is the Ledge mark (not a menu icon), labelled More.
+- Settings opens with an About card: the lockup and "The everyday ledger" line.
+- `EmptyState` has a `compact` option: about 40% shorter on phones, full size from `md`. The Tasks overview's empty Today card uses it.
+
 ## 5f1. Journal (2026-11-12, spec: `docs/journal-spec.md`)
 
 - **Header:** "Journal", then the day pill (the period pill's track, round arrows and popover, one day at a time; full width on phones, alone at the right from `sm`; no Search button and no round + button on the Journal since 2026-11-12, `q` still opens quick add). The popover is a 7-column day grid (mono weekday initials, 40px cells, ink fill for the chosen day, accent text for today, a 4px dot under days with a page, future days faded and disabled); the month name is a button that switches to the Expenses month grid. Footer: Today and Close.

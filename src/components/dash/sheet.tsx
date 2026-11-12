@@ -2,8 +2,9 @@
 
 import { Drawer } from "@base-ui/react/drawer";
 import { X } from "lucide-react";
-import type { ReactNode, RefObject } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { isTouchDevice } from "@/lib/touch";
 import { cn } from "@/lib/utils";
 import { dashButton } from "./dash-button";
 
@@ -23,11 +24,20 @@ export function Sheet({
   onOpenChange: (open: boolean) => void;
   /** Runs once the closing slide has finished (a good moment to reset what the sheet shows). */
   onClosed?: () => void;
-  /** What to focus on open; by default the first field. */
+  /**
+   * What to focus on open with a mouse or keyboard; by default the first field. On a touch
+   * screen nothing inside is focused, so the keyboard stays closed until you tap a field.
+   */
   initialFocus?: RefObject<HTMLElement | null> | boolean;
   children: ReactNode;
 }) {
   const mobile = useIsMobile();
+  const popupRef = useRef<HTMLDivElement>(null);
+  const focusOnOpen = (): boolean | HTMLElement => {
+    if (isTouchDevice()) return popupRef.current ?? false;
+    if (initialFocus && typeof initialFocus === "object") return initialFocus.current ?? true;
+    return initialFocus ?? true;
+  };
   return (
     <Drawer.Root
       open={open}
@@ -47,7 +57,8 @@ export function Sheet({
             )}
           >
             <Drawer.Popup
-              initialFocus={initialFocus}
+              ref={popupRef}
+              initialFocus={focusOnOpen}
               className={cn(
                 "dash flex flex-col bg-dash-card text-dash-ink outline-none will-change-transform data-swiping:select-none data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)]",
                 mobile

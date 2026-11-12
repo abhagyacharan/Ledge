@@ -241,7 +241,6 @@ function QuickAddForm({
               value={title}
               onChange={(e) => update(e.target.value, ignored)}
               maxLength={500}
-              autoFocus
               disabled={pending}
               enterKeyHint="done"
               placeholder="What needs doing?"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Brand } from "@/components/shell/brand";
 import { PageHeader } from "@/components/shell/page-header";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { ReportDownloads } from "@/modules/expenses/components/report-downloads";
@@ -22,6 +23,15 @@ export default async function SettingsPage() {
     <div className="dash">
       <PageHeader title="Settings" />
       <div className="flex flex-col gap-4">
+        <TaskPanel id="about" title="About" hideTitle>
+          <div className="flex items-center gap-4">
+            <Brand size="lg" />
+            <p className="min-w-0 text-sm text-pretty text-dash-ink-soft">
+              The everyday ledger: one book for the things you keep track of.
+            </p>
+          </div>
+        </TaskPanel>
+
         <TaskPanel id="account" title="Account">
           <dl className="grid gap-2 text-sm">
             <div className="flex gap-3">

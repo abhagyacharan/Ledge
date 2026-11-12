@@ -102,6 +102,17 @@ What was checked: unit and database tests, the browser tests (including the acce
 - **Lists can fold away.** In the side menu on a computer, the "Lists" heading under Tasks is now a button with a small arrow. Click it to hide or show your lists. The + for making a new list only appears while the lists are showing. Lists start open, and open by themselves when you go to one of them.
 - **Search moved down on phones.** On a phone, Search used to be a round button at the top right of the Tasks and Expenses pages, out of reach of your thumb. It is now a tab in the bar at the bottom, and the top-right button only appears on tablets and computers. Search is no longer in the "More" sheet, so it is in one place only.
 
+## Phone fixes (2026-11-13)
+
+You tried the app on your phone and asked for these. All are done and checked on a phone-sized screen.
+
+- **The keyboard no longer pops up by itself.** Before, opening "Add a task", an expense or income form, the new-list box or the Search page jumped straight to typing, and the keyboard covered half the screen. Now the form or page simply appears. Tap a box when you want to type. On a computer with a mouse nothing changed: the cursor still starts in the first box. Ledge decides this by asking whether the main way of pointing is a finger (a phone or tablet) or a mouse.
+- **Blur behind the Log a transaction menu.** The page behind it now goes soft and a little darker, like when you open More. The menu and the round button stay sharp. The task details panel, the new-list box and the confirm boxes got the same stronger blur.
+- **The Ledge mark replaces the More icon** on the phone's bottom bar: the L in light on dark or dark on light, with its orange line. The word under it still says More.
+- **The app name in Settings.** Settings now starts with a card showing the Ledge logo and name and a one-line description.
+- **A shorter "Nothing due today" box** on the Tasks overview on a phone.
+- **Is the phone slower than the computer? Probably, and mostly for reasons that are not bugs.** On your computer the app and its database are on the same machine, so every tap is answered instantly. On your phone each tap travels to your home server and back, and many screens ask the server for fresh data every time. Phones also draw blur and shadows more slowly than a PC. One small saving was made: the settings are no longer fetched twice for the same page. A bigger saving was added at your OK: Ledge now remembers who you are for up to 5 minutes (in a locked, tamper-proof note kept in your browser), so most taps skip the sign-in check against the database. The catch: if you sign out on one device, another device can stay signed in for up to 5 minutes. Signing out on the same device is instant. The best way to find the real cause is to try the same tap over home Wi-Fi and over mobile data.
+
 ## Decisions in plain words
 
 - **One action colour.** Fewer colours means less to decode. Green means "act or good", red means "look here".

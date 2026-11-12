@@ -25,6 +25,10 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // refresh once a day
+    // Remember the signed-in user in a signed cookie for 5 minutes, so most requests skip the
+    // session lookup in the database (O, 2026-11-13: every query is a round trip on a phone).
+    // Cost: signing out on another device takes up to 5 minutes to reach this one.
+    cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
   advanced: {
     // UUIDs everywhere (CLAUDE.md §9). Must match the generated schema.

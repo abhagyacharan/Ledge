@@ -12,6 +12,7 @@ import { loadMoneyContext } from "@/modules/expenses/context";
 import { TaskDrawerHost } from "@/modules/todos/components/task-drawer-host";
 import { TaskList } from "@/modules/todos/components/task-groups";
 import { TaskPanel } from "@/modules/todos/components/task-panel";
+import { SearchInput } from "./search-input";
 import { loadDateContext } from "@/modules/todos/date-context";
 import { searchEntries } from "@/server/data/finance";
 import { searchTasks } from "@/server/data/views";
@@ -57,18 +58,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                 aria-hidden
                 className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-dash-ink-soft"
               />
-              <input
-                id="search-input"
-                name="q"
-                type="search"
-                enterKeyHint="search"
-                defaultValue={q}
-                placeholder="Search tasks and expenses"
-                autoComplete="off"
-                autoFocus
-                maxLength={200}
-                className="h-11 w-full rounded-full bg-dash-well pr-4 pl-10 text-base text-dash-ink outline-none placeholder:text-dash-ink-soft focus-visible:ring-3 focus-visible:ring-ring/50 md:h-10 md:text-sm"
-              />
+              <SearchInput defaultValue={q} />
             </div>
             <DashButton type="submit" className="h-11! md:h-10!">
               Search

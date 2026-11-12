@@ -76,8 +76,21 @@ export function TransactionLauncher({
     <LauncherContext value={{ open }}>
       {children}
 
+      {/* While the menu is open the page behind it is blurred and tinted, like the sheets. It
+          sits under the menu and the round button, which stay sharp. Tapping it closes the menu. */}
+      {menuOpen ? (
+        <div
+          aria-hidden
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-[39] animate-in bg-black/15 backdrop-blur-[6px] duration-200 fade-in-0 dark:bg-black/35"
+        />
+      ) : null}
+
       <Menu.Root open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
-        <Menu.Trigger aria-label="Log a transaction" className={FAB_CLASS}>
+        <Menu.Trigger
+          aria-label="Log a transaction"
+          className={cn(FAB_CLASS, menuOpen && "z-[41]")}
+        >
           {/* The plus turns into a cross while the menu is open. */}
           <Plus aria-hidden className={cn(FAB_ICON_CLASS, menuOpen && "rotate-45")} />
         </Menu.Trigger>

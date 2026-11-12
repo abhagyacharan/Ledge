@@ -533,6 +533,16 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Not written into the repo:** the real domain and hostnames. The guide uses `ledge.<your-domain>`, so the repository does not advertise the server's SSH address.
 - **Reason:** O's request in chat (2026-11-13).
 
+## 2026-11-13: No keyboard on open, blurred backdrops, the Ledge mark as More, About card
+
+- **Keyboard:** on a touch screen (`(pointer: coarse)`), sheets and dialogs no longer focus their first field when they open, so the on-screen keyboard stays down until you tap a field. Covers Add a task, every expense or income form, the list dialog, the task drawer and the Search page. Mouse users still land in the first field. One helper, `src/lib/touch.ts` (`isTouchDevice`, `keepKeyboardClosed`); `Sheet` (Base UI) focuses the sheet itself on touch; `DialogContent` and `SheetContent` do the same through `onOpenAutoFocus`. The re-focus after adding a task is kept (the keyboard is already up then).
+- **Blur:** the Log a transaction menu now dims and blurs the page behind it, like the sheets; the menu and the round button stay sharp. The shared dialog, side sheet and alert overlays use the same 6px blur and tint as the dash sheet (they were unblurred or barely blurred).
+- **More tab:** the Ledge mark (L in the text colour, orange rule) replaces the menu icon; the label stays "More".
+- **App name:** Settings starts with an About card holding the full Ledge lockup and the tagline.
+- **Overview:** the empty Today card is shorter on phones (`EmptyState compact`).
+- **Speed:** `getUserSettings` is cached per request (the layout and the page both asked for it). Then, with O's OK ("Yes, add it"), Better Auth's `session.cookieCache` is on with a 5 minute `maxAge`: the signed-in user is kept in a signed cookie, so most requests skip the session lookup (measured: 8 page loads read the session table 0 times). Cost: signing out on one device can take up to 5 minutes to reach another device that still holds the cookie; signing out on the same device is instant (checked). The cookie is signed with `BETTER_AUTH_SECRET`, `httpOnly`, same attributes as the session cookie. The proxy and every `requireUser()` call are unchanged (§5). A "sign out everywhere" button (P1, not built) should be told about this delay.
+- **Reason:** O's requests in chat (2026-11-13).
+
 ## Pending decisions (log here when made)
 
 - Model provider for AI features (embeddings, RAG answers, the Journal's AI ideas): local model on the home server or a hosted API. Blocks the smarter-search item in `docs/ideas.md`.
