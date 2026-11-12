@@ -37,7 +37,9 @@ export function Sheet({
     >
       <Drawer.VirtualKeyboardProvider>
         <Drawer.Portal>
-          <Drawer.Backdrop className="fixed inset-0 z-50 bg-black opacity-[calc(var(--backdrop-opacity)*(1-var(--drawer-swipe-progress)))] transition-opacity duration-[400ms] ease-sheet [--backdrop-opacity:0.32] data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh dark:[--backdrop-opacity:0.6]" />
+          {/* The page behind is blurred and only lightly tinted, so it stays visible but out of
+              the way (O, 2026-11-12). The layer fades in and out, and follows a swipe. */}
+          <Drawer.Backdrop className="fixed inset-0 z-50 bg-black/15 opacity-[calc(1-var(--drawer-swipe-progress))] backdrop-blur-[6px] transition-opacity duration-[400ms] ease-sheet data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute supports-[-webkit-touch-callout:none]:min-h-dvh dark:bg-black/35" />
           <Drawer.Viewport
             className={cn(
               "fixed inset-0 z-50 flex",

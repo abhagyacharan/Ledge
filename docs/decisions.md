@@ -502,6 +502,14 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Welcome page:** `/` used to redirect to `/tasks`; it is now a page in the app shell where sign-in and sign-up land. It greets you and offers two buttons: "Add a task" (Tasks overview with quick add open) and "Log a transaction" (Expense Summary with the Log a transaction menu open). The buttons pass `?add=task` or `?add=transaction`; a small hook (`useOpenOnArrival`) opens the thing and then removes `add` from the address, so a reload or Back does not open it again. A query parameter was chosen over a stored flag so the link works in a new tab too.
 - **Reason:** O's requests in chat (2026-11-12).
 
+## 2026-11-12: Quick add as a sheet, blur behind sheets, one width for Tasks
+
+- **Quick add** moved from a centred dialog into the dashboard `Sheet` (right side with a mouse, bottom sheet on a phone), so adding a task and logging a transaction look and behave the same.
+- **Sheet backdrop:** a 6px blur with a light tint (15% black, 35% in dark) instead of a 32% to 60% black dim, so the page stays recognisable behind the sheet. It applies to every sheet.
+- **Tasks width:** all Tasks routes have one width. Before, only the Overview was wide, so the header and pill tabs jumped sideways when switching tabs. First all tabs took the Overview's full width; O found the blocks too wide, so every Tasks tab is now one centred column (`max-w-4xl`), the same width on every tab.
+- **Journal:** no Search button in its header and no round + (add a task) button; the day control sits alone at the right.
+- **Reason:** O's requests in chat (2026-11-12).
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

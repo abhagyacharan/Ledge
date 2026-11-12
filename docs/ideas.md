@@ -26,6 +26,7 @@ Anything not in CLAUDE.md §1 or §6 goes here instead of being built. Add a lin
 - 2026-11-11: **Automatic off-site backups** built into the stack (an `rclone` sidecar) once O has chosen where they go.
 - 2026-11-11: **Uptime alert**: ping `/api/health` from outside (Cloudflare Health Checks, UptimeRobot or Healthchecks.io) and notify O when it fails or when the nightly backup stops.
 - 2026-11-11: **Pin `cloudflared` and other image versions** in `docker-compose.yml` after the first successful deploy (the compose file uses `latest` for cloudflared).
+- 2026-11-12: **Floating pill tab bar on phones**: make the bottom navigation a pill-shaped bar that floats above the bottom edge (rounded ends, a little gap from the screen edges and the home bar) instead of the full-width solid bar. O's idea for later; check the 44px tap targets, the safe area, and that the round + button still clears it.
 
 ## P2 items already named in the spec (do not build now)
 

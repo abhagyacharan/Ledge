@@ -50,7 +50,7 @@ export type AppModule = {
   Global?: ComponentType;
 };
 
-const TASK_ROUTES = ["/tasks", "/today", "/upcoming", "/all", "/completed", "/lists"];
+export const TASK_ROUTES = ["/tasks", "/today", "/upcoming", "/all", "/completed", "/lists"];
 
 export const modules: AppModule[] = [
   {

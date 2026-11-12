@@ -5,12 +5,13 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * The page area. Dashboards (the Expense Tracker and the Tasks overview) get a wide canvas; lists of
- * tasks read best a little narrower. Phones leave room at the bottom for the tab bar and the + button.
+ * The page area. The Expense Tracker gets the wide canvas. Every other page, including every Tasks
+ * tab, is one centred column of the same width, so the Tasks header and tab bar never shift when
+ * you switch tabs (O, 2026-11-12). Phones leave room at the bottom for the tab bar and + button.
  */
 export function AppMain({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const wide = pathname.startsWith("/expenses") || pathname === "/tasks";
+  const wide = pathname.startsWith("/expenses");
   return (
     <main
       className={cn(

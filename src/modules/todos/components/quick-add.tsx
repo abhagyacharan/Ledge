@@ -7,13 +7,7 @@ import { useEffect, useRef, useState, useTransition, type FormEvent } from "reac
 import { toast } from "sonner";
 import { DashButton } from "@/components/dash/dash-button";
 import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/dash/sheet";
 import {
   Select,
   SelectContent,
@@ -65,6 +59,7 @@ export function QuickAdd() {
   const [prefill, setPrefill] = useState<QuickAddPrefill>({});
   // A new key starts the form fresh each time it is opened.
   const [openCount, setOpenCount] = useState(0);
+  const titleRef = useRef<HTMLInputElement>(null);
 
   // Default to the list being viewed, otherwise General (the default list).
   const viewed = /^\/lists\/([0-9a-f-]{36})/.exec(pathname)?.[1];
@@ -97,8 +92,9 @@ export function QuickAdd() {
 
   return (
     <>
-      {/* On Expense Tracker pages the round button logs a transaction instead; q still adds a task. */}
-      {pathname.startsWith("/expenses") ? null : (
+      {/* On Expense Tracker pages the round button logs a transaction instead, and the Journal has
+          none (O, 2026-11-12); q still adds a task everywhere. */}
+      {pathname.startsWith("/expenses") || pathname.startsWith("/journal") ? null : (
         <button
           type="button"
           aria-label="Quick add task (shortcut: q)"
@@ -109,17 +105,16 @@ export function QuickAdd() {
           <Plus aria-hidden className={cn(FAB_ICON_CLASS, open && "rotate-45")} />
         </button>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="dash max-h-[92svh] overflow-y-auto sm:max-w-lg">
-          {open ? (
-            <QuickAddForm
-              key={openCount}
-              prefill={prefill}
-              defaultListId={prefill.listId ?? defaultListId}
-            />
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      {/* The same sheet as Log a transaction (O, 2026-11-12): from the right with a mouse, from
+          the bottom on a phone. It stays mounted while it slides out; a new key starts it fresh. */}
+      <Sheet open={open} onOpenChange={setOpen} initialFocus={titleRef}>
+        <QuickAddForm
+          key={openCount}
+          prefill={prefill}
+          defaultListId={prefill.listId ?? defaultListId}
+          inputRef={titleRef}
+        />
+      </Sheet>
     </>
   );
 }
@@ -131,9 +126,12 @@ const label = "text-[13px] font-medium text-dash-ink";
 function QuickAddForm({
   prefill,
   defaultListId,
+  inputRef,
 }: {
   prefill: QuickAddPrefill;
   defaultListId: string;
+  /** The title field: the sheet focuses it on open, and Enter puts the caret back in it. */
+  inputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const { lists, timeZone, locale, weekStartsOn } = useTodos();
   const [dateCtx] = useState<DateContext>(() => {
@@ -162,7 +160,6 @@ function QuickAddForm({
   const [repeatRule, setRepeatRule] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState<RecurrenceMode>("fixed");
   const [pending, startTransition] = useTransition();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // A #list in the text wins over the menu; removing its chip gives the menu back.
   const effectiveListId = parsed.listId ?? listId;
@@ -224,153 +221,154 @@ function QuickAddForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <DialogHeader className="pr-10">
-        <DialogTitle className="text-lg font-semibold">Add a task</DialogTitle>
-        <DialogDescription className="text-[13px] text-dash-ink-soft">
-          Type it as you would say it: dates, #list and p1 to p3 are picked up. Enter adds it and
-          the box stays open for the next one.
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="quick-add-title" className="sr-only">
-          Task
-        </label>
-        <input
-          id="quick-add-title"
-          ref={inputRef}
-          value={title}
-          onChange={(e) => update(e.target.value, ignored)}
-          maxLength={500}
-          autoFocus
-          disabled={pending}
-          enterKeyHint="done"
-          placeholder="What needs doing?"
-          className="h-14 w-full rounded-2xl bg-dash-well px-4 text-lg text-dash-ink outline-none transition-shadow duration-150 placeholder:text-dash-ink-soft/70 focus-visible:ring-3 focus-visible:ring-ring/40"
-        />
-        {parsed.tokens.length > 0 ? (
-          <ul aria-label="Understood from your text" className="flex flex-wrap gap-1.5">
-            {parsed.tokens.map((token) => (
-              <li
-                key={tokenKey(token)}
-                className="inline-flex animate-in items-center rounded-full bg-dash-ink pl-3 text-[13px] text-dash-card duration-150 fade-in-0 zoom-in-95"
-              >
-                {token.label}
-                <button
-                  type="button"
-                  aria-label={`Remove ${token.label}`}
-                  onClick={() => removeToken(token)}
-                  className="grid size-11 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-8"
-                >
-                  <X className="size-3.5" aria-hidden />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <span className={label}>Due</span>
-          <DueDateField value={due} ctx={dateCtx} onChange={changeDue} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="quick-add-list" className={label}>
-            List
-          </label>
-          <Select
-            value={effectiveListId}
-            onValueChange={setListId}
-            disabled={parsed.listId !== null}
-          >
-            <SelectTrigger id="quick-add-list" className="h-11 w-full rounded-xl md:h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {lists.map((l) => (
-                <SelectItem key={l.id} value={l.id}>
-                  <ListGlyph icon={l.icon} className="size-4" />
-                  {l.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div
-        role="radiogroup"
-        aria-labelledby="quick-add-priority-label"
-        className="flex flex-col gap-1.5"
-      >
-        <span id="quick-add-priority-label" className={label}>
-          Priority
-        </span>
-        <div className="grid grid-cols-4 gap-1 rounded-full bg-dash-well p-1">
-          {PRIORITY_LABELS.map((name, i) => (
-            <label
-              key={name}
-              className={cn(
-                "relative z-0 inline-flex h-11 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium transition-colors duration-150 select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-9",
-                priority === i ? "text-dash-ink" : "text-dash-ink-soft hover:text-dash-ink",
-              )}
-            >
-              {/* The raised pill slides to the chosen priority instead of jumping (O, 2026-11-12). */}
-              {priority === i ? (
-                <motion.span
-                  aria-hidden
-                  layoutId="quick-add-priority-pill"
-                  transition={reduceMotion ? { duration: 0 } : PILL_SPRING}
-                  className="absolute inset-0 -z-10 rounded-full bg-dash-raised shadow-(--dash-lift)"
-                />
-              ) : null}
-              <input
-                type="radio"
-                name="quick-add-priority"
-                value={i}
-                checked={priority === i}
-                onChange={() => setManualPriority(i)}
-                className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
-              />
-              {name}
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+      <SheetHeader
+        title="Add a task"
+        description="Type it as you would say it: dates, #list and p1 to p3 are picked up. Enter adds it and the sheet stays open for the next one."
+      />
+      <SheetBody>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="quick-add-title" className="sr-only">
+              Task
             </label>
-          ))}
+            <input
+              id="quick-add-title"
+              ref={inputRef}
+              value={title}
+              onChange={(e) => update(e.target.value, ignored)}
+              maxLength={500}
+              autoFocus
+              disabled={pending}
+              enterKeyHint="done"
+              placeholder="What needs doing?"
+              className="h-14 w-full rounded-2xl bg-dash-well px-4 text-lg text-dash-ink outline-none transition-shadow duration-150 placeholder:text-dash-ink-soft/70 focus-visible:ring-3 focus-visible:ring-ring/40"
+            />
+            {parsed.tokens.length > 0 ? (
+              <ul aria-label="Understood from your text" className="flex flex-wrap gap-1.5">
+                {parsed.tokens.map((token) => (
+                  <li
+                    key={tokenKey(token)}
+                    className="inline-flex animate-in items-center rounded-full bg-dash-ink pl-3 text-[13px] text-dash-card duration-150 fade-in-0 zoom-in-95"
+                  >
+                    {token.label}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${token.label}`}
+                      onClick={() => removeToken(token)}
+                      className="grid size-11 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-8"
+                    >
+                      <X className="size-3.5" aria-hidden />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <span className={label}>Due</span>
+              <DueDateField value={due} ctx={dateCtx} onChange={changeDue} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="quick-add-list" className={label}>
+                List
+              </label>
+              <Select
+                value={effectiveListId}
+                onValueChange={setListId}
+                disabled={parsed.listId !== null}
+              >
+                <SelectTrigger id="quick-add-list" className="h-11 w-full rounded-xl md:h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {lists.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>
+                      <ListGlyph icon={l.icon} className="size-4" />
+                      {l.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div
+            role="radiogroup"
+            aria-labelledby="quick-add-priority-label"
+            className="flex flex-col gap-1.5"
+          >
+            <span id="quick-add-priority-label" className={label}>
+              Priority
+            </span>
+            <div className="grid grid-cols-4 gap-1 rounded-full bg-dash-well p-1">
+              {PRIORITY_LABELS.map((name, i) => (
+                <label
+                  key={name}
+                  className={cn(
+                    "relative z-0 inline-flex h-11 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium transition-colors duration-150 select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-9",
+                    priority === i ? "text-dash-ink" : "text-dash-ink-soft hover:text-dash-ink",
+                  )}
+                >
+                  {/* The raised pill slides to the chosen priority instead of jumping (O, 2026-11-12). */}
+                  {priority === i ? (
+                    <motion.span
+                      aria-hidden
+                      layoutId="quick-add-priority-pill"
+                      transition={reduceMotion ? { duration: 0 } : PILL_SPRING}
+                      className="absolute inset-0 -z-10 rounded-full bg-dash-raised shadow-(--dash-lift)"
+                    />
+                  ) : null}
+                  <input
+                    type="radio"
+                    name="quick-add-priority"
+                    value={i}
+                    checked={priority === i}
+                    onChange={() => setManualPriority(i)}
+                    className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
+                  />
+                  {name}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="task-repeat" className={label}>
+              Repeat
+            </label>
+            <RepeatField
+              rule={repeatRule}
+              mode={repeatMode}
+              dueDate={due.dueDate}
+              today={dateCtx.today}
+              onChange={changeRepeat}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="quick-add-notes" className={label}>
+              Notes
+            </label>
+            <Textarea
+              id="quick-add-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              maxLength={10000}
+              placeholder="Plain text. Add details, links, or steps."
+              className="rounded-xl"
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="task-repeat" className={label}>
-          Repeat
-        </label>
-        <RepeatField
-          rule={repeatRule}
-          mode={repeatMode}
-          dueDate={due.dueDate}
-          today={dateCtx.today}
-          onChange={changeRepeat}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="quick-add-notes" className={label}>
-          Notes
-        </label>
-        <Textarea
-          id="quick-add-notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          maxLength={10000}
-          placeholder="Plain text. Add details, links, or steps."
-          className="rounded-xl"
-        />
-      </div>
-
-      <DashButton type="submit" className="h-11! w-full" disabled={pending || !parsed.title}>
-        Add task
-      </DashButton>
+      </SheetBody>
+      <SheetFooter>
+        <DashButton type="submit" className="h-11! w-full" disabled={pending || !parsed.title}>
+          Add task
+        </DashButton>
+      </SheetFooter>
     </form>
   );
 }

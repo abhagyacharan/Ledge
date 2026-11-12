@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SearchButton } from "@/components/shell/search-button";
 import { todayIn } from "@/lib/dates";
 import { journalDay, monthEnd, monthOf, monthStart } from "@/modules/journal/calendar";
 import { DayControl } from "@/modules/journal/components/day-control";
@@ -60,16 +59,14 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
     <div className="dash mx-auto w-full max-w-4xl pb-24">
       <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">Journal</h1>
-        <div className="flex items-center gap-2">
-          <DayControl
-            day={date}
-            today={today}
-            weekStartsOn={settings.weekStartsOn}
-            locale={settings.locale}
-            marked={marked}
-          />
-          <SearchButton />
-        </div>
+        {/* The day control alone at the right: no Search button and no + here (O, 2026-11-12). */}
+        <DayControl
+          day={date}
+          today={today}
+          weekStartsOn={settings.weekStartsOn}
+          locale={settings.locale}
+          marked={marked}
+        />
       </header>
 
       <JournalDay
