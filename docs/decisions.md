@@ -508,6 +508,8 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Sheet backdrop:** a 6px blur with a light tint (15% black, 35% in dark) instead of a 32% to 60% black dim, so the page stays recognisable behind the sheet. It applies to every sheet.
 - **Tasks width:** all Tasks routes have one width. Before, only the Overview was wide, so the header and pill tabs jumped sideways when switching tabs. First all tabs took the Overview's full width; O found the blocks too wide, so every Tasks tab is now one centred column (`max-w-4xl`), the same width on every tab.
 - **Journal:** no Search button in its header and no round + (add a task) button; the day control sits alone at the right.
+- **Sidebar Lists collapsible:** "Lists" under Tasks is a toggle like the module headers; the new-list + only shows while it is open, so a collapsed section is just one quiet row.
+- **No + button on Search, Settings and Trash** either: the round button only appears where adding something belongs (Tasks pages, the welcome page, and Log a transaction on the Expense Tracker). `q` still opens quick add everywhere.
 - **Reason:** O's requests in chat (2026-11-12).
 
 ## Pending decisions (log here when made)

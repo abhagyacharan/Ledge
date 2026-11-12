@@ -36,6 +36,9 @@ import { useTodos } from "./todos-provider";
 import { PRIORITY_LABELS, type DateContext } from "./types";
 
 /** How the priority pill glides between options: quick, no bounce (docs/design.md §9). */
+/** Pages without the round "add a task" button. */
+const NO_ADD_BUTTON = ["/expenses", "/journal", "/search", "/settings", "/trash"];
+
 const PILL_SPRING: Transition = { type: "spring", duration: 0.3, bounce: 0 };
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -92,9 +95,9 @@ export function QuickAdd() {
 
   return (
     <>
-      {/* On Expense Tracker pages the round button logs a transaction instead, and the Journal has
-          none (O, 2026-11-12); q still adds a task everywhere. */}
-      {pathname.startsWith("/expenses") || pathname.startsWith("/journal") ? null : (
+      {/* On Expense Tracker pages the round button logs a transaction instead; the Journal,
+          Search, Settings and Trash have none (O, 2026-11-12). q still adds a task everywhere. */}
+      {NO_ADD_BUTTON.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ? null : (
         <button
           type="button"
           aria-label="Quick add task (shortcut: q)"

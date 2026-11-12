@@ -29,3 +29,20 @@ test("a sidebar section opens and closes with one button, and Journal is a link"
     "page",
   );
 });
+
+test("the Lists section collapses, and its + only shows while it is open", async ({ page }) => {
+  await page.goto("/today");
+  const sidebar = page.locator("[data-sidebar=sidebar]");
+  const lists = sidebar.getByRole("button", { name: "Lists", exact: true });
+  await expect(lists).toHaveAttribute("aria-expanded", "true");
+  await expect(sidebar.getByRole("button", { name: "New list" })).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: "Work", exact: true })).toBeVisible();
+
+  await lists.click();
+  await expect(lists).toHaveAttribute("aria-expanded", "false");
+  await expect(sidebar.getByRole("button", { name: "New list" })).toHaveCount(0);
+  await expect(sidebar.getByRole("link", { name: "Work", exact: true })).toHaveCount(0);
+
+  await lists.click();
+  await expect(sidebar.getByRole("link", { name: "Work", exact: true })).toBeVisible();
+});
