@@ -26,6 +26,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Check constraint.** A rule built into a database table that rejects bad values, for example a priority above 3.
 
+**CI/CD.** Short for "continuous integration and continuous delivery". Automatic checks run on every change you save to GitHub, and, if they pass, the change is put on the server without you typing anything. Planned for after the first deployment; not set up yet.
+
 **Cloudflare Tunnel.** A way to reach your home server from the internet without opening any door on your router. Your server connects out to Cloudflare, and Cloudflare passes visitors down that connection, with HTTPS included.
 
 **Collation.** The rule a database uses to decide alphabetical order, for example whether capital letters count the same as small ones.
@@ -68,6 +70,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **EMI.** "Equated monthly instalment": the fixed amount you pay each month towards a loan. In Ledge's expense tracker, "EMIs & loans" also covers credit card bills and other debt payments.
 
+**Embedding.** A list of numbers that a language model makes from a piece of text to capture its meaning. Texts that mean similar things get similar numbers. Needed for vector search; not used in Ledge yet.
+
 **End-to-end test (e2e).** A robot that uses a real browser and clicks through the app the way a person would.
 
 **Environment variable.** A setting kept outside the code (for example a secret or an address), so the same code can run in different places. Stored in the `.env` file.
@@ -89,6 +93,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Full-text search.** Searching for words inside text, including word forms, rather than matching exact letters.
 
 **Git / GitHub.** Git remembers every version of the project. GitHub is a website that stores a copy online.
+
+**Glassmorphism (liquid glass).** A look where panels resemble frosted glass: slightly see-through, with what is behind them blurred. "Liquid glass" is Apple's name for its newest version. A planned redesign; not built yet.
 
 **Goal.** In Ledge, a list that has a target date. The list heading shows how many days are left.
 
@@ -168,7 +174,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Quick add.** The round "+" button (or the `q` key) that opens a small box for adding tasks one after another.
 
+**PWA (installable web app).** Short for "progressive web app". A website that you can add to your phone's home screen so it opens full screen with its own icon, like an app, while staying the same website. Planned; not built yet.
+
 **Radix.** A set of building blocks for interface parts such as menus and dialogs that work well with keyboards and screen readers.
+
+**RAG.** Short for "retrieval-augmented generation". First find the pieces of your data that matter for a question, then give them to a language model so it can write an answer. Planned for search; not built yet.
 
 **Rate limit.** A cap on how many attempts are allowed in a short time, to stop automated guessing.
 
@@ -243,6 +253,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **UUID.** A long random identifier (like `3f2b8c1e-…`) used instead of 1, 2, 3, so IDs cannot be guessed.
 
 **Validation.** Checking that information is acceptable (for example, that an email looks like an email) before using it.
+
+**Vector search (vector database).** Search by meaning instead of spelling, by comparing embeddings. A vector database stores those embeddings. For Ledge the plan is the pgvector add-on inside the existing PostgreSQL database; not built yet.
 
 **View.** One way of looking at your tasks, such as Today, Upcoming, All tasks, Completed, a list or a tag. Also the name of the button that opens the sort, group and filter panel.
 

@@ -167,6 +167,7 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 2. Other expense tabs (Income, EMIs & loans, Expenses, Investments), the expense header and the Log a transaction button: **done 2026-11-11** (§5c) (§5b): overview, list and breakdown cards, chips, the sheet, skeletons.
 3. Task screens and the app shell: **done 2026-11-11** (§5e, §5f). The dashboard tokens are now the global tokens, the paper-and-ledger palette is retired, and O chose a light sidebar instead of the green spine.
 4. Each step ships with the axe and phone-width checks passing in light and dark.
+5. **Planned, not started (2026-11-13):** a glass redesign (glassmorphism or "liquid glass") after deployment, tried on a branch on a few phone surfaces first. It would replace or extend this language; contrast, blur cost on phones and reduced-transparency fallbacks are the known risks. See `docs/ideas.md` ("Roadmap after deployment").
 
 ## 9. Motion
 

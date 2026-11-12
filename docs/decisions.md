@@ -512,6 +512,21 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **No + button on Search, Settings and Trash** either: the round button only appears where adding something belongs (Tasks pages, the welcome page, and Log a transaction on the Expense Tracker). `q` still opens quick add everywhere.
 - **Reason:** O's requests in chat (2026-11-12).
 
+## 2026-11-13: Roadmap after deployment (plan only, nothing built)
+
+- **Order O set:** fix small bugs, deploy by hand to the home server, set up automatic deploys (push to `main` updates the server), then three big changes one at a time, each finished and running in production before the next: a glass redesign (glassmorphism or "liquid glass", looks only), smarter search (pgvector, then RAG), and a phone app that shares the website's data. Last: open source the project and host it publicly.
+- **Why after deployment:** O uses the app mostly on his phone and wants to try each change on the real phone, against the real server, while it is being built.
+- **Nothing is scheduled or specced.** The details, options, risks and recommendations are in `docs/ideas.md` ("Roadmap after deployment"). Each item needs its own spec and O's go-ahead; none of them changes §1 scope or the §14 phases yet.
+- **Findings recorded with the plan:**
+  - Search today is not brute force for tasks (Postgres full-text index); expense entries use a plain `ILIKE` match; the journal is not searched. Data size will not make search slow; the case for vectors is matching by meaning and answering questions.
+  - Vector search and RAG need a model provider (local or API), which is the same open choice that keeps AI features a v0.1 non-goal.
+  - A phone app needs no second database: any app talks to the same server. An installable web app (PWA) is the small first step; a native app needs an HTTP API and token sign-in that do not exist yet; offline sync is the hard part.
+  - The liquid-glass skill O found (`affaan-m/ecc`, `liquid-glass-design`) has not been installed or read; it must be reviewed first and checked that it suits web CSS.
+- **Reason:** O's plan in chat (2026-11-13).
+
 ## Pending decisions (log here when made)
+
+- Model provider for AI features (embeddings, RAG answers, the Journal's AI ideas): local model on the home server or a hosted API. Blocks the smarter-search item in `docs/ideas.md`.
+- Licence for open sourcing (MIT or AGPL), and whether the seed data and git history are safe to publish.
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.
