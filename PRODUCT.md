@@ -12,7 +12,7 @@ One person (O), the owner, who runs Ledge on a home server and uses it every day
 
 ## Product Purpose
 
-A self-hosted personal life-management app: tasks (lists, views, quick add) and an expense tracker that replaces O's Google Sheet (income, EMIs and loans, expenses, investments, with a monthly and yearly summary). Success is O preferring it to the sheet and to Todoist: fast capture, numbers that are always right, nothing in the way.
+An everyday ledger: one calm book for the things you keep track of. The name comes from ledger, the book where you write things down. Today it holds tasks (lists, views, quick add) and an expense tracker that replaces O's Google Sheet (income, EMIs and loans, expenses, investments, with a monthly and yearly summary). Success is O preferring it to the sheet and to Todoist: fast capture, numbers that are always right, nothing in the way. Later it grows into an app for life's essentials (a blog, a journal, reminders, health), and O means to let other people use it too, so the product copy no longer talks about self-hosting.
 
 ## Brand Personality
 

@@ -6,3 +6,4 @@ export * from "./tasks";
 export * from "./tags";
 export * from "./task-tags";
 export * from "./finance";
+export * from "./journal";

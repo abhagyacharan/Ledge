@@ -6,31 +6,33 @@ If a word is unfamiliar, look it up in [glossary.md](glossary.md).
 
 ## What is Ledge?
 
-Ledge is a private app for managing your own life. You run it on your own computer at home, and only you use it. Version 0.1 has three parts:
+Ledge is a private app for managing your own life. You run it on your own computer at home, and only you use it. Version 0.1 has four parts:
 
 1. **Sign in.** A way to create your account and log in, so nobody else can see your things.
 2. **A to-do list.** The main part. Capture tasks, set due dates, group them in lists, tag them, and see them in views like "Today" and "Upcoming".
 3. **An expense tracker.** Your Google Sheet, built in: income, EMIs and loans, expenses and investments, with a summary by month and by year.
+4. **A journal.** One private page per day, with plain facts about the day (tasks done, money spent) at the top, a mood, and your own words.
 
 Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 ## How the work is split into phases
 
-The work is done in eleven steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
+The work is done in twelve steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
-| Phase | Name                          | Status            | Read                                                         |
-| ----- | ----------------------------- | ----------------- | ------------------------------------------------------------ |
-| 0     | Scaffold (the empty workshop) | Done (2026-11-10) | [phase-0-scaffold.md](phase-0-scaffold.md)                   |
-| 1     | Auth (sign in and sign up)    | Done (2026-11-10) | [phase-1-auth.md](phase-1-auth.md)                           |
-| 2     | Data model                    | Done (2026-11-10) | [phase-2-data-model.md](phase-2-data-model.md)               |
-| 3     | Lists, tasks and tags         | Done (2026-11-10) | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md)   |
-| 4     | Views (Today, Upcoming...)    | Done (2026-11-10) | [phase-4-views.md](phase-4-views.md)                         |
-| 5     | Safety (undo, trash, keys)    | Done (2026-11-10) | [phase-5-safety.md](phase-5-safety.md)                       |
-| 6     | Polish                        | Done (2026-11-10) | [phase-6-polish.md](phase-6-polish.md)                       |
-| 7     | Expense tracker               | Done (2026-11-11) | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)     |
-| 8     | Frontend redesign             | Done (2026-11-11) | [phase-8-redesign.md](phase-8-redesign.md)                   |
-| 9     | Deploy and backup             | Built, you deploy | [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) |
-| 10    | Extra features (if time)      | In progress       | Written when the phase is done                               |
+| Phase | Name                          | Status                                        | Read                                                         |
+| ----- | ----------------------------- | --------------------------------------------- | ------------------------------------------------------------ |
+| 0     | Scaffold (the empty workshop) | Done (2026-11-10)                             | [phase-0-scaffold.md](phase-0-scaffold.md)                   |
+| 1     | Auth (sign in and sign up)    | Done (2026-11-10)                             | [phase-1-auth.md](phase-1-auth.md)                           |
+| 2     | Data model                    | Done (2026-11-10)                             | [phase-2-data-model.md](phase-2-data-model.md)               |
+| 3     | Lists, tasks and tags         | Done (2026-11-10)                             | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md)   |
+| 4     | Views (Today, Upcoming...)    | Done (2026-11-10)                             | [phase-4-views.md](phase-4-views.md)                         |
+| 5     | Safety (undo, trash, keys)    | Done (2026-11-10)                             | [phase-5-safety.md](phase-5-safety.md)                       |
+| 6     | Polish                        | Done (2026-11-10)                             | [phase-6-polish.md](phase-6-polish.md)                       |
+| 7     | Expense tracker               | Done (2026-11-11)                             | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)     |
+| 8     | Frontend redesign             | Done (2026-11-11)                             | [phase-8-redesign.md](phase-8-redesign.md)                   |
+| 9     | Deploy and backup             | Built, you deploy                             | [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) |
+| 10    | Extra features (if time)      | In progress                                   | [phase-10-extra-features.md](phase-10-extra-features.md)     |
+| 11    | Journal                       | Built (2026-11-12), browser tests not run yet | [phase-11-journal.md](phase-11-journal.md)                   |
 
 ## Other pages
 
@@ -47,7 +49,8 @@ The work is done in eleven steps, called phases, always in the same order. A pha
 - **Phase 7: Expense tracker (done).** See [phase-7-expense-tracker.md](phase-7-expense-tracker.md).
 - **Phase 8: Frontend redesign (done).** See [phase-8-redesign.md](phase-8-redesign.md).
 - **Phase 9: Deploy and backup (built; you deploy it).** See [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) and the step-by-step [deploy guide](../deploy-guide.md).
-- **Phase 10: Extra features, only if time remains (in progress).** See [phase-10-extra-features.md](phase-10-extra-features.md). Done so far: type tasks in plain sentences, search, and repeating tasks (a board view was built and then removed at your request). Still to come: repeating tasks, export your data, and select many tasks at once.
+- **Phase 10: Extra features, only if time remains (in progress).** See [phase-10-extra-features.md](phase-10-extra-features.md). Done so far: type tasks in plain sentences, search, and repeating tasks (a board view was built and then removed at your request). Still to come: export your data, and select many tasks at once.
+- **Phase 11: Journal (built; its browser tests have not run yet).** See [phase-11-journal.md](phase-11-journal.md). It was added at your request and built before the rest of Phase 10.
 
 ## The rule for keeping this folder up to date
 

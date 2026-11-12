@@ -25,7 +25,13 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/tasks/);
+  // New accounts land on the welcome page; its Tasks button opens quick add on the overview.
+  await expect(page).toHaveURL(/:\d+\/$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Welcome back, E2E" })).toBeVisible();
+  await page.getByRole("link", { name: /Tasks/ }).filter({ hasText: "Add a task" }).click();
+  await expect(page.getByRole("dialog", { name: "Add a task" })).toBeVisible();
+  await expect(page).toHaveURL(/\/tasks$/);
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
 
   // The new account starts with nothing to do, and no one else's tasks.
@@ -46,8 +52,14 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/tasks/);
-  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
+  await expect(page).toHaveURL(/:\d+\/$/);
+  // The Expenses button opens the Log a transaction menu on the Summary.
+  await page
+    .getByRole("link", { name: /Expenses/ })
+    .filter({ hasText: "Log a transaction" })
+    .click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page).toHaveURL(/\/expenses$/);
 });
 
 test("an unknown email gets the same message as a wrong password", async ({ page }) => {

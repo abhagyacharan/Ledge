@@ -257,6 +257,27 @@ describe("entry schemas", () => {
     expect(createEntrySchema.safeParse({ ...expense, kind: "nonsense" }).success).toBe(false);
   });
 
+  it("takes an optional need or want label on an expense; blank means none", () => {
+    const expense = {
+      kind: "expense",
+      entryDate: "2026-11-02",
+      title: "Cab",
+      category: "Transportation",
+      paymentMethod: "UPI",
+      amount: "4000",
+    };
+    const labelOf = (spendLabel: unknown) => {
+      const parsed = createEntrySchema.safeParse({ ...expense, spendLabel });
+      return parsed.success && parsed.data.kind === "expense" ? parsed.data.spendLabel : "invalid";
+    };
+    expect(labelOf("want")).toBe("want");
+    expect(labelOf("need")).toBe("need");
+    expect(labelOf("")).toBeNull();
+    expect(labelOf(null)).toBeNull();
+    expect(labelOf(undefined)).toBeNull();
+    expect(labelOf("treat")).toBe("invalid");
+  });
+
   it("validates an EMI, with a repeat count from 0 to 60", () => {
     const emi = {
       kind: "emi",
@@ -316,12 +337,25 @@ describe("tab filters from the URL", () => {
       sort: "highest",
       category: "Bonus",
       q: "rent",
+      label: null,
+      day: null,
     });
     expect(parseEntryFilters({ sort: "sideways", cat: "Nope" }, cats)).toEqual({
       sort: "newest",
       category: null,
       q: "",
+      label: null,
+      day: null,
     });
+  });
+
+  it("reads the need or want label and a single day", () => {
+    const parsed = parseEntryFilters({ label: "want", day: "2026-11-12" }, cats);
+    expect(parsed.label).toBe("want");
+    expect(parsed.day).toBe("2026-11-12");
+    const bad = parseEntryFilters({ label: "luxury", day: "2026-02-30" }, cats);
+    expect(bad.label).toBeNull();
+    expect(bad.day).toBeNull();
   });
 });
 

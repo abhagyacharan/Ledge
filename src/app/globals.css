@@ -208,6 +208,9 @@
     @apply font-sans;
     /* Phones paint a grey flash over tapped controls; our controls have their own press state. */
     -webkit-tap-highlight-color: transparent;
+    /* Keep room for the scrollbar, so a page that grows or shrinks (folding the journal facts)
+       does not shift sideways. */
+    scrollbar-gutter: stable;
   }
   /* Taps fire at once (no double-tap-zoom wait), and holding a button does not select its label. */
   button,
@@ -219,6 +222,30 @@
   [role="button"] {
     -webkit-user-select: none;
     user-select: none;
+  }
+  /*
+   * Tailwind 4 gives buttons the plain arrow cursor. Everything you can click shows the pointing
+   * hand instead (O, 2026-11-12); disabled controls keep the arrow. A cursor-* class still wins.
+   */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="menuitemradio"]:not([aria-disabled="true"]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="combobox"]:not(input),
+  select:not(:disabled),
+  summary,
+  label:has(> input[type="checkbox"], > input[type="radio"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="color"],
+  input[type="file"]::file-selector-button {
+    cursor: pointer;
   }
   /* Page titles use the display face; everything else stays in the quiet body face. */
   h1 {

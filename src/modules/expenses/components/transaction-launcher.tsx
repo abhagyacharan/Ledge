@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { DropdownMenu as Menu } from "radix-ui";
 import { createContext, use, useCallback, useRef, useState, type ReactNode } from "react";
 import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
+import { useOpenOnArrival } from "@/hooks/use-open-on-arrival";
 import { cn } from "@/lib/utils";
 import type { EntryKind } from "@/server/db/schema";
 import { KIND_ROUTES } from "../categories";
@@ -54,6 +55,8 @@ export function TransactionLauncher({
   });
   // Picking from the menu hands focus to the sheet, so the menu must not take it back on close.
   const picked = useRef(false);
+  // The welcome page's "Log a transaction" button arrives with ?add=transaction.
+  useOpenOnArrival("transaction", () => setMenuOpen(true));
 
   const open = useCallback(
     (kind: EntryKind) => setSheet((s) => ({ open: true, kind, n: s.n + 1 })),

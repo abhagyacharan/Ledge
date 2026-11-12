@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isIsoDate } from "@/lib/dates";
 import { parseMoney } from "@/lib/money";
-import { EMI_STATUSES } from "@/server/db/schema";
+import { EMI_STATUSES, SPEND_LABELS, type SpendLabel } from "@/server/db/schema";
 import {
   EMI_CATEGORIES,
   EMI_TYPES,
@@ -77,6 +77,12 @@ const expenseFields = {
   title,
   category: oneOf(EXPENSE_CATEGORIES, "Pick a category"),
   paymentMethod: oneOf(PAYMENT_METHODS, "Pick a payment method"),
+  /** Optional: need or want. Blank means not labelled. */
+  spendLabel: z
+    .union([z.enum(SPEND_LABELS), z.literal("")])
+    .nullable()
+    .optional()
+    .transform((v) => (v ? v : null)),
   amount,
   notes,
 };
@@ -152,17 +158,34 @@ export const SORT_LABELS: Record<EntrySort, string> = {
   lowest: "Lowest amount",
 };
 
-/** Reads `?sort=`, `?cat=` and `?q=` for an entries tab, ignoring anything invalid. */
+export type ParsedEntryFilters = {
+  sort: EntrySort;
+  category: string | null;
+  q: string;
+  /** Expenses only: need or want. */
+  label: SpendLabel | null;
+  /** One day inside the period (the journal links here), or null for the whole period. */
+  day: string | null;
+};
+
+/**
+ * Reads `?sort=`, `?cat=`, `?q=`, `?label=` and `?day=` for an entries tab, ignoring anything
+ * invalid.
+ */
 export function parseEntryFilters(
   params: Record<string, string | string[] | undefined>,
   categories: readonly string[],
-): { sort: EntrySort; category: string | null; q: string } {
+): ParsedEntryFilters {
   const one = (key: string) => (Array.isArray(params[key]) ? params[key][0] : params[key]);
   const sort = one("sort");
   const cat = one("cat");
+  const label = one("label");
+  const day = one("day");
   return {
     sort: (SORTS as readonly string[]).includes(sort ?? "") ? (sort as EntrySort) : "newest",
     category: cat && categories.includes(cat) ? cat : null,
     q: (one("q") ?? "").trim().slice(0, 100),
+    label: (SPEND_LABELS as readonly string[]).includes(label ?? "") ? (label as SpendLabel) : null,
+    day: day && isIsoDate(day) ? day : null,
   };
 }

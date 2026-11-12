@@ -1,5 +1,6 @@
 export const APP_NAME = "Ledge";
-export const APP_DESCRIPTION = "A calm, self-hosted place for your tasks and money.";
+export const APP_DESCRIPTION =
+  "One calm book for the things you keep track of: tasks and money today, more of everyday life over time.";
 
 /** Minimum password length (CLAUDE.md §5). */
 export const PASSWORD_MIN_LENGTH = 10;

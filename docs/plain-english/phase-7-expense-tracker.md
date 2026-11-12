@@ -37,6 +37,22 @@ Below the tiles:
 
 **Check against your sheet:** the demo data for the current month is set up to match your screenshot (₹28,000.00 in, ₹10,142.00 of EMIs, ₹4,600.00 of expenses, ₹13,258.00 net savings, 47.4% savings rate), and I looked at the real page to confirm those numbers appear. They do.
 
+## Downloading a report as a PDF (added 2026-11-12)
+
+A PDF is a document file that looks the same on every computer and phone and prints well. Two parts of the Summary can now be saved as one:
+
+- **Expense breakdown by category**: how much you spent in each category, for one month or a whole year.
+- **Annual cash flow trend**: for each month of a year, what came in, what went to EMIs and loans, what you spent, what you invested and what you saved, with a total for the year and your savings rate.
+
+There are two ways to get one:
+
+1. **From the Summary.** Each of those two cards has a small round download button at its top right. It downloads the report for the period you are looking at.
+2. **From Settings.** The new "Expense Tracker" card lets you pick either report and any month or year (with the same month picker as the Summary), then press "Download PDF".
+
+If nothing was recorded in that period, you still get the whole sheet, with every category or month and zeros, so you can see it is complete rather than broken.
+
+The file looks like a page from an account book: the Ledge logo, the report name, the period, a table, and the bottom-line total underlined twice. Two honest limits: the amounts have no rupee sign (the subtitle says "amounts in INR" instead), because the lettering built into every PDF reader has no rupee sign; and the app makes these files itself, without an extra add-on, because the tool that installs add-ons is blocked on this computer. The tables are simple enough that this costs nothing in quality.
+
 ## The four entry tabs
 
 Each of Income, EMIs & loans, Expenses and Investments shows the entries of the chosen period. They were redesigned on 2026-11-11 in the same "dashboard" look as the Summary (white rounded cards, grey wells, one orange), because the first version felt cluttered: too many boxes, buttons on every row, and too many places to look. Now each tab has only three things:
@@ -62,7 +78,7 @@ The fields, as you described them:
   - A **Mark paid** button on each row sets it to paid today in one click.
   - A scheduled EMI whose due date has passed shows an **Overdue** label (words and an icon). Its saved status is not changed, so you stay in control of it.
   - When adding an EMI you can choose **"Repeat monthly for N more months"** (0 to 60). It then creates the whole series for you in one go, all as Scheduled. If a month has no 31st, it uses that month's last day, and the later months go back to the 31st.
-- **Expenses:** date, item, category, payment method (UPI, cash, debit card, credit card, net banking, other), amount, notes. This tab also shows how much went through each payment method.
+- **Expenses:** date, item, category, payment method (UPI, cash, debit card, credit card, net banking, other), amount, notes. This tab also shows how much went through each payment method. Since 2026-11-12 an expense can also be marked **Need** or **Want** (optional; tap it again to clear), the tab can show only needs or only wants, and any tab can show a single day (the journal links there). Details in [phase-11-journal.md](phase-11-journal.md).
 - **Investments:** you left these fields to me, so: date, investment name, type (mutual fund, stocks, fixed deposit, recurring deposit, retirement such as PPF, EPF or NPS, gold, crypto, real estate, other), platform (the broker or app), amount, notes. This tab shows the total by type.
 
 The **categories** are fixed lists. The nine expense categories are the ones from your sheet (Housing & Utilities, Food & Groceries, Transportation, Healthcare, Dining & Entertainment, Shopping, Personal Care, Subscriptions & Tech, Miscellaneous). I chose the lists for income, EMIs and investments. Letting you add your own categories is parked in `docs/ideas.md`.

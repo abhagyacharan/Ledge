@@ -330,6 +330,7 @@ async function main() {
     title: "Metro pass and cabs",
     category: "Transportation",
     paymentMethod: "UPI",
+    spendLabel: "need",
     amountMinor: 400_000,
   });
   add({
@@ -338,6 +339,7 @@ async function main() {
     title: "Netflix and iCloud",
     category: "Subscriptions & Tech",
     paymentMethod: "Credit card",
+    spendLabel: "want",
     amountMinor: 60_000,
     notes: "Monthly plans",
   });
@@ -395,6 +397,7 @@ async function main() {
       title: "Groceries",
       category: "Food & Groceries",
       paymentMethod: "UPI",
+      spendLabel: "need",
       amountMinor: 600_000 + m * 15_000,
     });
     add({
@@ -411,6 +414,7 @@ async function main() {
       title: "Dinner out",
       category: "Dining & Entertainment",
       paymentMethod: "Credit card",
+      spendLabel: "want",
       amountMinor: 180_000 + (m % 4) * 20_000,
     });
     add({

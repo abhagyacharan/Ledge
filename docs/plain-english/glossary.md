@@ -46,6 +46,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Cookie.** A small piece of data a website stores in your browser, like a wristband that proves you are signed in.
 
+**Day facts (journal).** The short lines at the top of a journal page ("4 done", "No-spend day"), worked out by Ledge from that day's tasks and money. They are plain counts and sums, not AI.
+
 **Demo user.** The made-up account created by the seed command so every screen has something to show.
 
 **Dependency.** An outside tool or library the app relies on instead of writing it from scratch.
@@ -71,6 +73,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Environment variable.** A setting kept outside the code (for example a secret or an address), so the same code can run in different places. Stored in the `.env` file.
 
 **ESLint.** A tool that scans code for risky or sloppy patterns.
+
+**Favicon.** The tiny icon in a browser tab, next to the page title. Ledge's turns light when the browser is in dark mode.
 
 **Filter.** Hiding tasks that do not match your choice, for example only tasks with the tag "bills".
 
@@ -112,17 +116,25 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Invested.** Money you put into something that should grow (a fund, shares, a deposit, gold). Ledge counts it separately from spending, so it does not reduce your savings rate.
 
+**Journal.** The private diary part of Ledge: one page per day, with that day's facts at the top, an optional mood and your own words. Added in Phase 11.
+
 **Keyboard shortcut.** A key or key combination that does something without the mouse, such as `q` for quick add.
 
 **Lint.** Running ESLint.
 
+**Lockup.** A logo's symbol and its name placed together in fixed positions, as one picture.
+
 **Localhost.** The name for "this very computer". `http://localhost:3000` is the app running on your own computer.
+
+**Maskable icon.** An app icon drawn as a plain square with the picture well inside it, because phones cut their own shape (a circle, a rounded square) out of it.
 
 **Migration.** A small numbered file describing one change to the database's structure. Running all of them in order builds the database from nothing.
 
 **Module list (registry).** The single file listing all modules, from which the side menu is built.
 
 **Module.** One self-contained part of the app, such as tasks or expenses.
+
+**Need or want.** An optional label on an expense: was it something you needed, or something you wanted? The journal uses it to show how much of a day went on wants.
 
 **Net savings.** Money in, minus EMIs and loans, minus living expenses, for the period you are looking at.
 
@@ -137,6 +149,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Paise.** One hundredth of a rupee. Ledge stores every amount as a whole number of paise (₹28,000.00 is 2800000) so money never suffers the tiny rounding mistakes that decimals cause.
 
 **Password minimum.** The shortest password allowed. In Ledge it is 10 characters.
+
+**PDF.** A document file that looks the same on every computer and phone and prints well. Ledge can save two expense reports as PDFs.
 
 **Period picker.** The arrows and menus under the expense tabs that choose which month, or which whole year, you are looking at. The choice is kept in the web address.
 
@@ -204,7 +218,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Tag.** A label you could stick on tasks, such as "bills". Removed on 2026-11-11; lists and priorities do the grouping now.
 
-**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Expense Tracker, Tasks, More), like a native app.
+**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Tasks, Expenses, Journal, Search, More), like a native app.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 

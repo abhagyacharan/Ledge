@@ -1,6 +1,6 @@
 import { loadMoneyContext } from "../context";
 import { CATEGORIES_BY_KIND, KIND_LABELS } from "../categories";
-import { parsePeriod, periodLabel, periodRange, periodToParams } from "../periods";
+import { dateInPeriod, parsePeriod, periodLabel, periodRange, periodToParams } from "../periods";
 import { parseEntryFilters } from "../schema";
 import { emiProgress } from "../summary";
 import {
@@ -29,12 +29,19 @@ export async function EntriesPage({
   const [money, params] = await Promise.all([loadMoneyContext(userId), searchParams]);
   const period = parsePeriod(params, money.defaultPeriod);
   const range = periodRange(period);
-  const filters = parseEntryFilters(params, CATEGORIES_BY_KIND[kind]);
+  const parsed = parseEntryFilters(params, CATEGORIES_BY_KIND[kind]);
+  // A day only counts inside the chosen period, and labels only on expenses.
+  const filters = {
+    ...parsed,
+    label: kind === "expense" ? parsed.label : null,
+    day: parsed.day && dateInPeriod(parsed.day, period) ? parsed.day : null,
+  };
   const everything = { sort: "newest" as const, category: null, q: "" };
-  const filtered = Boolean(filters.category || filters.q);
+  const filtered = Boolean(filters.category || filters.q || filters.label || filters.day);
+  const listRange = filters.day ? { from: filters.day, to: filters.day } : range;
 
   const [entries, all, breakdown] = await Promise.all([
-    listEntries(userId, kind, range, filters),
+    listEntries(userId, kind, listRange, filters),
     filtered ? listEntries(userId, kind, range, everything) : null,
     loadBreakdown(userId, kind, range),
   ]);
@@ -54,6 +61,7 @@ export async function EntriesPage({
       periodTotalMinor={inPeriod.reduce((sum, e) => sum + e.amountMinor, 0)}
       periodCount={inPeriod.length}
       categoriesUsed={[...new Set(inPeriod.map((e) => e.category))]}
+      labelsUsed={inPeriod.some((e) => e.spendLabel !== null)}
     />
   );
 }

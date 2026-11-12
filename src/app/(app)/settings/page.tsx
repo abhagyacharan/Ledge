@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shell/page-header";
 import { SignOutButton } from "@/components/shell/sign-out-button";
+import { ReportDownloads } from "@/modules/expenses/components/report-downloads";
+import { loadMoneyContext } from "@/modules/expenses/context";
 import { ArchivedLists } from "@/modules/todos/components/archived-lists";
 import { TaskPanel } from "@/modules/todos/components/task-panel";
 import { listArchivedLists } from "@/server/data/lists";
@@ -8,10 +10,13 @@ import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Settings" };
 
-/** Your account and your archived lists, in the same cards as the rest of the app. */
+/** Your account, Expense Tracker reports and your archived lists, in the app's usual cards. */
 export default async function SettingsPage() {
   const { userId, user } = await requireUser();
-  const archived = await listArchivedLists(userId);
+  const [archived, money] = await Promise.all([
+    listArchivedLists(userId),
+    loadMoneyContext(userId),
+  ]);
 
   return (
     <div className="dash">
@@ -31,6 +36,14 @@ export default async function SettingsPage() {
           <div className="mt-4">
             <SignOutButton variant="outline" />
           </div>
+        </TaskPanel>
+
+        <TaskPanel
+          id="expense-reports"
+          title="Expense Tracker"
+          subtitle="Download a report as a PDF, for any month or year."
+        >
+          <ReportDownloads thisMonth={money.defaultPeriod} />
         </TaskPanel>
 
         <TaskPanel

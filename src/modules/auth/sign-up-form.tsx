@@ -35,7 +35,7 @@ export function SignUpForm() {
       else setFormError("We couldn't create that account. Check your details and try again.");
       return;
     }
-    router.replace("/tasks");
+    router.replace("/");
     router.refresh();
   }
 

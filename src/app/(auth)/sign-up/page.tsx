@@ -8,7 +8,7 @@ import { getSession } from "@/server/session";
 export const metadata: Metadata = { title: "Create account" };
 
 export default async function SignUpPage() {
-  if (await getSession()) redirect("/tasks");
+  if (await getSession()) redirect("/");
 
   if (!isSignupAllowed()) {
     return (

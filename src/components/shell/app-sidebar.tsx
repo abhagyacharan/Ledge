@@ -60,6 +60,30 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
 
 function ModuleSection({ module: m, pathname }: { module: AppModule; pathname: string }) {
   const inside = m.owns(pathname);
+  // A module with no views of its own (Journal) is one plain link.
+  if (m.nav.length === 0) {
+    return (
+      <div className="py-1">
+        <NavRow href={m.route} label={m.label} icon={m.icon} strong current={inside} />
+      </div>
+    );
+  }
+  return <CollapsibleSection module={m} pathname={pathname} inside={inside} />;
+}
+
+/**
+ * A module with views: the whole header row is one button that shows or hides them (the views
+ * themselves are the links). Opens by itself when you arrive on one of its pages.
+ */
+function CollapsibleSection({
+  module: m,
+  pathname,
+  inside,
+}: {
+  module: AppModule;
+  pathname: string;
+  inside: boolean;
+}) {
   // Open where you are; the other section stays tidy until you open it.
   const [open, setOpen] = useState(inside);
   const [seenInside, setSeenInside] = useState(inside);
@@ -71,27 +95,29 @@ function ModuleSection({ module: m, pathname }: { module: AppModule; pathname: s
 
   return (
     <div className="py-1">
-      <div className="flex items-center gap-1">
-        <div className="min-w-0 flex-1">
-          <NavRow href={m.route} label={m.label} icon={m.icon} strong current={inside && !open} />
-        </div>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={panelId}
-          aria-label={`${open ? "Hide" : "Show"} ${m.label} pages`}
-          onClick={() => setOpen((o) => !o)}
-          className="grid size-11 shrink-0 place-items-center rounded-xl text-muted-foreground outline-none transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 md:size-9"
-        >
-          <ChevronRight
-            aria-hidden
-            className={cn(
-              "size-4 transition-transform duration-200 ease-snap",
-              open && "rotate-90",
-            )}
-          />
-        </button>
-      </div>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "flex h-11 w-full min-w-0 items-center gap-2.5 rounded-xl px-2.5 text-left text-sm font-medium outline-none transition-[background-color,color,box-shadow] duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9",
+          // Closed while you are inside it: the header carries the "you are here" mark instead.
+          inside && !open
+            ? "bg-card text-foreground shadow-(--dash-lift)"
+            : "text-foreground hover:bg-sidebar-accent",
+        )}
+      >
+        <m.icon aria-hidden className="size-4 shrink-0" strokeWidth={1.85} />
+        <span className="min-w-0 flex-1 truncate">{m.label}</span>
+        <ChevronRight
+          aria-hidden
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-snap",
+            open && "rotate-90",
+          )}
+        />
+      </button>
       {open ? (
         <div
           id={panelId}

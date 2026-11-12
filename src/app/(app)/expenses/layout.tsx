@@ -1,3 +1,4 @@
+import { SearchButton } from "@/components/shell/search-button";
 import { ExpensesTabs, PeriodPicker } from "@/modules/expenses/components/expenses-nav";
 import { ExpensesPendingProvider, PendingRegion } from "@/modules/expenses/components/pending";
 import { TransactionLauncher } from "@/modules/expenses/components/transaction-launcher";
@@ -17,7 +18,10 @@ export default async function ExpensesLayout({ children }: LayoutProps<"/expense
     <ExpensesPendingProvider>
       <TransactionLauncher currency={currency} today={today}>
         <header className="dash mb-6 flex flex-col gap-4 md:mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Expenses</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="text-3xl font-semibold tracking-tight">Expenses</h1>
+            <SearchButton />
+          </div>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <ExpensesTabs />
             <PeriodPicker fallback={defaultPeriod} />

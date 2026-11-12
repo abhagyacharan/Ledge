@@ -72,8 +72,9 @@ export default async function TasksOverviewPage({ searchParams }: PageProps<"/ta
         id="glance"
         title={`Your tasks on ${formatLongDate(ctx.today, ctx.locale)}`}
         hideTitle
-        // Phones: one card of rows. Wider: no outer box, each figure is its own card.
-        className="max-sm:pt-1.5 max-sm:pb-4 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:p-0"
+        // Phones: one card of four equal rows, edge to edge. Wider: no outer box, each figure is
+        // its own card.
+        className="max-sm:overflow-hidden max-sm:p-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:p-0"
       >
         <dl className="flex flex-col sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           <StatTile

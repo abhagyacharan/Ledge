@@ -107,6 +107,22 @@ export function getCompletedTasks(userId: string, limit = 200): Promise<ViewTask
   });
 }
 
+/** Tasks finished on one day (a floating date, read in `timeZone`), newest first. */
+export function getCompletedTasksOn(
+  userId: string,
+  date: string,
+  timeZone: string,
+): Promise<ViewTask[]> {
+  return fetchViewTasks(
+    userId,
+    and(
+      eq(tasks.status, "done"),
+      sql`(${tasks.completedAt} at time zone ${timeZone})::date = ${date}`,
+    ),
+    { order: desc(tasks.completedAt) },
+  );
+}
+
 export type { Task };
 
 export type ListProgress = { listId: string; open: number; done: number };

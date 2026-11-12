@@ -49,14 +49,15 @@ export function SummaryStats({
   const overspent = totals.netSavings < 0;
   const delta = (current: number, before: number | undefined) =>
     previous === null || before === undefined ? null : changePercent(current, before);
-  // Phone: one column of rows. Wider: a 2 by 2 grid whose gap equals the card padding.
+  // Phone: one column of rows. Wider: a 2 by 2 grid of separate cards, spaced like the page.
   return (
-    <dl className="flex flex-1 flex-col sm:grid sm:grid-cols-2 sm:grid-rows-2 sm:gap-5 md:gap-6">
+    <dl className="flex flex-1 flex-col sm:grid sm:grid-cols-2 sm:grid-rows-2 sm:gap-4">
       <StatTile
         label="Total inflows"
         value={money(totals.income, fmt)}
         figure={<MoneyFlow minor={totals.income} fmt={fmt} />}
         icon={Wallet}
+        variant="card"
       >
         <DeltaPill
           change={delta(totals.income, previous?.income)}
@@ -71,6 +72,7 @@ export function SummaryStats({
         value={money(totals.emi, fmt)}
         figure={<MoneyFlow minor={totals.emi} fmt={fmt} />}
         icon={Landmark}
+        variant="card"
       >
         <DeltaPill change={delta(totals.emi, previous?.emi)} goodWhen="down" locale={fmt.locale} />
         {totals.emi > 0 ? (
@@ -100,6 +102,7 @@ export function SummaryStats({
         value={money(totals.expense, fmt)}
         figure={<MoneyFlow minor={totals.expense} fmt={fmt} />}
         icon={ShoppingBag}
+        variant="card"
       >
         <DeltaPill
           change={delta(totals.expense, previous?.expense)}
@@ -114,6 +117,7 @@ export function SummaryStats({
         value={money(totals.netSavings, fmt)}
         figure={<MoneyFlow minor={totals.netSavings} fmt={fmt} />}
         icon={PiggyBank}
+        variant="card"
         highlight
       >
         <DeltaPill

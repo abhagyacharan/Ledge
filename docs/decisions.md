@@ -421,6 +421,87 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Sign-in and sign-up:** the cover panel is pinned to the dark green-black in both themes; the form side is a grainy green-and-orange gradient generated afresh on the server for every visit (`randomGradient`: five blobs, three orange and two green, over a random-angle wash, blurred, with an SVG noise layer), with the form on a solid card. Phones get the gradient behind the card and the brand inside it. The feTurbulence grain is a deliberate exception to the impeccable skill's ban, because O asked for exactly this.
 - **Reason:** O's final pre-deployment requests in chat.
 
+## 2026-11-12: Logo concepts and project-level agent skills
+
+- **Logo:** four concepts drawn from the brief in `docs/brand/logo-prompt.md` (A shelf, B bottom line, C foothold, D set square), as SVGs in `public/brand/` and side by side in `docs/brand/concepts.html`. All sit on a 32-unit grid with a 24-unit L, the same height as the wordmark's capitals. The wordmark is the app's Bricolage Grotesque at weight 600 and optical size 96, outlined to paths so no font is needed. Claude recommended A.
+- **Chosen: B, the bottom line** (O, 2026-11-12). Every edge is on a 4-unit step of the 32 grid (one stroke = 4 units), so at 16px and 32px no pixel is blurred (checked by rendering to a canvas). Final files in `public/brand/` (icons, lockups, a favicon that switches to light in dark mode, a rounded and a maskable 512 app icon); the sheet is `docs/brand/logo.html` and the rules are `docs/brand/usage.md`. The other concepts' SVGs were removed from `public/` and survive only inline in `concepts.html`. Nothing in the app uses B yet: `LedgeMark` still draws the old placeholder, and no PNGs exist.
+- **Agent skills:** the SVG Logo Designer skill was installed at O's request with `npx skills add`, into `.agents/skills/` (linked from `.claude/skills/`, tracked in `skills-lock.json`). These are third-party files kept exactly as published, so Prettier ignores them.
+
+## 2026-11-12: Logo B in the app
+
+- **Brand:** the sidebar and sign-in logo is now the exact lockup drawn inline (outlined wordmark, not live text), so it matches the logo files; sizes are chosen so strokes are whole pixels (3px and 4px). Removed the old stroke-drawn mark.
+- **Icons:** new `src/app/icon.svg` (theme-aware), `favicon.ico` (dark tile, 16/32/48) and `apple-icon.png` (180, full bleed). The PNGs are rasterised from the rectangles by a small script, not by a design tool. `apple-icon.png` added to the proxy's public list so signed-out visitors and iOS can fetch it.
+- **Not added:** a web app manifest (it would change how the app installs on Android; ask O first).
+- **Reason:** O said "Yes, switch it".
+
+## 2026-11-12: Sidebar sections are one toggle button; Blog placeholder
+
+- **Sidebar:** each module's header (Expense Tracker, Tasks) was a link to the module plus a separate chevron button, and clicks often hit the wrong one. Now the whole row is one button that shows or hides the module's pages; it never navigates. The pages under it are the links (Summary and Overview are the homes). It still opens itself when you arrive inside the module.
+- **Blog placeholder:** a third module, `blog` (route `/blog`, Newspaper icon, no views), shows in the sidebar as a plain link, in the phone tab bar between Tasks and Search, and in the palette. The page only says "Coming soon". The blog itself stays a v0.1 non-goal and is parked in `docs/ideas.md`; this is O's explicit request in chat.
+- **Phone tab bar:** with five tabs (Expenses, Tasks, Blog, Search, More) the full "Expense Tracker" label wrapped, so modules may set a `shortLabel` for the tab bar; the Expense Tracker's is "Expenses".
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: Orange-rule logo everywhere; logo on phones; Search in the phone tab bar
+
+- **Orange rule everywhere:** the logo's second rule is always orange (`fill-dash-accent`) in `Brand`, `LedgeMark`, the new `BrandTile` and on sign-in, and in `icon.svg` (`#f26b21`, `#f58445` in dark mode) and `favicon.ico`. This replaces "one colour by default" in `docs/brand/usage.md`. The logo's orange is part of the logo, so it does not count against the one-orange-tile rule. Always-dark surfaces set `--dash-accent` to `#f58445`.
+- **Phone logo row:** `AppMain` starts every page on phones with the lockup, as a 44px link to home. Chosen over putting it in the old Search corner because only the Tasks and Expenses headers have that corner; this way the logo is on every page.
+- **Search on phones:** a bottom tab (the bar is Expenses, Tasks, Blog, Search, More), so the header's round `SearchButton` is tablet and up only, and Search left the More sheet.
+- **Phone sign-in:** the logo moved out of the card. Above it sit `BrandTile` (the app icon at 72px; a rounded square rather than a circle, to match the home-screen icon) and `Wordmark`.
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: Pointer cursor everywhere; sidebar headers open their first view; quick add tidy-up
+
+- **Pointer cursor:** Tailwind 4 resets buttons to `cursor: default`, so many controls (sign-in buttons, the + button, the dialog close, theme toggle, Sign out, View, the sidebar headers, period arrows, entry rows, sort) showed an arrow. One rule in the `globals.css` base layer gives every enabled button, ARIA button/menu/option/tab/checkbox/switch/radio role, select, summary and checkbox/radio label `cursor: pointer`; disabled controls keep the arrow and a `cursor-*` class still wins (drag grips keep `grab`). The shadcn menu, select and command items had `cursor-default` hard-coded; changed to `cursor-pointer`. Chosen over adding the class to each component, so new controls get it too.
+- **Sidebar headers (tried, then reverted the same day):** opening a closed section also went to its first view (Summary, Overview). O tried it and found it felt wrong, so the header is back to a plain show/hide toggle that never changes the page (the entry above stands).
+- **Quick add:** the title placeholder is "What needs doing?" instead of the parser example. The priority segmented control has a sliding raised pill (Motion `layoutId`, spring 0.3s, no bounce; instant with reduced motion), the same pattern as `PillTabs`.
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: What Ledge is, in its own words (sign-in cover)
+
+- **Positioning:** "The everyday ledger: one book for the things you keep track of." Tasks and money today; a blog, journal, reminders and health later. Replaces "Private and self-hosted" and "Ledge runs on your own server", because O means to let other people use it on his server one day, and for them it would not be self-hosted.
+- **Cover panel:** logo, kicker, headline, one line on the name, then a "Contents" page (numbered modules with Ready, Soon or Later) in place of the decorative ruled rows. Real text, so it is a labelled list. `APP_DESCRIPTION` (the page description) and `PRODUCT.md` match.
+- **Not decided:** opening Ledge to other people (§16 Q3) and the later modules are parked in `docs/ideas.md`; the cover only names them as "Later".
+- **Reason:** O's request in chat (2026-11-12).
+
+## 2026-11-12: Phone sign-in logo side by side
+
+- The tile and the wordmark above the phone sign-in card now sit in a row instead of stacked: a 48px tile (4px strokes, still whole pixels) and the wordmark at 1px per unit, so its capitals are as tall as the mark inside the tile.
+- **Reason:** O's request in chat (2026-11-12).
+
+## 2026-11-12: No logo row on phone pages; Lists menu in the phone Tasks header
+
+- **Logo row removed:** the lockup at the top of every phone page (added earlier today) took space and did not look good to O. Phone app pages start with the title again; the logo stays in the sidebar, sign-in, favicon and app icons.
+- **Lists on phones:** moved out of the More sheet (which is now Trash, Settings and the account) into a "Lists" menu at the top right of every Tasks page (`ListsMenu`, phones only; Radix dropdown in the Log a transaction card style, with "New list"). While it is open the page behind is dimmed and blurred. This brings back a phone-only version of the Lists button removed on 2026-11-11; tablets and desktops keep the lists in the sidebar and the round Search button.
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: PDF reports, figure rows and the Summary tiles
+
+- **PDF reports:** the expense breakdown (month or year) and the annual cash flow trend (year) download as PDFs from their Summary cards and from a new Expense Tracker card in Settings. Empty periods give a full sheet of zeros.
+- **No PDF library:** the files are written by a small built-in writer (`src/lib/pdf.ts`: text in the standard Helvetica faces, rectangles and lines, A4, multi-page tables). Reasons: pnpm cannot run on this machine at all (Windows Device Guard blocks its native binary, including pnpm 12 from npm), so a dependency could not be added to the lockfile; and two simple tables do not need a layout engine. Trade-off: the standard fonts have no rupee sign or non-Latin letters, so figures carry no symbol, the subtitle names the currency, and other characters are replaced. If richer reports are wanted later, `@react-pdf/renderer` is the candidate (needs O's OK and a working pnpm).
+- **Period control:** the Summary's month picker was split into a controlled `PeriodControl` (with a year-only mode) so Settings uses the same control; `PeriodPicker` keeps the URL wiring. The arrows now stop at the year limits (2000 to 2100).
+- **Phone figure rows:** on the Expense Summary and the Tasks overview all four rows are identical and evenly spaced; the highlighted one (Net savings last, Due today first) is filled orange edge to edge instead of being a smaller rounded band. The extra space under the last row is gone.
+- **Desktop Summary tiles:** the four figures are separate cards in a 2 by 2 grid, with no outer box, like the Tasks overview.
+- **Sign-in contents:** Blog removed; Journal is "Soon", then Reminders and Health "Later" (O is replacing the blog with a journal).
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: Journal (Phase 11), Need or want labels, and a day filter for expenses
+
+- **Scope:** O asked for a journal in place of the Blog placeholder and approved the design in chat (two sketches, then "Seems good"). This adds a module to v0.1 (CLAUDE.md §1) as Phase 11, built ahead of the remaining Phase 10 items. The full spec is in `docs/journal-spec.md`.
+- **Shape:** one page per day (editable all day, any past day, never a future one), plain text with autosave, an optional five-step mood, and a day picker built like the Expenses period pill (with a dot on days that have a page). A page with no words and no mood is deleted, not kept empty.
+- **Facts strip:** tasks done, money spent, slipped tasks and, only on days that had any, money in and saved. They are worked out by pure code (`day-facts.ts`) from one data function, and each links to the same day in Tasks or Expenses. O asked for kind wording instead of bare zeros ("No-spend day", "All caught up"). The money card is hidden on days with nothing, because a daily "you didn't invest" would nag. "Your usual" spending is the 30-day daily average, and within 25% either way counts as "about".
+- **No AI yet:** O chose plain facts for now. The AI reflection card, the weekly look-back and the other later ideas are parked in `docs/ideas.md`; AI features stay a v0.1 non-goal until O picks a provider.
+- **Need or want:** an optional label on expenses (O chose Need · Want), stored in `finance_entries.spend_label`, which a CHECK limits to expenses. It shows as clearable chips in the sheet, in the row details, and as filter chips on the Expenses tab.
+- **Day filter:** `?day=` on the entries tabs and on Completed, so the journal's cards can open one day. It is a filter on top of the period, not a new period type, so the period picker and the reports are unchanged.
+- **Routes:** `/blog` is gone. `/journal` replaces it in the registry, the sidebar, the phone tab bar and the palette, and the sign-in contents list Journal as Ready.
+- **Small fixes found on the way:** `scrollbar-gutter: stable` on `html`, so pages that grow or shrink (folding the facts) do not shift sideways. The journal's limits live in `modules/journal/limits.ts`, imported relatively by the database schema, because drizzle-kit does not read the `@/` alias.
+- **Reason:** O's requests in chat (2026-11-12).
+
+## 2026-11-12: Tasks first; a welcome page after sign-in
+
+- **Order:** the module registry lists Tasks, then Expense Tracker, then Journal, so the sidebar, the phone tab bar and the command palette all follow that order.
+- **Welcome page:** `/` used to redirect to `/tasks`; it is now a page in the app shell where sign-in and sign-up land. It greets you and offers two buttons: "Add a task" (Tasks overview with quick add open) and "Log a transaction" (Expense Summary with the Log a transaction menu open). The buttons pass `?add=task` or `?add=transaction`; a small hook (`useOpenOnArrival`) opens the thing and then removes `add` from the address, so a reload or Back does not open it again. A query parameter was chosen over a stored flag so the link works in a new tab too.
+- **Reason:** O's requests in chat (2026-11-12).
+
 ## Pending decisions (log here when made)
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.

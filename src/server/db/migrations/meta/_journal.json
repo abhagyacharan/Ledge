@@ -64,6 +64,13 @@
       "when": 1794402890265,
       "tag": "0008_list_icons_monochrome",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794491584687,
+      "tag": "0009_journal_and_spend_labels",
+      "breakpoints": true
     }
   ]
 }

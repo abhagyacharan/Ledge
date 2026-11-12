@@ -6,6 +6,7 @@ import {
   Landmark,
   ListChecks,
   ListTodo,
+  NotebookPen,
   ReceiptIndianRupee,
   Sun,
   TrendingUp,
@@ -30,11 +31,16 @@ export type NavItem = {
 export type AppModule = {
   id: string;
   label: string;
+  /** A shorter name for the phone tab bar, where five tabs share the width. */
+  shortLabel?: string;
   icon: LucideIcon;
   /** Where the module's own entry (and the phone tab) goes. */
   route: string;
   enabled: boolean;
-  /** The module's views, shown under it in the sidebar and as the tabs on its pages. */
+  /**
+   * The module's views, shown under it in the sidebar and as the tabs on its pages. Empty for a
+   * single-page module, which the sidebar shows as one plain link.
+   */
   nav: NavItem[];
   /** Whether a path belongs to this module (marks its sidebar entry and phone tab as current). */
   owns: (pathname: string) => boolean;
@@ -47,21 +53,6 @@ export type AppModule = {
 const TASK_ROUTES = ["/tasks", "/today", "/upcoming", "/all", "/completed", "/lists"];
 
 export const modules: AppModule[] = [
-  {
-    id: "expenses",
-    label: "Expense Tracker",
-    icon: Wallet,
-    route: "/expenses",
-    enabled: true,
-    nav: [
-      { label: "Summary", route: "/expenses", icon: ChartPie },
-      { label: "Income", route: "/expenses/income", icon: Wallet },
-      { label: "EMIs & loans", route: "/expenses/emis", icon: Landmark },
-      { label: "Expenses", route: "/expenses/spending", icon: ReceiptIndianRupee },
-      { label: "Investments", route: "/expenses/investments", icon: TrendingUp },
-    ],
-    owns: (path) => path === "/expenses" || path.startsWith("/expenses/"),
-  },
   {
     id: "todos",
     label: "Tasks",
@@ -78,6 +69,33 @@ export const modules: AppModule[] = [
     owns: (path) => TASK_ROUTES.some((r) => path === r || path.startsWith(`${r}/`)),
     SidebarSection: TodoSidebarSection,
     Global: TodoGlobal,
+  },
+  {
+    id: "expenses",
+    label: "Expense Tracker",
+    shortLabel: "Expenses",
+    icon: Wallet,
+    route: "/expenses",
+    enabled: true,
+    nav: [
+      { label: "Summary", route: "/expenses", icon: ChartPie },
+      { label: "Income", route: "/expenses/income", icon: Wallet },
+      { label: "EMIs & loans", route: "/expenses/emis", icon: Landmark },
+      { label: "Expenses", route: "/expenses/spending", icon: ReceiptIndianRupee },
+      { label: "Investments", route: "/expenses/investments", icon: TrendingUp },
+    ],
+    owns: (path) => path === "/expenses" || path.startsWith("/expenses/"),
+  },
+  {
+    // One page per day with the day's facts (docs/journal-spec.md). It took the Blog
+    // placeholder's place (O, 2026-11-12); posting to a blog is parked in docs/ideas.md.
+    id: "journal",
+    label: "Journal",
+    icon: NotebookPen,
+    route: "/journal",
+    enabled: true,
+    nav: [],
+    owns: (path) => path === "/journal" || path.startsWith("/journal/"),
   },
 ];
 

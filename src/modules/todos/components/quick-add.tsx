@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
+import { motion, useReducedMotion, type Transition } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useOpenOnArrival } from "@/hooks/use-open-on-arrival";
 import { timeNowIn, todayIn } from "@/lib/dates";
 import type { RecurrenceMode } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
@@ -38,6 +40,9 @@ import { ListGlyph } from "../list-icons";
 import { run } from "./run-action";
 import { useTodos } from "./todos-provider";
 import { PRIORITY_LABELS, type DateContext } from "./types";
+
+/** How the priority pill glides between options: quick, no bounce (docs/design.md §9). */
+const PILL_SPRING: Transition = { type: "spring", duration: 0.3, bounce: 0 };
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -70,6 +75,9 @@ export function QuickAdd() {
     setOpenCount((n) => n + 1);
     setOpen(true);
   }
+
+  // The welcome page's "Add a task" button arrives with ?add=task.
+  useOpenOnArrival("task", () => show());
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -149,6 +157,7 @@ function QuickAddForm({
     prefill.dueDate ? { dueDate: prefill.dueDate, dueTime: null } : null,
   );
   const [manualPriority, setManualPriority] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
   const [notes, setNotes] = useState("");
   const [repeatRule, setRepeatRule] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState<RecurrenceMode>("fixed");
@@ -237,7 +246,7 @@ function QuickAddForm({
           autoFocus
           disabled={pending}
           enterKeyHint="done"
-          placeholder="pay rent tomorrow 5pm #home p1"
+          placeholder="What needs doing?"
           className="h-14 w-full rounded-2xl bg-dash-well px-4 text-lg text-dash-ink outline-none transition-shadow duration-150 placeholder:text-dash-ink-soft/70 focus-visible:ring-3 focus-visible:ring-ring/40"
         />
         {parsed.tokens.length > 0 ? (
@@ -304,12 +313,19 @@ function QuickAddForm({
             <label
               key={name}
               className={cn(
-                "relative inline-flex h-11 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150 select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-9",
-                priority === i
-                  ? "bg-dash-raised text-dash-ink shadow-(--dash-lift)"
-                  : "text-dash-ink-soft hover:text-dash-ink",
+                "relative z-0 inline-flex h-11 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium transition-colors duration-150 select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-9",
+                priority === i ? "text-dash-ink" : "text-dash-ink-soft hover:text-dash-ink",
               )}
             >
+              {/* The raised pill slides to the chosen priority instead of jumping (O, 2026-11-12). */}
+              {priority === i ? (
+                <motion.span
+                  aria-hidden
+                  layoutId="quick-add-priority-pill"
+                  transition={reduceMotion ? { duration: 0 } : PILL_SPRING}
+                  className="absolute inset-0 -z-10 rounded-full bg-dash-raised shadow-(--dash-lift)"
+                />
+              ) : null}
               <input
                 type="radio"
                 name="quick-add-priority"

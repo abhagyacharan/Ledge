@@ -8,6 +8,7 @@ import {
   Pencil,
   Search,
   StickyNote,
+  CalendarDays,
   Trash2,
   X,
 } from "lucide-react";
@@ -43,7 +44,8 @@ import {
   presentCategories,
   type EmiState,
 } from "../entries-logic";
-import { SORT_LABELS, SORTS, type EntrySort } from "../schema";
+import { SORT_LABELS, SORTS, type ParsedEntryFilters, type EntrySort } from "../schema";
+import { SPEND_LABEL_NAMES } from "../categories";
 import { EntriesBreakdown, EntriesOverview, type Breakdown } from "./entries-overview";
 import { EntrySheet } from "./entry-sheet";
 import { usePending, useQueryUpdate } from "./pending";
@@ -51,7 +53,7 @@ import { useLogTransaction } from "./transaction-launcher";
 
 export type { Breakdown };
 
-type Filters = { sort: EntrySort; category: string | null; q: string };
+type Filters = ParsedEntryFilters;
 type Fmt = { currency: string; locale: string };
 
 export type EntriesViewProps = {
@@ -71,6 +73,8 @@ export type EntriesViewProps = {
   periodCount: number;
   /** Categories that appear in the period (for the filter chips). */
   categoriesUsed: string[];
+  /** Whether any expense in the period has a need or want label (shows the label chips). */
+  labelsUsed: boolean;
 };
 
 type Change = { type: "remove"; id: string } | { type: "paid"; id: string; today: string };
@@ -100,7 +104,7 @@ export function EntriesView(props: EntriesViewProps) {
         ),
   );
 
-  const filtered = Boolean(filters.category || filters.q);
+  const filtered = Boolean(filters.category || filters.q || filters.label || filters.day);
   const shownTotal = shown.reduce((sum, e) => sum + e.amountMinor, 0);
 
   const openNew = () => launcher.open(kind);
@@ -151,6 +155,9 @@ export function EntriesView(props: EntriesViewProps) {
         <Toolbar
           kind={kind}
           filters={filters}
+          today={today}
+          locale={locale}
+          showLabels={kind === "expense" && (props.labelsUsed || filters.label !== null)}
           categories={presentCategories(
             props.categoriesUsed,
             CATEGORIES_BY_KIND[kind],
@@ -164,11 +171,21 @@ export function EntriesView(props: EntriesViewProps) {
         />
 
         {shown.length === 0 ? (
-          <EmptyState kind={kind} filtered={filtered} periodLabel={periodLabel} onAdd={openNew} />
+          <EmptyState
+            kind={kind}
+            filtered={filtered}
+            dayOnly={
+              filters.day && !filters.category && !filters.q && !filters.label
+                ? formatDayHeading(filters.day, today, locale)
+                : null
+            }
+            periodLabel={periodLabel}
+            onAdd={openNew}
+          />
         ) : (
           // A new period or filter is a new list: it appears without replaying row animations.
           <EntryList
-            key={`${props.periodKey}|${filters.sort}|${filters.category}|${filters.q}`}
+            key={`${props.periodKey}|${filters.sort}|${filters.category}|${filters.q}|${filters.label}|${filters.day}`}
             kind={kind}
             entries={shown}
             grouped={kind === "expense" && groupsByDay(filters.sort)}
@@ -213,11 +230,17 @@ export function EntriesView(props: EntriesViewProps) {
 function Toolbar({
   kind,
   filters,
+  today,
+  locale,
+  showLabels,
   categories,
   result,
 }: {
   kind: EntryKind;
   filters: Filters;
+  today: string;
+  locale: string;
+  showLabels: boolean;
   categories: string[];
   result: string | null;
 }) {
@@ -227,6 +250,7 @@ function Toolbar({
   // The chips and the sort answer at once; the list follows when the server does.
   const [category, setCategory] = useOptimistic(filters.category);
   const [sort, setSort] = useOptimistic(filters.sort);
+  const [spendLabel, setSpendLabel] = useOptimistic(filters.label);
   const lastSent = useRef(filters.q);
   const updateRef = useRef(update);
   useEffect(() => {
@@ -254,7 +278,10 @@ function Toolbar({
   function clearAll() {
     setQ("");
     lastSent.current = "";
-    update({ q: null, cat: null }, () => setCategory(null));
+    update({ q: null, cat: null, label: null, day: null }, () => {
+      setCategory(null);
+      setSpendLabel(null);
+    });
   }
 
   const anyLabel = kind === "investment" ? "All types" : "All";
@@ -319,6 +346,48 @@ function Toolbar({
           </SelectContent>
         </Select>
       </div>
+
+      {filters.day ? (
+        <div className="flex">
+          <button
+            type="button"
+            onClick={() => update({ day: null })}
+            aria-label={`Showing ${formatDayHeading(filters.day, today, locale)} only. Show the whole period`}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-dash-ink pr-2.5 pl-3.5 text-[13px] font-medium text-dash-card outline-none transition-transform duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-8"
+          >
+            <CalendarDays aria-hidden className="size-3.5" />
+            {formatDayHeading(filters.day, today, locale)}
+            <X aria-hidden className="size-3.5" />
+          </button>
+        </div>
+      ) : null}
+
+      {showLabels ? (
+        <div role="group" aria-label="Need or want" className="flex gap-2">
+          {([null, "need", "want"] as const).map((l) => {
+            const active = spendLabel === l;
+            return (
+              <button
+                key={l ?? "any"}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  if (active) return;
+                  update({ label: l }, () => setSpendLabel(l));
+                }}
+                className={cn(
+                  "h-11 shrink-0 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-8",
+                  active
+                    ? "bg-dash-ink text-dash-card"
+                    : "bg-dash-well text-dash-ink hover:bg-dash-edge",
+                )}
+              >
+                {l ? SPEND_LABEL_NAMES[l].plural : "Any"}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       {categories.length > 1 || category ? (
         <div
@@ -479,6 +548,7 @@ function EntryRow({
   const meta = [
     entry.category,
     kind === "expense" ? entry.paymentMethod : null,
+    kind === "expense" && entry.spendLabel ? SPEND_LABEL_NAMES[entry.spendLabel].one : null,
     kind === "investment" ? entry.platform : null,
     kind === "emi" ? entry.lender : null,
     showDate ? (kind === "emi" ? `Due ${date}` : date) : null,
@@ -619,15 +689,38 @@ function EmiStatusPill({ state }: { state: EmiState }) {
 function EmptyState({
   kind,
   filtered,
+  dayOnly,
   periodLabel,
   onAdd,
 }: {
   kind: EntryKind;
   filtered: boolean;
+  /** The day's heading when the only filter is one day (from the journal). */
+  dayOnly: string | null;
   periodLabel: string;
   onAdd: () => void;
 }) {
   const label = KIND_LABELS[kind];
+  if (dayOnly) {
+    return (
+      <div className="flex flex-col items-center px-4 py-12 text-center">
+        <span
+          aria-hidden
+          className="mb-4 grid size-12 place-items-center rounded-full bg-dash-well text-dash-good"
+        >
+          <CategoryIcon kind={kind} category="" className="size-5" strokeWidth={1.75} />
+        </span>
+        <p className="font-medium text-balance">
+          No {label.plural} on {dayOnly}
+        </p>
+        <p className="mt-1 max-w-xs text-sm text-pretty text-dash-ink-soft">
+          {kind === "expense"
+            ? "A no-spend day. Tap the date above to see the whole month."
+            : "Tap the date above to see the whole month."}
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col items-center px-4 py-12 text-center">
       <span

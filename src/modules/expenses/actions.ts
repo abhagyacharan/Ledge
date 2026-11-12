@@ -35,7 +35,12 @@ function toEntryInput(data: CreateEntryInput | UpdateEntryInput): EntryInput {
     case "income":
       return { kind: "income", ...common };
     case "expense":
-      return { kind: "expense", ...common, paymentMethod: data.paymentMethod };
+      return {
+        kind: "expense",
+        ...common,
+        paymentMethod: data.paymentMethod,
+        spendLabel: data.spendLabel,
+      };
     case "investment":
       return { kind: "investment", ...common, platform: data.platform ?? null };
     case "emi":

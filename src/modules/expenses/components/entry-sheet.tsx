@@ -8,7 +8,7 @@ import { Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/dash/sh
 import { addDaysIso } from "@/lib/dates";
 import { minorToInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
-import type { EntryKind, FinanceEntry } from "@/server/db/schema";
+import type { EntryKind, FinanceEntry, SpendLabel } from "@/server/db/schema";
 import { createEntryAction, updateEntryAction } from "../actions";
 import {
   CATEGORIES_BY_KIND,
@@ -19,6 +19,8 @@ import {
   KIND_LABELS,
   PAYMENT_METHODS,
   TITLE_LABELS,
+  SPEND_LABEL_NAMES,
+  SPEND_LABEL_OPTIONS,
 } from "../categories";
 import { CategoryIcon } from "../category-icons";
 import { MAX_EXTRA_MONTHS } from "../emi-series";
@@ -110,6 +112,7 @@ function EntryForm({
   );
   const [notes, setNotes] = useState(entry?.notes ?? "");
   const [paymentMethod, setPaymentMethod] = useState(entry?.paymentMethod ?? "");
+  const [spendLabel, setSpendLabel] = useState<string>(entry?.spendLabel ?? "");
   const [lender, setLender] = useState(entry?.lender ?? "");
   const [emiType, setEmiType] = useState(entry?.emiType ?? "");
   const [status, setStatus] = useState<string>(entry?.status ?? "scheduled");
@@ -129,7 +132,7 @@ function EntryForm({
       case "income":
         return { kind, ...base };
       case "expense":
-        return { kind, ...base, paymentMethod };
+        return { kind, ...base, paymentMethod, spendLabel };
       case "investment":
         return { kind, ...base, platform };
       case "emi":
@@ -275,6 +278,20 @@ function EntryForm({
               onChange={setPaymentMethod}
               options={PAYMENT_METHODS}
               error={errors.paymentMethod}
+            />
+          ) : null}
+
+          {kind === "expense" ? (
+            <ChoiceGroup
+              id="entry-spend-label"
+              label="Need or want (optional)"
+              hint="Tap again to clear."
+              value={spendLabel}
+              onChange={setSpendLabel}
+              options={SPEND_LABEL_OPTIONS}
+              optionLabel={(o) => SPEND_LABEL_NAMES[o as SpendLabel].one}
+              clearable
+              error={errors.spendLabel}
             />
           ) : null}
 
@@ -475,9 +492,14 @@ function ChoiceGroup({
   iconKind,
   error,
   segmented = false,
+  clearable = false,
+  hint,
 }: {
   id: string;
   label: string;
+  /** Optional: tapping the chosen chip again (or Delete on it) clears the choice. */
+  clearable?: boolean;
+  hint?: string;
   value: string;
   onChange: (value: string) => void;
   options: readonly string[];
@@ -498,6 +520,9 @@ function ChoiceGroup({
       >
         <p id={`${id}-label`} className="mb-2 text-[13px] font-medium">
           {label}
+          {hint && value ? (
+            <span className="ml-1.5 font-normal text-dash-ink-soft">{hint}</span>
+          ) : null}
         </p>
         <div
           className={cn(
@@ -529,6 +554,14 @@ function ChoiceGroup({
                   value={option}
                   checked={checked}
                   onChange={() => onChange(option)}
+                  onClick={clearable && checked ? () => onChange("") : undefined}
+                  onKeyDown={
+                    clearable && checked
+                      ? (e) => {
+                          if (e.key === "Delete" || e.key === "Backspace") onChange("");
+                        }
+                      : undefined
+                  }
                   // Invisible but covering the whole chip, so a tap anywhere lands on the radio.
                   className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
                 />

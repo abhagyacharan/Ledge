@@ -7,21 +7,25 @@ import { useState } from "react";
 import { Sheet, SheetBody, SheetHeader } from "@/components/dash/sheet";
 import { enabledModules } from "@/config/modules";
 import { cn } from "@/lib/utils";
-import { ListsNav } from "@/modules/todos/components/sidebar-section";
 import { NavRow } from "./nav-row";
 import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
 
 /**
- * Phone navigation (docs/design.md §5e): a bottom tab bar with the two main parts of the app and
- * "More", which opens a sheet with your lists, Search, Trash, Settings and your account. Hidden
- * from tablet width up, where the sidebar takes over.
+ * Phone navigation (docs/design.md §5e): a bottom tab bar with the main parts of the app, Search
+ * and "More", which opens a sheet with Trash, Settings and your account. Your lists are in the
+ * Lists menu at the top of the Tasks pages. Hidden from tablet width up, where the sidebar takes
+ * over (and the headers' round Search button returns).
  */
 export function MobileTabBar({ user }: { user: { name: string; email: string } }) {
   const pathname = usePathname();
   const [more, setMore] = useState(false);
-  const inModule = enabledModules().some((m) => m.owns(pathname));
+  const inSearch = pathname === "/search";
+  const tabs = enabledModules();
+  const inModule = inSearch || tabs.some((m) => m.owns(pathname));
   const close = () => setMore(false);
+  // One column per module, then Search and More.
+  const columns = tabs.length === 3 ? "grid-cols-5" : "grid-cols-4";
 
   return (
     <>
@@ -29,14 +33,23 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
         aria-label="Main"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)] md:hidden"
       >
-        <ul className="mx-auto grid h-16 max-w-md grid-cols-3">
-          {enabledModules().map((m) => (
+        <ul className={cn("mx-auto grid h-16 max-w-md", columns)}>
+          {tabs.map((m) => (
             <li key={m.id}>
-              <Tab href={m.route} label={m.label} current={m.owns(pathname)}>
+              <Tab
+                href={m.route}
+                label={m.shortLabel ?? m.label}
+                current={!more && m.owns(pathname)}
+              >
                 <m.icon aria-hidden className="size-5" strokeWidth={1.85} />
               </Tab>
             </li>
           ))}
+          <li>
+            <Tab href="/search" label="Search" current={!more && inSearch}>
+              <Search aria-hidden className="size-5" strokeWidth={1.85} />
+            </Tab>
+          </li>
           <li>
             <button
               type="button"
@@ -59,13 +72,6 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
         <SheetBody>
           <div className="flex flex-col gap-1">
             <NavRow
-              href="/search"
-              label="Search"
-              icon={Search}
-              current={pathname === "/search"}
-              onNavigate={close}
-            />
-            <NavRow
               href="/trash"
               label="Trash"
               icon={Trash2}
@@ -80,7 +86,6 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
               onNavigate={close}
             />
           </div>
-          <ListsNav onNavigate={close} />
           <div className="mt-5 flex items-center gap-3 border-t border-border pt-4">
             <span
               aria-hidden

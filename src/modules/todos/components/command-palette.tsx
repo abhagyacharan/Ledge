@@ -39,7 +39,9 @@ export function CommandPalette() {
   // "Expense Tracker: Income", "Tasks: Today", ... then the shared places.
   const views = [
     ...enabledModules().flatMap((m) =>
-      m.nav.map((item) => ({ label: `${m.label}: ${item.label}`, route: item.route })),
+      m.nav.length === 0
+        ? [{ label: m.label, route: m.route }]
+        : m.nav.map((item) => ({ label: `${m.label}: ${item.label}`, route: item.route })),
     ),
     { label: "Search", route: "/search" },
     { label: "Trash", route: "/trash" },

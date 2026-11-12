@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
  *
  * On a phone the tiles read as a statement instead (docs/design.md §5d): each is one row, label
  * on the left and the change pill and figure on the right, all on one centre line, with hairlines
- * between rows. The highlighted tile becomes a slim orange total row. Extra lines are hidden there.
+ * between rows. Every row has the same height, padding and type; the highlighted one is simply
+ * filled orange from edge to edge (the parent card has no padding on phones and clips its
+ * corners). Extra lines are hidden there.
  */
 export function StatTile({
   label,
@@ -37,13 +39,13 @@ export function StatTile({
   return (
     <div
       className={cn(
-        // Phone: a row.
-        "relative flex min-w-0 items-center justify-between gap-3 py-3.5",
+        // Phone: a row, edge to edge inside its card.
+        "relative flex min-h-14 min-w-0 items-center justify-between gap-3 px-4 py-3.5",
         // Wider: a tile.
         "sm:h-full sm:flex-col sm:items-stretch sm:justify-start sm:gap-3",
         variant === "card" ? "sm:rounded-2xl sm:p-5" : "sm:rounded-[20px] sm:p-4",
         highlight
-          ? "mt-2 rounded-xl bg-gradient-to-br from-dash-accent-from to-dash-accent-to px-3.5 text-white first:mt-0 first:mb-1 sm:mt-0 sm:first:mb-0"
+          ? "bg-gradient-to-br from-dash-accent-from to-dash-accent-to text-white"
           : variant === "card"
             ? "border-b border-dash-edge text-dash-ink last:border-b-0 sm:border sm:bg-dash-card sm:shadow-(--dash-card-shadow)"
             : "border-b border-dash-edge text-dash-ink last:border-b-0 sm:border-0 sm:bg-dash-well",
@@ -52,7 +54,7 @@ export function StatTile({
       <dt
         className={cn(
           "shrink-0 text-sm leading-none sm:pr-11 sm:leading-normal",
-          highlight ? "font-medium text-white" : "text-dash-ink-soft",
+          highlight ? "text-white sm:font-medium" : "text-dash-ink-soft",
         )}
       >
         {label}

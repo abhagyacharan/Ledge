@@ -9,6 +9,7 @@ import {
   type EmiStatus,
   type EntryKind,
   type FinanceEntry,
+  type SpendLabel,
 } from "@/server/db/schema";
 
 /**
@@ -26,6 +27,7 @@ export type EntryInput = {
   notes?: string | null;
   /** expenses */
   paymentMethod?: string | null;
+  spendLabel?: SpendLabel | null;
   /** EMIs */
   lender?: string | null;
   emiType?: string | null;
@@ -47,6 +49,7 @@ function columnsFor(input: EntryInput) {
     amountMinor: input.amountMinor,
     notes: input.notes ?? null,
     paymentMethod: input.kind === "expense" ? (input.paymentMethod ?? null) : null,
+    spendLabel: input.kind === "expense" ? (input.spendLabel ?? null) : null,
     lender: isEmi ? (input.lender ?? null) : null,
     emiType: isEmi ? (input.emiType ?? null) : null,
     status,
@@ -154,7 +157,13 @@ export async function restoreEntry(userId: string, id: string): Promise<boolean>
   return rows.length > 0;
 }
 
-export type EntryFilters = { sort: EntrySort; category: string | null; q: string };
+export type EntryFilters = {
+  sort: EntrySort;
+  category: string | null;
+  q: string;
+  /** Expenses only: need or want. */
+  label?: SpendLabel | null;
+};
 
 /** Escapes `%`, `_` and `\` so a search for "50%" matches the text "50%". */
 function likePattern(q: string): string {
@@ -192,6 +201,7 @@ export async function listEntries(
         gte(financeEntries.entryDate, range.from),
         lte(financeEntries.entryDate, range.to),
         filters.category ? eq(financeEntries.category, filters.category) : undefined,
+        filters.label ? eq(financeEntries.spendLabel, filters.label) : undefined,
         search,
       ),
     )

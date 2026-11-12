@@ -7,6 +7,7 @@ import {
   TrendTable,
 } from "@/modules/expenses/components/summary-sections";
 import { CashFlowChart } from "@/modules/expenses/components/cash-flow-chart";
+import { DownloadReport } from "@/modules/expenses/components/download-report";
 import { SummaryEmpty } from "@/modules/expenses/components/summary-empty";
 import { parsePeriod, periodLabel, periodRange } from "@/modules/expenses/periods";
 import {
@@ -56,7 +57,9 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="tiles"
           title={`${periodLabel(period)} at a glance`}
           hideTitle
-          className="flex flex-col max-sm:pt-1.5 max-sm:pb-4 xl:col-span-6"
+          // Phones: one card of four equal rows, edge to edge. Wider: no outer box, the four
+          // figures are cards of their own in a 2 by 2 grid (like the Tasks overview).
+          className="flex flex-col max-sm:overflow-hidden max-sm:p-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:rounded-none md:p-0 xl:col-span-6"
         >
           <SummaryStats totals={totals} previous={previous} emi={emi} fmt={fmt} />
         </DashCard>
@@ -79,6 +82,12 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="breakdown"
           title="Expense breakdown by category"
           subtitle={periodLabel(period)}
+          action={
+            <DownloadReport
+              href={`/api/export/expense-breakdown?y=${period.year}&m=${period.month}`}
+              label={`Download the expense breakdown for ${periodLabel(period)} as a PDF`}
+            />
+          }
           className="xl:col-span-6"
         >
           <BreakdownTable rows={breakdown.rows} total={breakdown.total} fmt={fmt} />
@@ -88,6 +97,12 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
           id="details"
           title={`Annual cash flow trend, ${period.year}`}
           subtitle="Month by month, with the full-year total"
+          action={
+            <DownloadReport
+              href={`/api/export/cash-flow?y=${period.year}`}
+              label={`Download the annual cash flow trend for ${period.year} as a PDF`}
+            />
+          }
           className="xl:col-span-6"
         >
           <TrendTable

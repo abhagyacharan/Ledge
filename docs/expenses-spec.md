@@ -31,6 +31,7 @@ One table, `finance_entries`, holds all four kinds. Common columns, plus a few c
 | `amount_minor`                                            | integer paise, greater than 0                                                                                                            |
 | `notes`                                                   | optional, up to 1000 characters                                                                                                          |
 | `payment_method`                                          | expenses only                                                                                                                            |
+| `spend_label`                                             | expenses only, optional: `need` or `want` (2026-11-12, for the journal; see `docs/journal-spec.md`)                                      |
 | `lender`, `emi_type`, `status`, `paid_on`                 | EMIs only. `status` is `scheduled`, `paid` or `delayed`; `paid_on` is set only when paid                                                 |
 | `platform`                                                | investments only (the broker or app)                                                                                                     |
 
@@ -60,6 +61,14 @@ For the chosen period (a month, or the whole year):
 4. **Annual cash flow trend, January to December:** a table with total inflow, EMI & debt, expenses, net savings and savings % per month, a **Full year total** row, and the selected month highlighted (marked with text as well as colour). A simple bar chart above it (inflow against outflow per month) repeats the table for people who like pictures; the table is the accessible version.
 5. **Empty state** when the period has no entries: one sentence and an "Add income" button.
 
+## Download as PDF (2026-11-12)
+
+- **Expense breakdown by category** for a month or a whole year: `GET /api/export/expense-breakdown?y=2026&m=11` (`m=all` for the year). Every category is listed, with items, amount spent, % of total and a share bar, then the total.
+- **Annual cash flow trend** for a year: `GET /api/export/cash-flow?y=2026`. January to December with inflows, EMIs and loans, expenses, invested and net savings, the full-year row and the savings rate.
+- Reached from a download button on each card (the period on screen) and from Settings, Expense Tracker (any period). A period with no entries gives the full sheet with zeros.
+- Amounts are printed without a symbol and the subtitle names the currency ("amounts in INR"), because the PDF's built-in fonts have no rupee sign.
+- Both routes call `requireUser()`, validate the query with Zod (400 otherwise), read only that user's entries, and are never cached.
+
 ## The four entry tabs
 
 Each tab shows the entries of the chosen period as a table on a computer and as cards on a phone, newest first, with:
@@ -67,20 +76,22 @@ Each tab shows the entries of the chosen period as a table on a computer and as 
 - a **total for the period** and the **entry count** at the top,
 - **Add** (a dialog) and **Edit** (click a row), **Delete** with an **Undo** toast (no confirmation question: Undo and Trash make it safe, as with tasks),
 - a **category filter**, a **sort** (newest, oldest, amount high to low, amount low to high) and a text **search** over title and notes, all kept in the URL,
+- on the Expenses tab, **Any / Needs / Wants** chips (`?label=`) once any expense in the period has a label,
+- a **single day** (`?day=YYYY-MM-DD`, which the journal links to), shown as a chip you tap to go back to the whole period,
 - a designed empty state.
 
 Fields:
 
 - **Income:** date, income stream, category, amount, notes.
 - **EMIs & loans:** type, due date, loan or debt name, lender, category, amount, status, paid on (appears when status is Paid and defaults to today), notes. Choosing Paid fills "paid on". A **Mark paid** shortcut sits on each row. A scheduled EMI whose due date has passed shows an **Overdue** label (text and icon), without changing its stored status. On creation, **Repeat monthly for N more months** (0 to 60) creates the whole series at once as Scheduled entries (a month with no 31st uses the last day).
-- **Expenses:** date, item, category, payment method, amount, notes. The tab also shows a spend-by-payment-method line.
+- **Expenses:** date, item, category, payment method, need or want (optional; tap the chosen chip again to clear it), amount, notes. The tab also shows a spend-by-payment-method line.
 - **Investments:** date, investment name, type, platform, amount, notes. The tab shows a total by type.
 
 Deleting moves an entry to **Trash** (the same Trash screen, 30 days, restore or delete forever, clean-up included).
 
 ## Seed data
 
-`pnpm db:seed` also creates finance data for the demo user: this month matches O's sheet (salary and bonus ₹28,000; EMIs ₹10,142 across a few loans, some paid; expenses ₹4,000 transport and ₹600 subscriptions), plus a few earlier months so the annual trend is not empty, and some investments.
+`pnpm db:seed` also creates finance data for the demo user: this month matches O's sheet (salary and bonus ₹28,000; EMIs ₹10,142 across a few loans, some paid; expenses ₹4,000 transport and ₹600 subscriptions), plus a few earlier months so the annual trend is not empty, and some investments. Groceries and transport are labelled Need, dining out and subscriptions Want.
 
 ## Out of scope for now (parked in `docs/ideas.md`)
 

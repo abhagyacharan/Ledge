@@ -9,6 +9,10 @@ export type EntryKind = (typeof ENTRY_KINDS)[number];
 export const EMI_STATUSES = ["scheduled", "paid", "delayed"] as const;
 export type EmiStatus = (typeof EMI_STATUSES)[number];
 
+/** Optional label on an expense (O, 2026-11-12): was it something you needed, or wanted? */
+export const SPEND_LABELS = ["need", "want"] as const;
+export type SpendLabel = (typeof SPEND_LABELS)[number];
+
 /** Largest amount in minor units (one billion major units of a two-decimal currency). */
 export const MAX_AMOUNT_MINOR = 100_000_000_000;
 
@@ -37,6 +41,8 @@ export const financeEntries = pgTable(
     notes: text("notes"),
     /** Expenses only. */
     paymentMethod: text("payment_method"),
+    /** Expenses only, optional: need or want. */
+    spendLabel: text("spend_label", { enum: SPEND_LABELS }),
     /** EMIs only. */
     lender: text("lender"),
     emiType: text("emi_type"),
@@ -72,6 +78,10 @@ export const financeEntries = pgTable(
     check(
       "finance_entries_payment_method_only_expense_check",
       sql`${t.kind} = 'expense' or ${t.paymentMethod} is null`,
+    ),
+    check(
+      "finance_entries_spend_label_check",
+      sql`${t.spendLabel} is null or (${t.kind} = 'expense' and ${t.spendLabel} in ('need', 'want'))`,
     ),
     check(
       "finance_entries_emi_columns_only_emi_check",

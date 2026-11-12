@@ -1,4 +1,4 @@
-import type { EmiStatus, EntryKind } from "@/server/db/schema";
+import type { EmiStatus, EntryKind, SpendLabel } from "@/server/db/schema";
 
 /**
  * The fixed lists the expense tracker offers (docs/expenses-spec.md). Categories are stored as
@@ -110,3 +110,12 @@ export const DATE_LABELS: Record<EntryKind, string> = {
   expense: "Date",
   investment: "Date",
 };
+
+/** The need or want label's choices, in chip order (the database lists the same two). */
+export const SPEND_LABEL_OPTIONS = ["need", "want"] as const satisfies readonly SpendLabel[];
+
+/** How the optional need or want label reads in chips, rows and the journal. */
+export const SPEND_LABEL_NAMES = {
+  need: { one: "Need", plural: "Needs" },
+  want: { one: "Want", plural: "Wants" },
+} as const;

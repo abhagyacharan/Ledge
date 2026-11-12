@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Current phase          | **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, waiting for O to deploy by hand)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Last verified test run | 2026-11-11 (after the light-mode, icons, search and sign-in changes): `typecheck`, `lint`, `format:check` clean; `pnpm test` 418 tests pass (real database); `pnpm test:e2e` 102 Playwright tests: 100 passed in the full run, then the two failures re-run green after a fix (a duplicate "Search" link name) and a timing flake. Covers axe audits of every page, the list form, menus, sheets and quick add in light and dark, phone tap targets, and search across tasks and expenses. Not checked: Cloudflare Tunnel and HTTPS on the real server, the off-site backup copy, a real screen reader, `secure` cookie over real HTTPS, real touch devices |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| Enabled modules        | expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Current phase          | **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, waiting for O to deploy by hand; Phase 11 Journal built, its e2e run pending until pnpm runs again)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Last verified test run | 2026-11-12 (whole tree after the Journal, the PDF reports, the welcome page and the Tasks-first order): `typecheck`, `lint`, `format:check` clean and 452 Vitest tests pass (real database), run with `node` directly because pnpm is blocked on this machine by Windows Device Guard; e2e not re-run (Playwright starts its server through pnpm), so the new journal, download and welcome-page tests and the updated phone, sidebar, a11y and auth specs have not run yet. Last e2e run 2026-11-11: 102 Playwright tests passed. Not checked: Cloudflare Tunnel and HTTPS on the real server, the off-site backup copy, a real screen reader, `secure` cookie over real HTTPS, real touch devices |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Enabled modules        | expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists); journal ("Journal": one page per day with the day's facts, mood, day picker)                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ---
 
@@ -29,10 +29,11 @@ A self-hosted personal life-management app that the owner (O) will use daily for
 1. **Auth**: sign up, sign in, sign out, sessions, protected routes (§5).
 2. **To-do tracker**: the main deliverable, specified in §6.
 3. **Expense tracker**: income, EMIs and loans, expenses and investments with a monthly and yearly summary, modelled on O's Google Sheet. Specified in `docs/expenses-spec.md`; built in Phase 7 (§7).
+4. **Journal** (added at O's request, 2026-11-12): one private page per day with plain facts about the day from Tasks and Expenses, an optional mood and a day picker. Specified in `docs/journal-spec.md`; built in Phase 11.
 
 ### Non-goals for v0.1 (do not build, even if tempting)
 
-Social features, blogs, public profile or portfolio, calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features, file attachments, i18n, rich-text editor, team or shared workspaces, billing.
+Social features, blogs (posting journal entries publicly is parked in `docs/ideas.md`), public profile or portfolio, calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features (including the journal's AI ideas, until O picks a provider), file attachments, i18n, rich-text editor, team or shared workspaces, billing.
 
 Park any new idea in `docs/ideas.md` instead of building it.
 
@@ -99,17 +100,19 @@ src/
   hooks/                    # shared React hooks (shadcn)
   app/                      # routes (App Router)
     (auth)/sign-in, sign-up
-    (app)/                  # authenticated shell (sidebar + content)
+    (app)/                  # authenticated shell (sidebar + content); page.tsx is the welcome page at / (sign-in lands here)
       inbox, today, upcoming, completed, all
       (tasks)/              # route group: shared Tasks header; tasks (Overview), today, upcoming, all, completed, lists/[listId], search
       inbox                 # redirects to /tasks (Inbox became the General list)
       expenses/             # layout (tabs + period picker), page (summary), income, emis, spending, investments (§7); loading.tsx skeleton in each
+      journal/              # one page per day (?d=), loading.tsx skeleton; see docs/journal-spec.md
       settings/
-    api/health, api/export  # health check, JSON/CSV export
+    api/health, api/export  # health check; export/expense-breakdown and export/cash-flow (PDF reports); JSON/CSV export still to come
   modules/
     auth/                   # sign-in/up forms, Zod schemas (client side of auth)
     todos/                  # components/ (list screen, views, task row, drawer, quick add, drag board, Trash, palette, shortcuts), actions/ (server actions), schema.ts (Zod), view-logic.ts, day-views.ts, view-settings.ts (pure, tested)
-    expenses/               # components/ (tab bar and period picker, pending state, transaction launcher, summary sections, cash-flow chart, entries overview and list, entry sheet, money-flow, skeletons), actions.ts, schema.ts (Zod), categories.ts, category-icons.ts, periods.ts, summary.ts, entries-logic.ts, emi-series.ts, context.ts (pure maths tested); see docs/expenses-spec.md
+    expenses/               # components/ (tab bar and period picker, pending state, transaction launcher, summary sections, cash-flow chart, entries overview and list, entry sheet, money-flow, skeletons), actions.ts, schema.ts (Zod), categories.ts, category-icons.ts, periods.ts, summary.ts, entries-logic.ts, emi-series.ts, context.ts (pure maths tested), report-pdf.ts and reports.ts (PDF reports); see docs/expenses-spec.md
+    journal/                # components/ (day control, journal day: facts, mood, autosaving page), actions.ts, schema.ts (Zod), limits.ts, day-facts.ts and calendar.ts (pure, tested); see docs/journal-spec.md
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
     auth.ts                 # Better Auth config
@@ -117,7 +120,7 @@ src/
     session.ts              # getSession() / requireUser() helpers
     user-defaults.ts        # ensureUserDefaults(): settings row + General (the default list, stored as the inbox), run on sign-up
     action-guard.ts         # guarded(): requireUser + Zod + typed result + revalidate, shared by todo and expense actions
-    data/                   # data functions (lists, tasks, views, settings, finance, trash): every one takes userId
+    data/                   # data functions (lists, tasks, views, settings, finance, journal, trash): every one takes userId
   components/
     ui/                     # shadcn primitives
     shell/                  # app sidebar, page header, empty state, theme toggle, sign out
@@ -125,9 +128,11 @@ src/
   config/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
-  lib/                      # shared utils: dates.ts (floating dates), money.ts (integer paise), ordering.ts (fractional index), result.ts, utils.ts
-docs/ decisions.md  ideas.md  expenses-spec.md  design.md      # PRODUCT.md (root): product brief read by the impeccable design skill
+  lib/                      # shared utils: dates.ts (floating dates), money.ts (integer paise), ordering.ts (fractional index), pdf.ts (tiny PDF writer), result.ts, utils.ts
+docs/ decisions.md  ideas.md  expenses-spec.md  journal-spec.md  design.md      # PRODUCT.md (root): product brief read by the impeccable design skill
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
+  brand/                    # logo: logo-prompt.md (brief), concepts.html (all four), logo.html (chosen B), usage.md (rules); SVGs in public/brand/
+.agents/skills/             # third-party agent skills from `npx skills add` (skills-lock.json; Prettier ignores them)
 tests/ e2e/  integration/  helpers/ (fast-users.ts, users.ts)  setup/  stubs/
 ```
 
@@ -250,7 +255,7 @@ Full spec: **`docs/expenses-spec.md`**. In short:
 ## 8. UI and UX guidelines
 
 - **Feel:** calm, fast, minimal; closer to Linear, Notion, or Things than to a busy dashboard. Content first, chrome second.
-- **Layout:** light sidebar from tablet width up, a bottom tab bar on phones (Expense Tracker, Tasks, More), right-side detail drawer. Sidebar: Expense Tracker and Tasks as equal, expandable sections (Tasks also lists your lists), then Search, Trash, Settings and the account. One round + button bottom right: Log a transaction on Expense Tracker pages, Add a task elsewhere (docs/design.md §5e).
+- **Layout:** light sidebar from tablet width up, a bottom tab bar on phones (Tasks, Expenses, Journal, Search, More; More holds Trash, Settings and the account, and the lists sit in a Lists menu on the phone Tasks header), right-side detail drawer. Sidebar: Tasks and Expense Tracker as equal sections (Tasks first), each header one button that opens and closes it, then Journal (a single link) (Tasks also lists your lists), then Search, Trash, Settings and the account. One round + button bottom right: Log a transaction on Expense Tracker pages, Add a task elsewhere (docs/design.md §5e).
 - **Design tokens** as CSS variables (colors, radius, spacing). 4/8px spacing scale. No colour emojis anywhere: minimal line icons only (docs/design.md §8). Three typefaces with clear jobs (Phase 8): Geist for body text, Bricolage Grotesque for page titles and big figures, IBM Plex Mono for money, dates and column heads. Light and dark themes, following the system by default with a manual override.
 - **Responsive:** mobile-first. Tap targets at least 44px. Usable one-handed on a phone, since O will use it on his phone daily.
 - **Accessibility:** WCAG AA contrast, visible focus rings, full keyboard operation, ARIA for drag and drop (dnd-kit keyboard sensor), respect `prefers-reduced-motion`. Never convey state by color alone.
@@ -362,19 +367,20 @@ This is the canonical plan. It expands the original suggested build order into p
 
 **Stop line:** if it is Saturday evening and P0 is not done, drop all P1 work. If it is Sunday night, deploy what exists and freeze. After that, maintenance is capped at about 2 hours per week so the main plan is not starved. When the stop line triggers, record it in the status snapshot.
 
-| #   | Phase                           | Status                 |
-| --- | ------------------------------- | ---------------------- |
-| 0   | Scaffold                        | `[x]` done 2026-11-10  |
-| 1   | Auth                            | `[x]` done 2026-11-10  |
-| 2   | Data model                      | `[x]` done 2026-11-10  |
-| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10  |
-| 4   | Views (P0)                      | `[x]` done 2026-11-10  |
-| 5   | Safety (P0)                     | `[x]` done 2026-11-10  |
-| 6   | Polish                          | `[x]` done 2026-11-10  |
-| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11  |
-| 8   | Frontend redesign               | `[x]` done 2026-11-11  |
-| 9   | Deploy and backup               | `[~]` built; O deploys |
-| 10  | P1 items (only if time remains) | `[ ]`                  |
+| #   | Phase                           | Status                   |
+| --- | ------------------------------- | ------------------------ |
+| 0   | Scaffold                        | `[x]` done 2026-11-10    |
+| 1   | Auth                            | `[x]` done 2026-11-10    |
+| 2   | Data model                      | `[x]` done 2026-11-10    |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10    |
+| 4   | Views (P0)                      | `[x]` done 2026-11-10    |
+| 5   | Safety (P0)                     | `[x]` done 2026-11-10    |
+| 6   | Polish                          | `[x]` done 2026-11-10    |
+| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11    |
+| 8   | Frontend redesign               | `[x]` done 2026-11-11    |
+| 9   | Deploy and backup               | `[~]` built; O deploys   |
+| 10  | P1 items (only if time remains) | `[~]`                    |
+| 11  | Journal                         | `[~]` built; e2e pending |
 
 ### Phase 0: Scaffold
 
@@ -542,6 +548,20 @@ Do in this order, one at a time, each with tests and §15 done: natural-language
 
 Exit: each shipped P1 item meets §15; unshipped ones are noted in `docs/ideas.md` or the status snapshot.
 
+### Phase 11: Journal
+
+Goal: a private journal page per day, with the day's facts from Tasks and Expenses (spec: `docs/journal-spec.md`). Added by O on 2026-11-12 in place of the Blog placeholder and built ahead of the open Phase 10 items. Numbered 11 so the existing phase numbers stay stable.
+
+- [x] Spec agreed with O in chat (questions, phone and desktop sketches) and written to `docs/journal-spec.md` (2026-11-12)
+- [x] `journal_entries` table and `finance_entries.spend_label`; migration 0009 (2026-11-12)
+- [x] Data functions (page, month dots, day facts) and server actions with Zod, ownership and typed results (2026-11-12)
+- [x] Journal page: day picker, facts strip that folds, mood, autosaving page, loading skeleton; Blog placeholder replaced (2026-11-12)
+- [x] Need or want label on expenses (sheet chips, row details, filter chips) and `?day=` filters on the entries tabs and Completed (2026-11-12)
+- [x] Unit tests (facts wording, calendar, input), integration tests (pages, privacy, day facts, label constraint), e2e spec written (2026-11-12)
+- [ ] e2e run (`journal.spec.ts` and the updated sidebar, phone and a11y specs): blocked while pnpm cannot run on this machine
+
+Exit: a day's page saves and reloads; facts match the day's tasks and money; another user cannot read or change a page; the §15 definition of done holds (desktop and phone, light and dark, keyboard, empty and loading states).
+
 ---
 
 ## 15. Definition of done (every feature)
@@ -564,7 +584,7 @@ Format when answered: replace the question's status with `ANSWERED YYYY-MM-DD: <
 
 1. Expense tracker spec (categories, accounts, budgets, recurring expenses, reports, import from bank or UPI exports?). **ANSWERED 2026-11-10:** O described it from his Google Sheet (tabs: summary, income, EMIs and loans, expenses, investments; month and year views); written up in `docs/expenses-spec.md` and built in Phase 7. Budgets, recurring entries, custom categories and import are parked in `docs/ideas.md`.
 2. Domain or hostname for the home server, and Cloudflare Tunnel vs Tailscale. **PARTLY ANSWERED 2026-11-11:** Cloudflare Tunnel. The hostname is still O's to choose (it goes in `.env` as `BETTER_AUTH_URL`; see `docs/deploy-guide.md`).
-3. Is this multi-user from day one, or single-user with `ALLOW_SIGNUP=false` after the first account? **OPEN**
+3. Is this multi-user from day one, or single-user with `ALLOW_SIGNUP=false` after the first account? **PARTLY ANSWERED 2026-11-12:** O wants other people to be able to use it one day, hosted on his server; for now it stays single-user. What that needs (sign-up, privacy wording, backups) is parked in `docs/ideas.md`.
 4. Final app name and branding. **OPEN** (working name: Ledge)
 
 ---
@@ -646,3 +666,14 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-11 | Expense entry tabs redesigned in the dashboard look (overview, list and breakdown cards; sheet; chips; skeletons). §3 versions and a stack row for Base UI, Motion, NumberFlow; §4 layout; §8 dashboard-look line; status snapshot; decisions logged; `PRODUCT.md` added                                                                     | O asked for a professional, phone-first redesign of the remaining expense tabs with the named skills                             |
 | 2026-11-11 | Tasks redesign and new navigation: Inbox replaced by a Tasks overview (the list is now General, migration 0007), tags and sections removed (§6 rewritten, tables kept), light sidebar with Expense Tracker above Tasks, phone bottom tab bar, one shared + button, app-wide dashboard tokens; §4, §5, §6, §8, §10, §14 note, status snapshot | O's requests in chat (answers: General, bottom tab bar, light sidebar, remove tags and sections)                                 |
 | 2026-11-11 | Light-mode contrast tokens, overview tiles as cards, Lists picker removed, sidebar spacing, line icons instead of emojis (migration 0008), app-wide search incl. expenses (§6.2 Search line), grainy gradient on sign-in; §8 icon rule                                                                                                       | O's final requests before deployment                                                                                             |
+| 2026-11-12 | §4 layout: `docs/brand/` (logo brief, concepts, chosen logo B and usage rules), `public/brand/` SVGs, `.agents/skills/`                                                                                                                                                                                                                      | O asked for a logo brief and four concepts with the SVG Logo Designer skill                                                      |
+| 2026-11-12 | Logo B in the app (`Brand`, favicon, ICO, Apple icon; proxy lets `apple-icon.png` through); status snapshot test run                                                                                                                                                                                                                         | O chose B and said "Yes, switch it"                                                                                              |
+| 2026-11-12 | Sidebar module headers became one toggle button; Blog placeholder module (sidebar, phone tab bar, `/blog` Coming soon); `shortLabel` for phone tabs; §1 non-goal note, §4 layout, §8 layout line, status snapshot                                                                                                                            | O's requests in chat                                                                                                             |
+| 2026-11-12 | Orange-rule logo everywhere; phone logo row and Search tab; logo above the card on phone sign-in; status snapshot test run                                                                                                                                                                                                                   | O's requests in chat                                                                                                             |
+| 2026-11-12 | Pointer cursor rule; quick add placeholder and priority pill; status snapshot test run                                                                                                                                                                                                                                                       | O's requests in chat                                                                                                             |
+| 2026-11-12 | Sign-in cover reworded ("the everyday ledger", contents page instead of ruled rows, no self-hosted wording); §16 Q3 partly answered; status snapshot test run                                                                                                                                                                                | O's request in chat                                                                                                              |
+| 2026-11-12 | Phone sign-in logo side by side (tile and wordmark in a row)                                                                                                                                                                                                                                                                                 | O's request in chat                                                                                                              |
+| 2026-11-12 | Phone logo row removed; phone Lists menu in the Tasks header (lists out of More); §8 layout line                                                                                                                                                                                                                                             | O's requests in chat                                                                                                             |
+| 2026-11-12 | PDF reports (Summary cards and Settings); identical phone figure rows; Summary tiles as separate cards; sign-in contents Journal; §4 layout; status snapshot test run                                                                                                                                                                        | O's requests in chat                                                                                                             |
+| 2026-11-12 | Journal built as Phase 11 (Blog placeholder replaced): §1 scope item 4 and non-goal wording, §4 layout, §8 layout line, §14 table and Phase 11, status snapshot; Need/Want labels and day filters noted in `docs/expenses-spec.md`                                                                                                           | O asked for a journal and approved the design in chat (counts as OK, §17.3)                                                      |
+| 2026-11-12 | Sidebar and phone tab order Tasks, Expense Tracker, Journal; welcome page at / with Add a task and Log a transaction buttons; §4, §8                                                                                                                                                                                                         | O's requests in chat                                                                                                             |

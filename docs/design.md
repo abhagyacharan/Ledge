@@ -81,9 +81,15 @@ Four blocks, two rows, on a 12-column grid at desktop width (`xl`), one column o
   * Savings is the highlighted orange tile
 ```
 
-Columns (of 12): every block is 6 wide, so each row is 50/50. The four tiles stretch to fill their card evenly (two rows of two). The chart stretches to the height of its row. This arrangement was tried the other way round (chart narrow, table wide) and O preferred this one. The period picker and the tab bar stay above, unchanged.
+Columns (of 12): every block is 6 wide, so each row is 50/50. The four tiles are cards of their own (no outer box since 2026-11-12, like the Tasks overview), two rows of two with the page's 16px gap, stretching to the height of the chart beside them. The chart stretches to the height of its row. This arrangement was tried the other way round (chart narrow, table wide) and O preferred this one. The period picker and the tab bar stay above, unchanged.
 
 The four tiles: **Total inflows**, **Total EMIs & loans** (with paid, to pay and delayed lines), **Living expenses**, **Net savings** (highlighted; it also carries the savings rate, how much was invested and what is left after investing, so nothing from the old tiles is lost). Each tile shows a delta pill against the previous month (not shown in "Whole year" view, where there is nothing fair to compare to).
+
+### Report downloads (2026-11-12)
+
+- "Expense breakdown by category" and "Annual cash flow trend" have a round download button at the top right of their card (`DownloadReport`: grey well, download icon, 44px on phones, 36px from `md`). It is a plain link to the PDF route, so the browser downloads the file.
+- Settings has an "Expense Tracker" card (`ReportDownloads`): a two-option pill ("Expense breakdown", "Annual cash flow") with a sliding raised pill, one line on what the report holds, the period control (month or whole year for the breakdown; a year-only stepper for the cash flow) and a black "Download PDF" button.
+- The PDF itself is a quiet ledger page: the mark and "Ledge" top left, "Made on" date top right, a 20pt title and a grey subtitle naming the period and the currency, a grey header band, hairline rows (empty rows in grey), a bold total row with a rule above and the double rule under the bottom-line figure, and a footer with the report name and page number. Helvetica only (built into every PDF reader); the one orange is the logo rule and the share bars.
 
 ## 5b. Layout of the entry tabs (Income, EMIs & loans, Expenses, Investments)
 
@@ -95,7 +101,7 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 
 ## 5c. The expense header and the Log a transaction button
 
-- **Header:** the page title, then one row (from `lg`; stacked below) with the tabs on the left and the period on the right.
+- **Header:** the page title with the round Search button at the far right from tablet width up (`SearchButton`, shared with Tasks; phones use the Search tab), then one row (from `lg`; stacked below) with the tabs on the left and the period on the right.
 - **Tabs:** a well-coloured pill track holding five links. The chosen one is a `--dash-raised` pill with a hairline shadow that slides to the next tab (spring, 350ms, no bounce). 44px tall on phones, 36px with a mouse. On a phone the track scrolls sideways and keeps the chosen tab centred.
 - **Period:** one well pill: round previous and next buttons around a button showing a calendar icon, the period ("November 2026") and a chevron. It opens a 19.5rem card: year stepper, a 3 by 4 grid of short month names (chosen month filled ink; an orange dot marks the current month), then Whole year and This month.
 - **Log a transaction:** a 56px ink circle bottom right (52px with a mouse), clear of the phone's home bar. It opens a menu above itself (scaling from the button): a small "Log a transaction" label, then Income, Expense, EMI or loan and Investment, each a 40px icon circle with the name and a one-line hint. The plus rotates into a cross while the menu is open. Choosing opens the add sheet for that kind.
@@ -104,28 +110,46 @@ Three blocks. Phones and tablets get one column in this order: overview, list, b
 ## 5d. Phone rules (below `sm`, 640px)
 
 - Cards: 14px radius (`rounded-2xl`), 16px side padding, 20px top and bottom. No grey tiles inside cards on a phone.
-- Summary figures: a statement of rows. Row = label (14px, soft) on the left; change pill then figure (Bricolage 17px) on the right; everything on one centre line; 14px above and below; a hairline under each row. Net savings is the last row as an orange band with 12px corners and 14px side padding. Supporting lines are hidden.
+- Summary figures: a statement of rows. Row = label (14px, soft) on the left; change pill then figure (Bricolage 17px) on the right; everything on one centre line; 14px above and below; a hairline under each row. All four rows are identical (56px, 16px side padding, same type); the card has no padding on phones and clips its corners, and Net savings, the last row, is simply filled orange from edge to edge (2026-11-12; it used to be a smaller rounded band inside the card). Supporting lines are hidden. The Tasks overview uses the same rows, with Due today as the orange first row.
 - Tabs: five equal icon-only cells (Lucide line icons at 18px, stroke 1.75) filling the track; the chosen one is the raised pill.
 - Chart: 12px padding and 12px corners for the well, 4px bar gaps, one-letter month labels below 440px.
 
 ## 5e. App shell (navigation and the + button)
 
-- **Sidebar (tablet and up):** the soft grey canvas with a hairline right edge. The brand, then one section per module from the registry: Expense Tracker, then Tasks. Each section is a row (icon and name) with a chevron that shows or hides its views; it opens itself when you are inside it. Tasks also shows "Lists" with a + and each list (emoji or icon). At the bottom: Search, Trash, Settings, then the account (initial in an ink circle, name, email, theme button) and Sign out. The current page is a white raised pill with a hairline ring, the same mark as the pill tabs (`NavRow`).
-- **Bottom tab bar (phones):** a solid bar (no blur) with Expense Tracker, Tasks and More; each tab is an icon over a 11px label, the current one has its icon in a raised pill. More opens a sheet with Search tasks, Trash, Settings, the lists, the account, the theme and Sign out. The bar respects the home indicator.
+- **Sidebar (tablet and up):** the soft grey canvas with a hairline right edge. The brand, then one section per module from the registry: Tasks, Expense Tracker, then Journal (Tasks first since 2026-11-12). A section with views is one button (icon, name, chevron) that shows or hides them: one click opens, the next closes, and it never changes the page (its views are the links). It opens itself when you arrive inside it, and while closed with you inside it carries the raised "you are here" pill. A module with no views (Journal) is a plain link. Tasks also shows "Lists" with a + and each list (emoji or icon). At the bottom: Search, Trash, Settings, then the account (initial in an ink circle, name, email, theme button) and Sign out. The current page is a white raised pill with a hairline ring, the same mark as the pill tabs (`NavRow`).
+- **Bottom tab bar (phones):** a solid bar (no blur) with five tabs: Tasks, Expenses (the registry's `shortLabel`, so five labels fit on one line), Journal, Search and More; each tab is an icon over a 11px label, the current one has its icon in a raised pill. More opens a sheet with Trash, Settings, the account, the theme and Sign out (the lists are in the Tasks header's Lists menu). The bar respects the home indicator.
+- **No logo on phone app pages:** a logo row at the top of every page was tried and removed the same day (it took space and did not look good); the page title comes first. Phones have no round Search button in the headers: Search is the tab above.
+- **Logo:** always the orange-rule version (O, 2026-11-12), in the sidebar, on the phone logo row, on sign-in and in the favicon and app icons. Its orange is part of the logo and does not count as the screen's one highlighted orange tile. Rules: `docs/brand/usage.md`.
 - **The + button:** a 56px ink circle (52px with a mouse), bottom right, 76px up on phones so it clears the tab bar. Log a transaction on Expense Tracker pages, Add a task elsewhere. The plus turns into a cross while its menu or form is open.
 - **Dialogs:** 16px corners and a soft shadow on desktop; on phones every dialog is a bottom sheet (24px top corners, slides up on the sheet curve, at most 92% of the screen).
 
+- **Cursor:** everything you can click shows the pointing hand (buttons, menu and list items, select options, radios and checkboxes). Tailwind 4 gives buttons the plain arrow, so one base rule in `globals.css` sets `cursor: pointer`; disabled controls keep the arrow, and drag grips keep `grab`.
+
+- **Welcome page (`/`):** where sign-in and sign-up land. "Welcome back, <first name>", one line ("Want to add a task or update your expenses?") and two cards: Tasks ("Add a task") and Expenses ("Log a transaction"), each with a round icon that turns orange on hover and an arrow. Tasks goes to `/tasks?add=task`, which opens quick add; Expenses goes to `/expenses?add=transaction`, which opens the Log a transaction menu (`useOpenOnArrival`, which then removes `add` from the address).
+
+## 5f0. Placeholder modules
+
+- A module that is planned but not built has a registry entry with no views, so it shows in the sidebar, the phone tab bar and the palette like any other part of the app. Its page is the page title and one card holding an `EmptyState`: the module's icon, "Coming soon", and one sentence on what will live there. (Blog used this from 2026-11-12 until Journal took its place the same day; no module is a placeholder now.)
+
+## 5f1. Journal (2026-11-12, spec: `docs/journal-spec.md`)
+
+- **Header:** "Journal", then the day pill (the period pill's track, round arrows and popover, one day at a time; full width on phones, beside the round Search button from `sm`). The popover is a 7-column day grid (mono weekday initials, 40px cells, ink fill for the chosen day, accent text for today, a 4px dot under days with a page, future days faded and disabled); the month name is a button that switches to the Expenses month grid. Footer: Today and Close.
+- **Facts strip:** a mono "Your day" label with a quiet "Fold away" button. Phones: one card of 60px rows (icon in a well circle, 15px semibold title, 13px soft detail, chevron). From `md`: tiles, one card each (icon, Bricolage 18px title, detail), 3 across, or 2×2 then 4 across from `lg` with the money card. Empty-day cards keep the shape; only the icon turns `--dash-good`. Folded, the strip is one pill (`summaryLine`) with a chevron; focusing the page folds it. Fold and unfold is a 200ms height and opacity change, instant with reduced motion.
+- **Mood:** a radiogroup of five 44px circles (Lucide Frown, Annoyed, Meh, Smile, Laugh), the chosen one filled ink, like a chosen chip.
+- **Page:** a white card textarea (16px text, relaxed leading, `field-sizing: content`, 256px minimum, 320px from `md`), then a mono status line ("Saved · 8:42 pm"). The page column is at most 896px wide.
+
 ## 5f. Tasks
 
-- **Header:** "Tasks", then one row with the pill tabs (Overview, Today, Upcoming, All tasks, Completed; icons only on phones) and, on the right, a well pill holding the Lists picker (popover: each list, a check on the current one, New list) and Search.
+- **Header:** "Tasks" with the round Search button at the far right from tablet width up (`SearchButton`, the same as the expense header; phones use the Search tab). On phones that spot holds a "Lists" pill with a chevron (`ListsMenu`, 44px): it opens a menu card (the Log a transaction card style) with "Your lists", each list with its line icon (the current one bold with a check), and "New list"; the page behind is dimmed and blurred (`backdrop-blur-sm`) while it is open, and tapping it closes the menu. The trigger's name says the current list ("Lists, now showing Work"). Then the pill tabs (Overview, Today, Upcoming, All tasks, Completed; icons only on phones). No Lists picker: lists are in the sidebar, the More sheet and the Overview.
 - **Overview:** four figures in the stat tiles (Due today is the orange one; phones show them as statement rows), then two columns from `lg`: Today and Coming up (7 cols), Lists with progress and This week bars (5 cols).
-- **Views and lists:** each is one card (`TaskPanel`) with group headings (`TaskGroup`: label left, count right, Overdue in red with its word) and an inline "Add a task" row at the bottom. A list page starts with a header card: emoji in a well, the name (Bricolage 24px), description, goal date and a done/total bar, with the options menu.
+- **Views and lists:** each is one card (`TaskPanel`) with group headings (`TaskGroup`: label left, count right, Overdue in red with its word) and an inline "Add a task" row at the bottom. A list page starts with a header card: the list's line icon in a well, the name (Bricolage 24px), description, goal date and a done/total bar, with the options menu.
 - **Task row:** a 20px round checkbox in a 44px target (ring red for high priority, amber for medium), the title (15px on phones, 14px on desktop) and one 12px line: due (red with "Overdue:" when late), repeat, priority, subtasks, list. No dividers; a soft grey under the pointer. In manual order a grip appears on hover (always on touch).
 
 ## 5g. Sign in and sign up
 
-- Wide screens: the cover panel on the left is always the dark green-black (`#121514`, light text, green kicker). The right side is a grainy gradient: five soft blobs (three orange, two green) at random places over a green-to-orange wash at a random angle, blurred, with fine monochrome grain on top. It is generated on the server for each visit, so no two loads match. The form sits on a solid white card (24px corners, deep soft shadow).
-- Phones: the gradient fills the screen behind the card; the brand moves to the top of the card.
+- Wide screens: the cover panel on the left is always the dark green-black (`#121514`, light text, green kicker). Top to bottom: the logo; the kicker "The everyday ledger", the headline "One book for the things you keep track of." and one sentence on the name; then a "Contents" page listing the modules (01 Tasks, 02 Expense Tracker and 03 Journal marked Ready with an orange dot; Reminders, Health Later) as mono numbers, names, dotted leaders and statuses. It is real text, not decoration, and it says nothing about self-hosting (O plans to let other people use it). A 48px minimum gap keeps the three parts apart; on short screens the panel grows and the page scrolls. The right side is a grainy gradient: five soft blobs (three orange, two green) at random places over a green-to-orange wash at a random angle, blurred, with fine monochrome grain on top. It is generated on the server for each visit, so no two loads match. The form sits on a solid white card (24px corners, deep soft shadow).
+- Phones: the gradient fills the screen behind the card. The logo stands on its own above the card, centred and side by side: the app icon as a 48px tile (`BrandTile`: light mark and orange rule on `#121514`, 4px strokes, a soft drop shadow), a 12px gap, then the wordmark at 1px per unit (`Wordmark`, 92×32, light, with a faint shadow so it reads on the gradient), so its 24px capitals match the 24px mark inside the tile. The card holds only the form.
+- The cover panel and the tile are always dark, so they set `--dash-accent` to the dark orange `#f58445`.
 
 ## 6. Accessibility rules that override the screenshot
 
