@@ -74,9 +74,10 @@ Ledge runs on a home server with Docker Compose and is reached over HTTPS throug
 cp .env.production.example .env   # fill in the secrets and your https address
 mkdir -p backups
 docker compose up -d --build                # database, migrations, app, nightly backups
-docker compose --profile tunnel up -d       # also start the Cloudflare Tunnel
 curl http://127.0.0.1:3000/api/health       # {"status":"ok"} when the app can reach the database
 ```
+
+Then add Ledge as one more route on the server's existing Cloudflare tunnel (`ledge.<your-domain>` → `http://localhost:3000` when cloudflared runs as a system service), as step 6 of the guide explains. A server without a tunnel can run the bundled connector instead: put the tunnel token in `TUNNEL_TOKEN` and start with `docker compose --profile tunnel up -d`.
 
 What is in the stack (`docker-compose.yml`): `db` (Postgres 18, named volume, port not published), `migrate` (one-shot: applies new migrations, then exits), `app` (the Next.js standalone server as a non-root user, port bound to 127.0.0.1 only), `cloudflared` (only with `--profile tunnel`), `backup` (nightly dump). The image is built by the multi-stage `Dockerfile`. A build needs internet access once (packages and fonts); the running app does not.
 

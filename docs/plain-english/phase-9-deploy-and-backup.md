@@ -87,3 +87,21 @@ Follow [docs/deploy-guide.md](../deploy-guide.md) from the top. It takes about a
 - **Real visitor addresses are read from Cloudflare's header.** Only safe because the only way in is the tunnel.
 - **Backups are files you can open.** Plain SQL, compressed, so you are never locked in to a special tool.
 - **No "forgot password" email yet.** There is no email service. Keep your password in a password manager. A command-line reset is on the ideas list in case you ever need it.
+
+## Update 2026-11-13: one tunnel for everything
+
+Your home server already has a Cloudflare tunnel that serves your portfolio, your SSH login and your trip planner. Instead of making a new tunnel for Ledge, the guide now adds Ledge to that same tunnel as one more "route". A route is a line that says "visitors to this name go to this program on the server". One tunnel per machine, one route per app, is the simplest way to keep things tidy.
+
+The guide (step 6) first helps you check how your tunnel's connector program (cloudflared) runs on the server, because that decides which address the route points to: `http://localhost:3000` if it runs as a normal system service, or `http://app:3000` if it runs in its own Docker container (then you connect that container to Ledge's network with one command).
+
+A new part of the guide (6A) explains how to tidy up the two old tunnels you made for single apps you no longer use (Trip Deck and Tracker): stop their connectors, delete their routes and the tunnels, and remove leftover DNS records. If you want those apps back one day, each becomes one more route on the main tunnel. It also reminds you to keep the SSH route behind Cloudflare Access (a second lock that only lets your email through) and to turn on automatic renewal for your domain, because if the domain expires every route stops at once, including remote SSH.
+
+The repository does not contain your real domain name: the guide writes `ledge.<your-domain>`, so the code never advertises where your server's SSH login is. Like the rest of the Cloudflare steps, this part could not be tried here, because it needs your Cloudflare account.
+
+## Update 2026-11-13: the first real deployment, and an FAQ
+
+You started deploying Ledge on your home server. So far: the settings file was created, the database and app were started, and Ledge was added as a new route on your existing Cloudflare tunnel (your tunnel keeps its routes in a configuration file on the server, so the route was added there and the tunnel was restarted). Still to do: confirm Ledge opens over HTTPS, create your account and close sign-ups, and the backup steps.
+
+The backup part of the guide (step 9) is deferred for now. What that means in practice: the nightly backup still runs by itself and keeps its copies on the server, so you have protection against a mistake, but not against the server's disk failing. The two steps that are left, copying backups to another place and trying a restore once, are worth doing before you depend on Ledge for anything you cannot re-enter.
+
+The guide has a new FAQ (section 15) with the questions that came up on the way: why `.env` does not show in a plain `ls`, how to tell the migration worked when it prints very little, whether the firewall prompt is safe, what "locally managed tunnel" means, how to find which cloudflared configuration file is really in use, why several cloudflared programs can be running at once, and why you should never paste keys or tokens anywhere.

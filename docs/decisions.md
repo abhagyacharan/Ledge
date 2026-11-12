@@ -524,6 +524,15 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
   - The liquid-glass skill O found (`affaan-m/ecc`, `liquid-glass-design`) has not been installed or read; it must be reviewed first and checked that it suits web CSS.
 - **Reason:** O's plan in chat (2026-11-13).
 
+## 2026-11-13: Ledge joins the existing Cloudflare tunnel
+
+- **Decision:** O's home server already runs one Cloudflare tunnel with several routes (portfolio, SSH, a trip planner). Ledge is added to it as one more route instead of getting its own tunnel. The rule is one tunnel per machine, one route per app.
+- **Service URL** depends on where that tunnel's cloudflared runs: `http://localhost:3000` for a system service (Ledge's port is bound to 127.0.0.1, so only the machine itself reaches it), or `http://app:3000` for a cloudflared container joined to Ledge's `ledge_default` network. The guide's step 6.1 shows how to tell.
+- **Kept:** the compose `cloudflared` service (profile `tunnel`) for a machine without a tunnel; on the home server `TUNNEL_TOKEN` stays empty.
+- **Clean-up advice (guide 6A):** O's two older per-app tunnels (Trip Deck, Tracker; apps no longer used) can be removed: stop their connectors, delete their routes and tunnels, delete leftover `cfargotunnel.com` CNAMEs. If those apps return, they become routes on the main tunnel. Also: keep the SSH route behind Cloudflare Access, and turn on domain auto-renew (every route, including SSH, depends on the domain).
+- **Not written into the repo:** the real domain and hostnames. The guide uses `ledge.<your-domain>`, so the repository does not advertise the server's SSH address.
+- **Reason:** O's request in chat (2026-11-13).
+
 ## Pending decisions (log here when made)
 
 - Model provider for AI features (embeddings, RAG answers, the Journal's AI ideas): local model on the home server or a hosted API. Blocks the smarter-search item in `docs/ideas.md`.

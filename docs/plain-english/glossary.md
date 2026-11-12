@@ -190,6 +190,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
 
+**Route (tunnel).** One line in a Cloudflare tunnel that sends visitors of one name (such as ledge.your-domain) to one program on the server. One tunnel can have many routes.
+
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
 
 **Savings rate.** Net savings as a percentage of the money that came in. 47.4% means you kept about 47 paise of every rupee.
