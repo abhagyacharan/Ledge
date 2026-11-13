@@ -74,6 +74,15 @@
  * canvas, white cards, near-black ink, grey wells, and one orange used sparingly (the dashboard
  * look). The sidebar is the same light canvas. Every pair is checked by the axe audit in the tests.
  */
+/*
+ * Where the floating phone tab bar sits: just above the home bar (the safe-area inset, needs
+ * viewport-fit=cover), or 12px up on phones without one. The + button and the page padding count
+ * from it.
+ */
+:root {
+  --tabbar-gap: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
 :root {
   /* A faint green-grey canvas, the light echo of the dark theme's green-black. */
   --background: #eceee9;

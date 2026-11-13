@@ -543,6 +543,14 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Speed:** `getUserSettings` is cached per request (the layout and the page both asked for it). Then, with O's OK ("Yes, add it"), Better Auth's `session.cookieCache` is on with a 5 minute `maxAge`: the signed-in user is kept in a signed cookie, so most requests skip the session lookup (measured: 8 page loads read the session table 0 times). Cost: signing out on one device can take up to 5 minutes to reach another device that still holds the cookie; signing out on the same device is instant (checked). The cookie is signed with `BETTER_AUTH_SECRET`, `httpOnly`, same attributes as the session cookie. The proxy and every `requireUser()` call are unchanged (§5). A "sign out everywhere" button (P1, not built) should be told about this delay.
 - **Reason:** O's requests in chat (2026-11-13).
 
+## 2026-11-13: Phone tab bar as a floating pill; glass tried and removed
+
+- **Glass removed:** frosted glass was tried three ways on 2026-11-13: an app-wide "Glass (beta)" switch (`liquid-glass-design` skill, SwiftUI only, rebuilt in CSS), then a glass phone tab bar and finally glass across the whole app (`glassmorphism` skill). O did not keep any of it; all glass code and both skills were removed. The design stays the solid dashboard look in `docs/design.md`.
+- **Kept:** the phone tab bar as a floating pill, shaped with the `mobile-native` skill: 16px side gutters, at most 448px wide, 64px tall and fully round, 52px concentric tabs (the current one filled, with a semibold label), press feedback, just above the home bar. A solid card with a hairline edge and a soft shadow. The + button sits 12px above it, aligned to its right edge. Rules: `docs/design.md` §5e.
+- **Safe areas:** `viewport-fit=cover` is now set (`viewport` export in the root layout), because without it `env(safe-area-inset-*)` is always 0 and the pill could not clear the iPhone home bar. The page area pads itself from the notch and rounded corners in return. `--tabbar-gap` (`max(12px, safe-area bottom)`) is the one value the pill, the + button and the page padding count from.
+- **Not checked:** a real phone and iPhone Safari (only an emulated phone-size browser); the axe run (pnpm is blocked on this machine).
+- **Reason:** O's requests in chat (2026-11-13).
+
 ## Pending decisions (log here when made)
 
 - Model provider for AI features (embeddings, RAG answers, the Journal's AI ideas): local model on the home server or a hosted API. Blocks the smarter-search item in `docs/ideas.md`.

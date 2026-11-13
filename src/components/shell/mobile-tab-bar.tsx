@@ -32,9 +32,12 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
     <>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)] md:hidden"
+        // A floating pill (docs/design.md §5e): 16px from the screen sides (the page gutter; the +
+        // button lines up with its right edge), clear of the home bar, and never wider than a
+        // large phone so every tab stays in thumb reach. 64px tall, corners half that.
+        className="fixed inset-x-4 bottom-(--tabbar-gap) z-30 mx-auto max-w-md rounded-full border border-dash-edge bg-card p-1.5 shadow-[0_12px_32px_-12px_rgb(16_24_16/0.28),0_2px_6px_-2px_rgb(16_24_16/0.08)] md:hidden dark:shadow-[0_14px_36px_-12px_rgb(0_0_0/0.7)]"
       >
-        <ul className={cn("mx-auto grid h-16 max-w-md", columns)}>
+        <ul className={cn("grid h-13 gap-0.5", columns)}>
           {tabs.map((m) => (
             <li key={m.id}>
               <Tab
@@ -113,21 +116,15 @@ export function MobileTabBar({ user }: { user: { name: string; email: string } }
 
 const tabClass = (current: boolean) =>
   cn(
-    "flex h-full w-full flex-col items-center justify-center gap-1 text-[11px] font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
-    current ? "text-foreground" : "text-muted-foreground",
+    // Each tab is a pill inside the pill: 52px tall (over the 44px tap minimum), inset 6px and
+    // fully round, so it is concentric with the bar. The current one is filled and its label
+    // turns ink and semibold, so the state never rests on colour alone. Presses respond at once.
+    "flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] leading-none outline-none transition-[background-color,color,transform] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active:scale-[0.96]",
+    current ? "bg-dash-well font-semibold text-foreground" : "font-medium text-muted-foreground",
   );
 
-function TabIcon({ current, children }: { current: boolean; children: React.ReactNode }) {
-  return (
-    <span
-      className={cn(
-        "grid h-7 w-14 place-items-center rounded-full transition-colors duration-150",
-        current && "bg-card shadow-(--dash-lift)",
-      )}
-    >
-      {children}
-    </span>
-  );
+function TabIcon({ children }: { current?: boolean; children: React.ReactNode }) {
+  return <span className="grid size-6 place-items-center">{children}</span>;
 }
 
 function Tab({

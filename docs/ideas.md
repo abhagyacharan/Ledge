@@ -29,6 +29,8 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 
 ### 4. Glass redesign (glassmorphism or "liquid glass")
 
+**Status (2026-11-13): tried and removed.** An app-wide glass switch (`liquid-glass-design` skill), a glass phone tab bar and glass across the whole app (`glassmorphism` skill) were each built and then removed at O's request. Only the floating pill shape of the phone tab bar stayed (`docs/design.md` §5e). The notes below are the original plan.
+
 - **What:** frosted, translucent surfaces (blurred backgrounds, soft highlights, depth) across the app. No new functions; a look change large enough to count as a version (for example 0.2).
 - **Skill O wants to try:** `npx skills add https://github.com/affaan-m/ecc --skill liquid-glass-design` (from skills.sh). Not installed or read yet. Before using it: read the skill file (a third-party skill is instructions an agent will follow), and check it is written for web CSS. If it targets Apple's native SwiftUI Liquid Glass, it can inspire but not drive a Tailwind app. Fallback: plain glassmorphism by our own rules (`backdrop-filter`, translucent tokens), which O trusts.
 - **Risks to design for:**
@@ -98,7 +100,7 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 - 2026-11-11: **Automatic off-site backups** built into the stack (an `rclone` sidecar) once O has chosen where they go.
 - 2026-11-11: **Uptime alert**: ping `/api/health` from outside (Cloudflare Health Checks, UptimeRobot or Healthchecks.io) and notify O when it fails or when the nightly backup stops.
 - 2026-11-11: **Pin `cloudflared` and other image versions** in `docker-compose.yml` after the first successful deploy (the compose file uses `latest` for cloudflared).
-- 2026-11-12: **Floating pill tab bar on phones**: make the bottom navigation a pill-shaped bar that floats above the bottom edge (rounded ends, a little gap from the screen edges and the home bar) instead of the full-width solid bar. O's idea for later; check the 44px tap targets, the safe area, and that the round + button still clears it.
+- 2026-11-12, **built 2026-11-13** (solid pill, `docs/design.md` §5e): **Floating pill tab bar on phones**: make the bottom navigation a pill-shaped bar that floats above the bottom edge (rounded ends, a little gap from the screen edges and the home bar) instead of the full-width solid bar. O's idea for later; check the 44px tap targets, the safe area, and that the round + button still clears it.
 
 ## P2 items already named in the spec (do not build now)
 

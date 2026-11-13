@@ -94,7 +94,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Git / GitHub.** Git remembers every version of the project. GitHub is a website that stores a copy online.
 
-**Glassmorphism (liquid glass).** A look where panels resemble frosted glass: slightly see-through, with what is behind them blurred. "Liquid glass" is Apple's name for its newest version. A planned redesign; not built yet.
+**Glassmorphism (liquid glass).** A look where panels resemble frosted glass: slightly see-through, with what is behind them blurred. "Liquid glass" is Apple's name for its newest version. Tried in Ledge on 13 November 2026 and not kept.
 
 **Goal.** In Ledge, a list that has a target date. The list heading shows how many days are left.
 
@@ -192,6 +192,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Route (tunnel).** One line in a Cloudflare tunnel that sends visitors of one name (such as ledge.your-domain) to one program on the server. One tunnel can have many routes.
 
+**Safe area.** The part of a phone screen that is not covered by the notch, the rounded corners or the home bar. Ledge keeps its buttons inside it.
+
 **SameSite = Lax.** A cookie rule: the browser does not attach the cookie to most requests started from other websites.
 
 **Savings rate.** Net savings as a percentage of the money that came in. 47.4% means you kept about 47 paise of every rupee.
@@ -230,7 +232,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Tag.** A label you could stick on tasks, such as "bills". Removed on 2026-11-11; lists and priorities do the grouping now.
 
-**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Tasks, Expenses, Journal, Search, More), like a native app.
+**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Tasks, Expenses, Journal, Search, More), like a native app. In Ledge it is a floating, rounded pill.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 

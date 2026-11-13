@@ -15,7 +15,9 @@ export function AppMain({ children }: { children: ReactNode }) {
   return (
     <main
       className={cn(
-        "mx-auto w-full flex-1 px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-16",
+        // Phones: clear of the notch and rounded corners (viewport-fit=cover), and room at the
+        // bottom for the floating tab bar and the + button above it.
+        "mx-auto w-full flex-1 px-[max(1rem,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))] pt-[calc(1.5rem+env(safe-area-inset-top,0px))] pb-[calc(var(--tabbar-gap)+8.5rem)] md:px-8 md:pt-10 md:pb-16",
         wide ? "max-w-6xl" : "max-w-4xl",
       )}
     >

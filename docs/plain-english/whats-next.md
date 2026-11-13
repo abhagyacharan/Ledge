@@ -30,6 +30,20 @@ Each of the big ones (4, 5 and 6) is finished and working on the server before t
 
 ## 4. The glass look
 
+**Update, 13 November 2026: tried, and not kept.** The glass look was tried three times in one day: first as a switch that turned much of the app to frosted glass, then only on the bar at the bottom of the phone, then across the whole app. You decided against it each time, so all of it was taken out again. The app keeps its solid, calm look.
+
+**What stayed: the bar at the bottom of the phone is now a floating pill.** It is a rounded white bar (dark grey in dark mode) that floats a little above the bottom edge and away from the sides of the screen, like the newest phone apps. The tab you are on is shaded and its word turns bold. The round + button sits just above the pill, lined up with its right edge.
+
+Why it is shaped this way:
+
+- **Thumb-friendly.** Each tab is a big target (bigger than the 44-pixel minimum), and the pill is never wider than a large phone, so every tab stays within reach of your thumb.
+- **Clear of the home bar.** On iPhones it sits just above the thin home bar at the bottom. To know where that bar is, the app now draws right to the edges of the screen and keeps its own content away from the notch and the rounded corners (the "safe area").
+- **Feels like a button.** A tab shrinks very slightly as you press it, so a tap answers at once.
+
+Not checked yet: your real phone (only a phone-sized browser window so far) and the automatic accessibility check.
+
+The rest of this section is the original plan, kept for reference.
+
 **What it is.** Panels that look like frosted glass: slightly see-through, with whatever is behind them blurred. Apple calls its newest version "liquid glass". The general style is called glassmorphism.
 
 **The tool you found.** A "skill" from the skills.sh website (`liquid-glass-design`). A skill is a set of written instructions that Claude follows. It has not been installed or read yet. Two checks come first: read what it tells Claude to do (it was written by a stranger), and check that it is meant for websites. If it is written for iPhone apps made with Apple's own tools, it can give ideas but cannot be applied directly to Ledge. The fallback is building the glass look by our own rules, which is well understood.
