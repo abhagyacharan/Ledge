@@ -18,6 +18,8 @@ You will use Ledge mostly on your phone. Once it runs on your home server, you c
 
 Each of the big ones (4, 5 and 6) is finished and working on the server before the next one starts.
 
+**Update, 14 November 2026.** You put 5 and 6 on hold. Smarter search is not worth it while the database holds one person's data, and a phone app is a lot of work that you are still thinking about. The app stays as it is for now.
+
 ## 3. Automatic updates
 
 **What it is.** Today, updating the server means logging in to it and typing commands. The technical name for doing this automatically is CI/CD (see the [glossary](glossary.md)).
@@ -105,7 +107,27 @@ Before the code is made public: check that no passwords, secrets or personal det
 
 Letting other people have accounts on your server is a bigger step. It needs email (to confirm addresses and reset passwords), privacy wording, and backups that now hold other people's finances. That needs your decision first.
 
+## A new idea: the Work page (14 November 2026)
+
+**Not built. It is a written proposal only**, in [`docs/work-spec.md`](../work-spec.md).
+
+The idea is yours. You tell the app what you are working on, for example "System design", and whether you want things to learn from, news, or both. Each morning at a time you pick, a short briefing is waiting: three to five real links, each with a line saying what it is and why it suits you. If one interests you, one tap turns it into a task. The task has no due date unless you give it one; the app does not guess.
+
+How it would work: a small helper program on the server wakes every 15 minutes and checks whether a briefing is due. If so, it asks a language model (an AI program that reads and writes text) that can search the web, then checks every link really exists and has not been shown to you before.
+
+Honest notes:
+
+- **It costs money.** The model is a paid service. The price is not known until one is chosen and tried.
+- **Some days there is nothing new.** The page will say so instead of padding the list.
+- **The summary can be wrong.** The app can prove a page exists. It cannot prove the model described it correctly.
+- **Only the topic leaves your server.** Never your tasks, money or journal.
+- **No alerts on your phone.** The briefing waits until you open the app.
+
+It is also a cheap way to test your bigger Odyssey idea: if you read the briefing every morning for a month, a full learning app is worth building.
+
 ## What is not decided
+
+- For the Work page: which AI service to use, its name, where it sits on the phone, and your go-ahead (AI features are on the "do not build" list today).
 
 - Where the two unfinished extras (export your data, select many tasks at once) fit in this order.
 - Which language model to use for smarter search.

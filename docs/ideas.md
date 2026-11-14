@@ -16,6 +16,8 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 6. A phone app that shares the same data as the website.
 7. Open source the project and host it publicly.
 
+**Update (2026-11-14):** O put items 5 and 6 on hold. Smarter search does not pay off for a database as small as one person's, and a phone app is a lot of work he is still thinking about. Item 4 (glass) was tried and removed. The app stays as it is for now, apart from new ideas parked below.
+
 ### 3. Automatic deploys (CI/CD)
 
 - **Goal:** push to GitHub, the home server rebuilds and restarts by itself.
@@ -78,6 +80,8 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 
 ## Parked
 
+- 2026-11-14: **Work (daily briefings)**: a page where O names what he is working on ("System design") and gets a short briefing of real links each morning, resources or news, any of which can become a task. Full proposal with open questions: `docs/work-spec.md`. Not built; needs a model provider with web search and O's go-ahead, because AI features are a §1 non-goal. It doubles as a cheap test of O's separate Odyssey idea (a learning app).
+- 2026-11-14: **If many people used Ledge** (O asked what it would become at 1,000 to 100,000 users). Ideas only: capture without typing (plain sentence, voice, receipt photo, bank statement or UPI import, a Telegram or WhatsApp bot); categories that learn from corrections; "ask your data" where a model calls the existing data functions as tools (not RAG); weekly and monthly reviews written over figures the code computes; forecasts and warnings from plain statistics (safe to spend, unusual spending, subscriptions, EMI end dates); goals that join money and tasks; shared spaces; an MCP server so O's own assistant can read and add entries. Underneath: an append-only event log, a job queue inside Postgres, staged imports, and evals for anything AI. The hard part at scale is trust and privacy, not load.
 - 2026-11-11: **Blog** (O mentioned it as a possible later module, after the expense tracker, redesign and deployment). Needs its own spec: public or private, markdown editor, drafts, images. The placeholder page it had on 2026-11-12 was replaced the same day by the Journal; posting a journal entry as a blog post is the planned route (see Journal, later additions).
 - 2026-11-12: **Journal, later additions** (O chose these for after the first version; the first version is one page per day with a day-facts strip, Need/Want expense labels, mood and a past-days calendar):
   - **AI reflection card**: a short read of the day from its tasks, spending and entry. Provider not chosen yet (Claude API or a local model); the day's data would leave the server with the Claude API.

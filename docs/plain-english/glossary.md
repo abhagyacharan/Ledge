@@ -20,6 +20,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Bottom sheet.** A panel that slides up from the bottom of a phone screen, used here for the add and edit form. You can drag it down to close it.
 
+**Briefing (Work page).** A short daily list of links about a topic you chose, with a line about each. A proposal only (`docs/work-spec.md`); not built.
+
 **Build.** Turning the code into the finished, optimised version that actually runs for daily use.
 
 **Cascade.** When deleting one record automatically deletes the records that depend on it, for example deleting a list deletes its tasks.

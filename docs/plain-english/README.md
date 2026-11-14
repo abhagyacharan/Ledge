@@ -37,7 +37,7 @@ The work is done in twelve steps, called phases, always in the same order. A pha
 ## Other pages
 
 - [How the tests work](how-tests-work.md): where test data comes from, why tests were slow, and how they were sped up.
-- [What comes next](whats-next.md): the plan for after deployment (automatic updates, a glass look, smarter search, a phone app, open source). The glass look was tried and dropped; only the floating phone bar stayed. The rest is not built yet.
+- [What comes next](whats-next.md): the plan for after deployment (automatic updates, a glass look, smarter search, a phone app, open source). The glass look was tried and dropped; only the floating phone bar stayed. Smarter search and the phone app are on hold (14 November 2026). It also describes a new idea, the Work page with a daily briefing, which is a written proposal only. The rest is not built yet.
 - [Glossary](glossary.md): plain meanings of technical words.
 
 ## What each future phase will do, in one paragraph
