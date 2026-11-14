@@ -94,6 +94,24 @@ export function getDueBetweenTasks(userId: string, from: string, to: string): Pr
   );
 }
 
+/**
+ * Open repeating tasks that follow a fixed schedule and are due on or before `to` (any date up to
+ * it, so an overdue or today task still shows its later days in Upcoming).
+ */
+export function getRepeatingTasks(userId: string, to: string): Promise<ViewTask[]> {
+  return fetchViewTasks(
+    userId,
+    and(
+      eq(tasks.status, "open"),
+      isNull(tasks.parentId),
+      isNotNull(tasks.recurrenceRule),
+      eq(tasks.recurrenceMode, "fixed"),
+      isNotNull(tasks.dueDate),
+      lte(tasks.dueDate, to),
+    ),
+  );
+}
+
 /** Every task (open and done), subtasks included, so parents can show progress. */
 export function getAllTasks(userId: string): Promise<ViewTask[]> {
   return fetchViewTasks(userId, undefined);

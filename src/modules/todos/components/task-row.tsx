@@ -188,7 +188,7 @@ export function TaskRow({
   const { done, toggle } = useToggleDone(task.id, task.title, task.status === "done");
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
   const { hrefFor } = useTaskLinks();
-  const repeatText = describeStored(task.recurrenceRule, task.recurrenceMode);
+  const repeatText = describeStored(task.recurrenceRule, task.recurrenceMode, task.recurrenceUntil);
 
   return (
     <li

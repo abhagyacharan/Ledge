@@ -26,6 +26,8 @@ export type TaskPatch = {
   /** Canonical rule text (src/lib/recurrence.ts) or null to stop repeating. */
   recurrenceRule?: string | null;
   recurrenceMode?: RecurrenceMode;
+  /** Last day the repeat may fall on, or null for no end. */
+  recurrenceUntil?: string | null;
 };
 
 /** The task's list has not been moved to Trash. */
@@ -106,6 +108,7 @@ export type NewTaskInput = {
   dueTime?: string | null;
   recurrenceRule?: string | null;
   recurrenceMode?: RecurrenceMode;
+  recurrenceUntil?: string | null;
 };
 
 /**
@@ -129,6 +132,9 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
   const recurrenceRule = input.recurrenceRule ?? null;
   // A repeat needs a due date, a top-level task and a rule we understand.
   if (recurrenceRule && (!dueDate || parentId || !parseRule(recurrenceRule))) return null;
+  // An end date only goes with a repeat, and cannot come before the first date.
+  const recurrenceUntil = recurrenceRule ? (input.recurrenceUntil ?? null) : null;
+  if (recurrenceUntil && dueDate && recurrenceUntil < dueDate) return null;
   const [row] = await db
     .insert(tasks)
     .values({
@@ -142,6 +148,7 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
       dueTime: dueDate ? (input.dueTime ?? null) : null,
       recurrenceRule,
       recurrenceMode: input.recurrenceMode ?? "fixed",
+      recurrenceUntil,
       position: positionAtEnd(await lastPositionInGroup(userId, listId, parentId)),
     })
     .returning();
@@ -179,10 +186,22 @@ export async function updateTask(
       if (current.parentId || !effectiveDue || !parseRule(patch.recurrenceRule)) return null;
     }
     set.recurrenceRule = patch.recurrenceRule;
+    if (patch.recurrenceRule === null) set.recurrenceUntil = null; // no repeat, nothing to end
   } else if (patch.dueDate === null && current.recurrenceRule) {
     set.recurrenceRule = null; // a repeating task with no date has nothing to repeat from
+    set.recurrenceUntil = null;
   }
   if (patch.recurrenceMode !== undefined) set.recurrenceMode = patch.recurrenceMode;
+  if (patch.recurrenceUntil !== undefined && set.recurrenceRule !== null) {
+    const effectiveRule =
+      patch.recurrenceRule === undefined ? current.recurrenceRule : patch.recurrenceRule;
+    const effectiveDue = patch.dueDate === undefined ? current.dueDate : patch.dueDate;
+    if (patch.recurrenceUntil !== null) {
+      // An end date needs a repeat, and cannot come before the date it starts from.
+      if (!effectiveRule || (effectiveDue && patch.recurrenceUntil < effectiveDue)) return null;
+    }
+    set.recurrenceUntil = patch.recurrenceUntil;
+  }
   if (Object.keys(set).length === 0) return current;
 
   const [row] = await db.update(tasks).set(set).where(activeTask(userId, taskId)).returning();
@@ -220,6 +239,8 @@ export async function completeRecurringTask(
     dueDate: task.dueDate,
     completedOn,
   });
+  // The repeat has run its course: finish the task like any other (the caller does that).
+  if (task.recurrenceUntil && nextDue > task.recurrenceUntil) return null;
 
   return db.transaction(async (tx) => {
     const [snapshot] = await tx

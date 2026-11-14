@@ -33,6 +33,11 @@ import { guarded, NOT_FOUND, refresh } from "./guard";
 
 export async function createTaskAction(input: unknown) {
   return guarded(createTaskSchema, input, async (data, userId) => {
+    if (data.recurrenceUntil && data.dueDate && data.recurrenceUntil < data.dueDate) {
+      return fail("The repeat cannot end before its first date.", {
+        recurrenceUntil: "Pick a day on or after the first date.",
+      });
+    }
     const task = await createTask(userId, data);
     if (!task) return fail("Couldn't add that task. The list or parent no longer exists.");
     refresh();
@@ -52,6 +57,17 @@ export async function updateTaskAction(input: unknown) {
       if (current.parentId) return fail("Only a task, not a subtask, can repeat.");
       if (!(defined.dueDate ?? current.dueDate))
         return fail("Set a due date before it can repeat.");
+    }
+    if (defined.recurrenceUntil) {
+      const current = await getTask(userId, id);
+      if (!current) return fail(NOT_FOUND);
+      const rule =
+        defined.recurrenceRule === undefined ? current.recurrenceRule : defined.recurrenceRule;
+      const due = defined.dueDate === undefined ? current.dueDate : defined.dueDate;
+      if (!rule) return fail("Choose how often it repeats before setting an end.");
+      if (due && defined.recurrenceUntil < due) {
+        return fail("The repeat cannot end before its first date.");
+      }
     }
     const task = await updateTask(userId, id, defined);
     if (!task) return fail(NOT_FOUND);

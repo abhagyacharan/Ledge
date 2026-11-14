@@ -65,6 +65,24 @@ export function groupUpcoming<T extends DatedTask>(
     .map(([date, list]) => ({ date, tasks: list.sort(byTimeThenPriority) }));
 }
 
+export type Preview = { taskId: string; title: string; repeatText: string };
+
+/**
+ * The days of Upcoming: real tasks plus the later dates of repeating tasks, merged by day and
+ * ordered by date. A day with only previews still gets its group.
+ */
+export function mergeUpcoming<T extends DatedTask>(
+  days: DayGroup<T>[],
+  previews: Map<IsoDate, Preview[]>,
+): { date: IsoDate; tasks: T[]; previews: Preview[] }[] {
+  const dates = new Set<IsoDate>([...days.map((d) => d.date), ...previews.keys()]);
+  return [...dates].sort(byString).map((date) => ({
+    date,
+    tasks: days.find((d) => d.date === date)?.tasks ?? [],
+    previews: (previews.get(date) ?? []).sort((a, b) => byString(a.title, b.title)),
+  }));
+}
+
 /**
  * Finished tasks grouped by the day they were finished in the user's timezone, newest day first
  * and newest task first inside a day.

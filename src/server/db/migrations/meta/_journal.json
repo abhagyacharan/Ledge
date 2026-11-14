@@ -71,6 +71,13 @@
       "when": 1794491584687,
       "tag": "0009_journal_and_spend_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794521053641,
+      "tag": "0010_task_repeat_end_date",
+      "breakpoints": true
     }
   ]
 }

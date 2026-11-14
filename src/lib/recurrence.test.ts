@@ -6,6 +6,7 @@ import {
   nextDueDate,
   parseRule,
   ruleFor,
+  upcomingOccurrences,
   type RecurrenceMode,
 } from "./recurrence";
 
@@ -188,5 +189,66 @@ describe("describeRule", () => {
     expect(describeStored(null, "fixed")).toBeNull();
     expect(describeStored("FREQ=HOURLY", "fixed")).toBeNull();
     expect(describeStored("FREQ=DAILY", "fixed")).toBe("Every day");
+  });
+});
+
+describe("upcomingOccurrences (later dates shown in Upcoming)", () => {
+  const dates = (
+    text: string,
+    dueDate: string | null,
+    until: string | null,
+    from: string,
+    to: string,
+    mode: RecurrenceMode = "fixed",
+  ) => upcomingOccurrences({ rule: rule(text), mode, dueDate, until, from, to });
+
+  it("lists every day after the due date for a daily task", () => {
+    expect(dates("FREQ=DAILY", "2026-11-13", null, "2026-11-14", "2026-11-17")).toEqual([
+      "2026-11-14",
+      "2026-11-15",
+      "2026-11-16",
+      "2026-11-17",
+    ]);
+  });
+
+  it("stops at the end date, and an end date before the window gives nothing", () => {
+    expect(dates("FREQ=DAILY", "2026-11-13", "2026-11-15", "2026-11-14", "2026-11-30")).toEqual([
+      "2026-11-14",
+      "2026-11-15",
+    ]);
+    expect(dates("FREQ=DAILY", "2026-11-13", "2026-11-13", "2026-11-14", "2026-11-30")).toEqual([]);
+  });
+
+  it("follows the schedule: every 3 days, weekly on chosen days", () => {
+    expect(dates("FREQ=DAILY;INTERVAL=3", "2026-11-10", null, "2026-11-14", "2026-11-23")).toEqual([
+      "2026-11-16",
+      "2026-11-19",
+      "2026-11-22",
+    ]);
+    // 2026-11-13 is a Friday.
+    expect(
+      dates("FREQ=WEEKLY;BYDAY=MO,FR", "2026-11-13", null, "2026-11-14", "2026-11-24"),
+    ).toEqual(["2026-11-16", "2026-11-20", "2026-11-23"]);
+  });
+
+  it("skips dates before the window for an overdue task", () => {
+    expect(dates("FREQ=DAILY", "2026-11-01", null, "2026-11-14", "2026-11-15")).toEqual([
+      "2026-11-14",
+      "2026-11-15",
+    ]);
+  });
+
+  it("shows nothing for a repeat that counts from when you finish it, or with no due date", () => {
+    expect(
+      dates("FREQ=DAILY", "2026-11-13", null, "2026-11-14", "2026-11-20", "after_completion"),
+    ).toEqual([]);
+    expect(dates("FREQ=DAILY", null, null, "2026-11-14", "2026-11-20")).toEqual([]);
+  });
+});
+
+describe("describeStored with an end date", () => {
+  it("adds 'until' only when there is an end", () => {
+    expect(describeStored("FREQ=DAILY", "fixed")).toBe("Every day");
+    expect(describeStored("FREQ=DAILY", "fixed", "2026-12-13")).toBe("Every day until 13 Dec");
   });
 });

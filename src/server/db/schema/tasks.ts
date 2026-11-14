@@ -48,6 +48,8 @@ export const tasks = pgTable(
     /** RRULE subset (Phase 10). */
     recurrenceRule: text("recurrence_rule"),
     recurrenceMode: text("recurrence_mode", { enum: RECURRENCE_MODES }).notNull().default("fixed"),
+    /** Last day a repeat may fall on (optional). After it the task finishes like a normal task. */
+    recurrenceUntil: date("recurrence_until", { mode: "string" }),
     /** For a completed snapshot of a recurring task: the task it came from. */
     recurrenceOriginId: uuid("recurrence_origin_id").references((): AnyPgColumn => tasks.id, {
       onDelete: "set null",
@@ -83,6 +85,10 @@ export const tasks = pgTable(
     check("tasks_status_check", sql`${t.status} in ('open', 'done')`),
     check("tasks_priority_check", sql`${t.priority} between 0 and 3`),
     check("tasks_recurrence_mode_check", sql`${t.recurrenceMode} in ('fixed', 'after_completion')`),
+    check(
+      "tasks_recurrence_until_needs_rule_check",
+      sql`${t.recurrenceUntil} is null or ${t.recurrenceRule} is not null`,
+    ),
     check("tasks_due_time_needs_date_check", sql`${t.dueTime} is null or ${t.dueDate} is not null`),
     // Completing sets completed_at; reopening clears it. They must always agree.
     check(

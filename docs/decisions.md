@@ -543,6 +543,13 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Speed:** `getUserSettings` is cached per request (the layout and the page both asked for it). Then, with O's OK ("Yes, add it"), Better Auth's `session.cookieCache` is on with a 5 minute `maxAge`: the signed-in user is kept in a signed cookie, so most requests skip the session lookup (measured: 8 page loads read the session table 0 times). Cost: signing out on one device can take up to 5 minutes to reach another device that still holds the cookie; signing out on the same device is instant (checked). The cookie is signed with `BETTER_AUTH_SECRET`, `httpOnly`, same attributes as the session cookie. The proxy and every `requireUser()` call are unchanged (§5). A "sign out everywhere" button (P1, not built) should be told about this delay.
 - **Reason:** O's requests in chat (2026-11-13).
 
+## 2026-11-13: Repeats can end; Upcoming previews repeating tasks
+
+- **Problem (O):** a task repeating daily "for a month" did not appear in Today or Upcoming. Cause: a repeating task is one task that moves to its next date, so Upcoming (next 14 days) showed it at most once and only when that date was within the window; and there was no way to say "for a month".
+- **End date:** `tasks.recurrence_until` (nullable date, CHECK: only with a rule; migration 0010). Set from a new Ends control in the repeat box: Never, After 1 week, After 1 month, After 3 months (counted from the first date), or On a date. It cannot be before the first date. When the next date would pass it, ticking the task finishes it like a normal task (no new copy). Stopping the repeat or clearing the due date clears the end.
+- **Upcoming previews:** each later date of an open, follows-the-schedule repeat (until its end) is listed in Upcoming as a read-only row with a dashed repeat icon and no checkbox; it opens the real task. Repeats that count from when you finish have no known dates, so they show none. Today is unchanged: a repeat due today or overdue is already in it.
+- **Reason:** O's report and answers in chat (2026-11-13).
+
 ## 2026-11-13: Phone tab bar as a floating pill; glass tried and removed
 
 - **Glass removed:** frosted glass was tried three ways on 2026-11-13: an app-wide "Glass (beta)" switch (`liquid-glass-design` skill, SwiftUI only, rebuilt in CSS), then a glass phone tab bar and finally glass across the whole app (`glassmorphism` skill). O did not keep any of it; all glass code and both skills were removed. The design stays the solid dashboard look in `docs/design.md`.

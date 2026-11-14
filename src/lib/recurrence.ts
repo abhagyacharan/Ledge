@@ -212,6 +212,35 @@ export function nextDueDate(input: {
   return nextOnSchedule(rule, anchor, after);
 }
 
+/** The most previews one repeating task can add to a view (a daily task over a long window). */
+const MAX_OCCURRENCES = 400;
+
+/**
+ * The dates a repeating task will fall on from `from` to `to` (inclusive), after the one it is due
+ * on now, for showing ahead in Upcoming. Only for "follows the schedule" repeats: a repeat that
+ * counts from when you finish it has no dates to show until it is finished. Stops at `until`.
+ */
+export function upcomingOccurrences(input: {
+  rule: Rule;
+  mode: RecurrenceMode;
+  dueDate: IsoDate | null;
+  until: IsoDate | null;
+  from: IsoDate;
+  to: IsoDate;
+}): IsoDate[] {
+  const { rule, mode, dueDate, until, from, to } = input;
+  if (mode !== "fixed" || !dueDate) return [];
+  const last = until && until < to ? until : to;
+  const out: IsoDate[] = [];
+  let cursor = dueDate;
+  for (let i = 0; i < MAX_OCCURRENCES; i++) {
+    cursor = nextOnSchedule(rule, dueDate, cursor);
+    if (cursor > last) break;
+    if (cursor >= from) out.push(cursor);
+  }
+  return out;
+}
+
 const WEEKDAY_NAMES: Record<Weekday, string> = {
   MO: "Mon",
   TU: "Tue",
@@ -266,9 +295,25 @@ export function describeRule(rule: Rule, mode: RecurrenceMode = "fixed"): string
   return every;
 }
 
-/** Text for a stored rule, or null when it is empty or not a supported rule. */
-export function describeStored(text: string | null, mode: RecurrenceMode): string | null {
+/** Text for a stored rule, or null when it is empty or not a supported rule. `until` adds "until 13 Dec". */
+export function describeStored(
+  text: string | null,
+  mode: RecurrenceMode,
+  until: IsoDate | null = null,
+  locale = "en-IN",
+): string | null {
   if (!text) return null;
   const rule = parseRule(text);
-  return rule ? describeRule(rule, mode) : null;
+  if (!rule) return null;
+  const base = describeRule(rule, mode);
+  return until ? `${base} until ${formatShortDate(until, locale)}` : base;
+}
+
+function formatShortDate(iso: IsoDate, locale: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
 }

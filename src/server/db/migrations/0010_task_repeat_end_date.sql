@@ -1,0 +1,2 @@
+ALTER TABLE "tasks" ADD COLUMN "recurrence_until" date;--> statement-breakpoint
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_recurrence_until_needs_rule_check" CHECK ("tasks"."recurrence_until" is null or "tasks"."recurrence_rule" is not null);

@@ -1,4 +1,4 @@
-import { addDays, differenceInCalendarDays, format, isValid, parseISO } from "date-fns";
+import { addDays, addMonths, differenceInCalendarDays, format, isValid, parseISO } from "date-fns";
 
 /**
  * Due dates and times are "floating" (CLAUDE.md §6.3, §9): a date is `YYYY-MM-DD`, a time is
@@ -59,6 +59,11 @@ function parseIsoDate(iso: IsoDate): Date {
 /** `iso` plus `days` calendar days (negative allowed). Month ends and leap days are handled. */
 export function addDaysIso(iso: IsoDate, days: number): IsoDate {
   return format(addDays(parseIsoDate(iso), days), "yyyy-MM-dd");
+}
+
+/** `iso` plus `months` calendar months; a day past the month's end lands on its last day (31 Jan + 1 month = 28 Feb). */
+export function addMonthsIso(iso: IsoDate, months: number): IsoDate {
+  return format(addMonths(parseIsoDate(iso), months), "yyyy-MM-dd");
 }
 
 /** ISO weekday of a date: 1 = Monday ... 7 = Sunday. */

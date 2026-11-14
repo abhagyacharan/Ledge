@@ -162,6 +162,7 @@ function QuickAddForm({
   const [notes, setNotes] = useState("");
   const [repeatRule, setRepeatRule] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState<RecurrenceMode>("fixed");
+  const [repeatUntil, setRepeatUntil] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   // A #list in the text wins over the menu; removing its chip gives the menu back.
@@ -182,12 +183,17 @@ function QuickAddForm({
 
   function changeDue(next: Due) {
     setManualDue(next);
-    if (next.dueDate === null) setRepeatRule(null); // nothing to repeat from
+    if (next.dueDate === null) {
+      setRepeatRule(null); // nothing to repeat from
+      setRepeatUntil(null);
+    }
   }
 
   function changeRepeat(change: RepeatChange) {
     if (change.recurrenceRule !== undefined) setRepeatRule(change.recurrenceRule);
     if (change.recurrenceMode) setRepeatMode(change.recurrenceMode);
+    if (change.recurrenceUntil !== undefined) setRepeatUntil(change.recurrenceUntil);
+    if (change.recurrenceRule === null) setRepeatUntil(null);
     if (change.dueDate) setManualDue({ dueDate: change.dueDate, dueTime: due.dueTime });
   }
 
@@ -204,7 +210,11 @@ function QuickAddForm({
           priority,
           ...(due.dueDate ? { dueDate: due.dueDate, dueTime: due.dueTime } : {}),
           ...(repeatRule && due.dueDate
-            ? { recurrenceRule: repeatRule, recurrenceMode: repeatMode }
+            ? {
+                recurrenceRule: repeatRule,
+                recurrenceMode: repeatMode,
+                recurrenceUntil: repeatUntil,
+              }
             : {}),
         }),
       );
@@ -218,6 +228,7 @@ function QuickAddForm({
         setNotes("");
         setRepeatRule(null);
         setRepeatMode("fixed");
+        setRepeatUntil(null);
       }
       inputRef.current?.focus();
     });
@@ -344,6 +355,7 @@ function QuickAddForm({
             <RepeatField
               rule={repeatRule}
               mode={repeatMode}
+              until={repeatUntil}
               dueDate={due.dueDate}
               today={dateCtx.today}
               onChange={changeRepeat}

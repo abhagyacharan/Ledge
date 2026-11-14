@@ -83,6 +83,10 @@ In the task panel there is a new **Repeat** box under the due date. Choose **Eve
 
 A task needs a due date to repeat; if it has none, turning on a repeat gives it today's date. Clearing the due date turns the repeat off. Only whole tasks repeat, not subtasks. Repeating tasks show a small repeat symbol and words ("Every week on Mon, Wed") in their row.
 
+**Ending a repeat (added 2026-11-13).** The Repeat box has an **Ends** choice: Never, After 1 week, After 1 month, After 3 months, or On a date (counted from the first date). When the next date would fall after the end, ticking the task finishes it for good, like a normal task. The row then reads "Every day until 13 Dec". You asked for this after adding a daily "swimming" task for a month: before, there was no way to say "for a month".
+
+**Seeing the coming days (added 2026-11-13).** A repeating task is really one task that moves to its next date, so Upcoming used to show it once, or not at all if that date was more than two weeks away. Now Upcoming also lists each later day the task comes back, within the next 14 days and up to its end date. Those rows have a dashed repeat symbol and no tick box, because they are previews; tapping one opens the real task. Tasks whose repeat counts from the day you finish them show no previews, because their next dates are not known until you finish them. Today did not need a change: a repeating task due today or late is already listed there. If a task was due on a day more than two weeks ahead, it will not show in Today or Upcoming until it gets closer.
+
 ### What happens when you tick one
 
 The task is **not finished for good**. Ledge adds a finished copy to **Completed** (so your history shows every time you did it) and moves the task to its **next date**. Its subtasks are unticked for the next round, and the copy keeps its tags. A message says "Done ... Next: tomorrow" with **Undo**, which removes the copy and puts everything back, including the subtasks' ticks.

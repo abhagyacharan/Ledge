@@ -79,6 +79,7 @@ export const createTaskSchema = z.object({
   dueTime: isoTime.nullable().optional(),
   recurrenceRule: recurrenceRule.nullable().optional(),
   recurrenceMode: recurrenceMode.optional(),
+  recurrenceUntil: isoDate.nullable().optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -90,6 +91,7 @@ export const updateTaskSchema = z.object({
   dueTime: isoTime.nullable().optional(),
   recurrenceRule: recurrenceRule.nullable().optional(),
   recurrenceMode: recurrenceMode.optional(),
+  recurrenceUntil: isoDate.nullable().optional(),
 });
 
 export const setTaskDoneSchema = z.object({ id, done: z.boolean() });

@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { addMonthsIso, addDaysIso } from "@/lib/dates";
 import {
   describeRule,
   formatRule,
@@ -29,7 +30,18 @@ export type RepeatChange = {
   recurrenceMode?: RecurrenceMode;
   /** Turning a repeat on gives the task a due date (today) when it has none. */
   dueDate?: string;
+  /** Last day the repeat may fall on; null means it never ends. */
+  recurrenceUntil?: string | null;
 };
+
+/** Ready-made ends, counted from the first date. */
+const END_PRESETS: { value: string; label: string; from: (start: string) => string }[] = [
+  { value: "week", label: "After 1 week", from: (s) => addDaysIso(s, 7) },
+  { value: "month", label: "After 1 month", from: (s) => addMonthsIso(s, 1) },
+  { value: "3months", label: "After 3 months", from: (s) => addMonthsIso(s, 3) },
+];
+const ENDS_NEVER = "never";
+const ENDS_DATE = "date";
 
 const FREQS: { value: Freq; label: string; unit: [string, string] }[] = [
   { value: "daily", label: "Every day", unit: ["day", "days"] },
@@ -60,12 +72,15 @@ const NONE = "none";
 export function RepeatField({
   rule: stored,
   mode,
+  until,
   dueDate,
   today,
   onChange,
 }: {
   rule: string | null;
   mode: RecurrenceMode;
+  /** Last day the repeat may fall on, or null. */
+  until: string | null;
   dueDate: string | null;
   today: string;
   onChange: (change: RepeatChange) => void;
@@ -189,9 +204,51 @@ export function RepeatField({
             </Select>
           </div>
 
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="task-repeat-ends">Ends</Label>
+            <Select
+              value={until ? ENDS_DATE : ENDS_NEVER}
+              onValueChange={(v) => {
+                if (v === ENDS_NEVER) return onChange({ recurrenceUntil: null });
+                if (v === ENDS_DATE)
+                  return onChange({ recurrenceUntil: until ?? addMonthsIso(base, 1) });
+                const preset = END_PRESETS.find((p) => p.value === v);
+                if (preset) onChange({ recurrenceUntil: preset.from(base) });
+              }}
+            >
+              <SelectTrigger id="task-repeat-ends" className="h-11 w-full md:h-8">
+                <SelectValue>{until ? "On a date" : "Never"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ENDS_NEVER}>Never</SelectItem>
+                {END_PRESETS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value={ENDS_DATE}>On a date</SelectItem>
+              </SelectContent>
+            </Select>
+            {until ? (
+              <Input
+                id="task-repeat-until"
+                type="date"
+                aria-label="Last day of the repeat"
+                min={base}
+                value={until}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  if (next && next >= base) onChange({ recurrenceUntil: next });
+                }}
+                className="h-11 md:h-8"
+              />
+            ) : null}
+          </div>
+
           <p className="text-xs text-muted-foreground" aria-live="polite">
-            {describeRule(rule, mode)}. When you tick it, a finished copy goes to Completed and the
-            due date moves on.
+            {describeRule(rule, mode)}
+            {until ? ` until ${until}` : ""}. When you tick it, a finished copy goes to Completed
+            and the due date moves on.
           </p>
         </div>
       ) : null}

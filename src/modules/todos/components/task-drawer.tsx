@@ -243,6 +243,7 @@ function DrawerBody({
             <RepeatField
               rule={view.recurrenceRule}
               mode={view.recurrenceMode}
+              until={view.recurrenceUntil}
               dueDate={view.dueDate}
               today={ctx.today}
               onChange={(change) => void save(change)}

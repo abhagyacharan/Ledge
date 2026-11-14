@@ -2,12 +2,13 @@ import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   completeRecurringTask,
+  createTask,
   getTask,
   setTaskDone,
   undoRecurringCompletion,
   updateTask,
 } from "@/server/data/tasks";
-import { getCompletedTasks } from "@/server/data/views";
+import { getCompletedTasks, getRepeatingTasks } from "@/server/data/views";
 import { db } from "@/server/db/client";
 import { tasks } from "@/server/db/schema";
 import { makeList, makeTask } from "../helpers/data";
@@ -191,5 +192,92 @@ describe("setting a repeat on a task", () => {
     const task = await repeating();
     const changed = await updateTask(a.id, task.id, { recurrenceMode: "after_completion" });
     expect(changed?.recurrenceMode).toBe("after_completion");
+  });
+});
+
+describe("an end date on a repeat", () => {
+  it("is stored with a repeat, and refused before the first date or without a repeat", async () => {
+    const ok = await createTask(a.id, {
+      listId: list.id,
+      title: "Swimming",
+      dueDate: "2026-11-13",
+      recurrenceRule: "FREQ=DAILY",
+      recurrenceUntil: "2026-12-13",
+    });
+    expect(ok?.recurrenceUntil).toBe("2026-12-13");
+
+    const early = await createTask(a.id, {
+      listId: list.id,
+      title: "Swimming",
+      dueDate: "2026-11-13",
+      recurrenceRule: "FREQ=DAILY",
+      recurrenceUntil: "2026-11-12",
+    });
+    expect(early).toBeNull();
+
+    // No repeat, so the end date is dropped rather than stored.
+    const plain = await createTask(a.id, {
+      listId: list.id,
+      title: "Once",
+      dueDate: "2026-11-13",
+      recurrenceUntil: "2026-12-13",
+    });
+    expect(plain?.recurrenceUntil).toBeNull();
+  });
+
+  it("keeps repeating up to the end date, then finishes the task like a normal one", async () => {
+    const task = await repeating({ dueDate: "2026-11-13", recurrenceUntil: "2026-11-14" });
+    const first = await completeRecurringTask(a.id, task.id, "2026-11-13");
+    expect(first?.nextDueDate).toBe("2026-11-14");
+    // The next date (15th) is past the end (14th): no more repeating.
+    const second = await completeRecurringTask(a.id, task.id, "2026-11-14");
+    expect(second).toBeNull();
+    const done = await setTaskDone(a.id, task.id, true);
+    expect(done?.status).toBe("done");
+  });
+
+  it("can be changed and removed, is cleared when the repeat stops, and checks the date", async () => {
+    const task = await repeating({ dueDate: "2026-11-13" });
+    expect(
+      (await updateTask(a.id, task.id, { recurrenceUntil: "2026-12-13" }))?.recurrenceUntil,
+    ).toBe("2026-12-13");
+    expect(await updateTask(a.id, task.id, { recurrenceUntil: "2026-11-01" })).toBeNull();
+    expect(
+      (await updateTask(a.id, task.id, { recurrenceUntil: null }))?.recurrenceUntil,
+    ).toBeNull();
+
+    await updateTask(a.id, task.id, { recurrenceUntil: "2026-12-13" });
+    const stopped = await updateTask(a.id, task.id, { recurrenceRule: null });
+    expect(stopped?.recurrenceRule).toBeNull();
+    expect(stopped?.recurrenceUntil).toBeNull();
+
+    // An end date on a task that does not repeat is refused.
+    const once = await makeTask(a.id, list.id, "Once", { dueDate: "2026-11-13" });
+    expect(await updateTask(a.id, once.id, { recurrenceUntil: "2026-12-13" })).toBeNull();
+  });
+
+  it("the database refuses an end date without a repeat", async () => {
+    const task = await makeTask(a.id, list.id, "Once", { dueDate: "2026-11-13" });
+    await expect(
+      db.update(tasks).set({ recurrenceUntil: "2026-12-13" }).where(eq(tasks.id, task.id)),
+    ).rejects.toThrow();
+  });
+});
+
+describe("repeating tasks for Upcoming", () => {
+  it("returns only the user's open, fixed-schedule repeats due up to the date", async () => {
+    const mine = await repeating({ title: "Mine", dueDate: "2026-11-13" });
+    await repeating({ title: "Later", dueDate: "2026-12-30" });
+    await repeating({
+      title: "After finishing",
+      dueDate: "2026-11-13",
+      recurrenceMode: "after_completion",
+    });
+    await makeTask(a.id, list.id, "No repeat", { dueDate: "2026-11-13" });
+    const bList = await makeList(b.id, "B list");
+    await makeTask(b.id, bList.id, "B's", { dueDate: "2026-11-13", recurrenceRule: "FREQ=DAILY" });
+
+    const rows = await getRepeatingTasks(a.id, "2026-11-27");
+    expect(rows.map((r) => r.id)).toEqual([mine.id]);
   });
 });
