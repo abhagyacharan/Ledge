@@ -81,7 +81,7 @@ Then add Ledge as one more route on the server's existing Cloudflare tunnel (`le
 
 What is in the stack (`docker-compose.yml`): `db` (Postgres 18, named volume, port not published), `migrate` (one-shot: applies new migrations, then exits), `app` (the Next.js standalone server as a non-root user, port bound to 127.0.0.1 only), `cloudflared` (only with `--profile tunnel`), `backup` (nightly dump). The image is built by the multi-stage `Dockerfile`. A build needs internet access once (packages and fonts); the running app does not.
 
-Update later: `git pull && docker compose up -d --build` (migrations run automatically). After creating your account, set `ALLOW_SIGNUP=false` in `.env` and run `docker compose up -d`.
+Update later: `sh scripts/deploy.sh` (safety backup, `git pull --ff-only`, rebuild, health check, prune old images; migrations run automatically; see `docs/deploy-guide.md` §10). After creating your account, set `ALLOW_SIGNUP=false` in `.env` and run `docker compose up -d`.
 
 ## Backup and restore
 

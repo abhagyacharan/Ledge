@@ -620,3 +620,7 @@ O chose **Groq** as the AI provider for voice capture: Groq's hosted Whisper (`w
 ## 2026-11-15: Quick add footer
 
 The Add a task sheet ends with the same pair of buttons as the transaction sheet: **Save task** (adds the task and closes the sheet; the confirmation and its Undo move to a toast) and **Save and add another** (adds it and keeps the sheet open, confirming inside it with Undo, as before). Enter in the task field still adds and keeps the sheet open (CLAUDE.md §6.2). The old "Stays open for the next task" line and the single "Add task" button are gone.
+
+## 2026-11-15: One-command server update
+
+`scripts/deploy.sh` replaces the five update commands O typed on the server: safety backup (stops if it fails), `git pull --ff-only` (refuses if tracked files were edited on the server), `docker compose up -d --build`, a wait of up to a minute for `/api/health` on `APP_PORT`, then `docker image prune -f` (skipped when the app is unhealthy, so the old images stay for a rollback). `--skip-backup` skips step 1. The body runs inside a function so the shell has read the whole file before `git pull` can replace it. It lives in the repo (not only on the server) so it is versioned and arrives with each pull. Automatic deploys on push stay on O's roadmap (`docs/ideas.md`).

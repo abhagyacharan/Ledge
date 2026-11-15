@@ -501,7 +501,26 @@ Starting on a brand-new server (the old one is gone)? Do steps 2 to 5 first (so 
 
 ## 10. Updating Ledge later
 
-When there is a new version of Ledge in git:
+When there is a new version of Ledge in git, run one command:
+
+```bash
+sh ~/ledge/scripts/deploy.sh
+```
+
+It does, in order, and stops at the first thing that fails:
+
+1. **A safety backup** (`backups/daily/`). If it fails, nothing else happens.
+2. **`git pull --ff-only`**, and lists the new commits. It refuses to start if files in `~/ledge` were edited on the server, so nothing gets mixed in by accident.
+3. **`docker compose up -d --build`**. The migrate job applies any new database changes before the new app starts.
+4. **Waits for `/api/health`** to answer (up to a minute) on your `APP_PORT` (3000 unless you changed it). If it does not, it tells you which logs to look at and keeps the old images.
+5. **`docker image prune -f`** to free disk space.
+
+`sh ~/ledge/scripts/deploy.sh --skip-backup` skips step 1, only if you made a backup a minute ago. `--help` prints the steps.
+
+The first time, the script arrives with `git pull`, so run the old commands once more (below) and use the script from then on. To make it even shorter, add an alias once: `echo "alias ledge-update='sh ~/ledge/scripts/deploy.sh'" >> ~/.bashrc`, open a new terminal, then just type `ledge-update`.
+
+<details>
+<summary>The same steps by hand</summary>
 
 ```bash
 cd ~/ledge
@@ -509,14 +528,11 @@ docker compose run --rm --entrypoint "sh /backup.sh once" backup   # a safety ba
 git pull
 docker compose up -d --build
 docker image prune -f                                              # tidy old images
-```
-
-The migrate job applies any new database changes automatically before the new app starts. Check afterwards:
-
-```bash
 docker compose ps
 curl http://127.0.0.1:3000/api/health
 ```
+
+</details>
 
 **If an update goes wrong:** go back to the previous code with `git log --oneline` (find the old commit) and `git checkout <that-commit>`, then `docker compose up -d --build`. If the new version had already changed the database tables, also restore the safety backup you took (step 9.4).
 
@@ -536,6 +552,7 @@ Run them in `~/ledge`.
 | Start Ledge again                 | `docker compose up -d`                                                      |
 | Check the tunnel (system service) | `systemctl status cloudflared --no-pager`                                   |
 | See how much disk Docker uses     | `docker system df`                                                          |
+| Update Ledge to the latest code   | `sh scripts/deploy.sh`                                                      |
 | Make a backup now                 | `docker compose run --rm --entrypoint "sh /backup.sh once" backup`          |
 | Open a database prompt (to look)  | `docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'` |
 

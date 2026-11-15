@@ -105,3 +105,21 @@ You started deploying Ledge on your home server. So far: the settings file was c
 The backup part of the guide (step 9) is deferred for now. What that means in practice: the nightly backup still runs by itself and keeps its copies on the server, so you have protection against a mistake, but not against the server's disk failing. The two steps that are left, copying backups to another place and trying a restore once, are worth doing before you depend on Ledge for anything you cannot re-enter.
 
 The guide has a new FAQ (section 15) with the questions that came up on the way: why `.env` does not show in a plain `ls`, how to tell the migration worked when it prints very little, whether the firewall prompt is safe, what "locally managed tunnel" means, how to find which cloudflared configuration file is really in use, why several cloudflared programs can be running at once, and why you should never paste keys or tokens anywhere.
+
+## Updating with one command (2026-11-15)
+
+Updating Ledge on the server used to mean typing five commands in a row. Now there is one:
+
+```bash
+sh ~/ledge/scripts/deploy.sh
+```
+
+A **script** is just a file of commands that the computer runs one after another, so you do not have to type them. This one:
+
+1. makes a safety backup first, and stops if that fails, so you never update without one;
+2. downloads the new code (`git pull`), and refuses if someone changed files on the server by hand, so nothing gets mixed up;
+3. rebuilds and restarts Ledge; the database changes are applied on their own;
+4. waits up to a minute until Ledge answers its health check, so you know the new version really started, and tells you where to look if it did not;
+5. deletes old copies of the app's image to free disk space (only when the update worked, so the old version stays available if you need to go back).
+
+The script is kept in the project itself, so every update brings the latest version of it too. The first time, you still type the old commands once, because the script arrives with that download. You can also give it a short name, like `ledge-update`; the deploy guide (step 10) shows how.
