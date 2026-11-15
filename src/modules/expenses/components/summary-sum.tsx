@@ -92,7 +92,8 @@ export function SummarySum({
         />
         <SumRow label="Living expenses" value={money(totals.expense, fmt, "minus")} />
       </dl>
-      <div aria-hidden className="mt-2 border-t-[3px] border-double border-dash-ink" />
+      {/* The bottom-line rule is the logo's orange double rule. */}
+      <div aria-hidden className="mt-2 border-t-[3px] border-double border-dash-accent" />
       <div className="mt-3 flex items-end justify-between gap-3">
         <div className="min-w-0">
           <p

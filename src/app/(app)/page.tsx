@@ -172,11 +172,11 @@ type Hint = { line: ReactNode; figure: ReactNode; sub: ReactNode };
 const focusRing =
   "outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_var(--dash-ink)]";
 
-function IconCircle({ icon: Icon }: { icon: LucideIcon }) {
+function IconCircle({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
   return (
     <span
       aria-hidden
-      className="grid size-10 shrink-0 place-items-center rounded-full bg-dash-well text-dash-ink"
+      className={`grid size-10 shrink-0 place-items-center rounded-full bg-dash-well text-dash-ink transition-colors duration-150 ${className ?? ""}`}
     >
       <Icon className="size-[18px]" strokeWidth={1.75} />
     </span>
@@ -210,10 +210,14 @@ function ModuleCard({ module: m, hint }: { module: AppModule; hint?: Hint }) {
       className={`group flex min-h-[132px] flex-col rounded-3xl border border-dash-edge bg-dash-card p-5 shadow-(--dash-card-shadow) transition-[transform,background-color] duration-150 ease-snap hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 ${focusRing}`}
     >
       <span className="flex items-start justify-between">
-        <IconCircle icon={m.icon} />
+        {/* The icon turns orange on hover (docs/design.md, welcome page). */}
+        <IconCircle
+          icon={m.icon}
+          className="group-hover:bg-dash-accent group-hover:text-dash-on-accent"
+        />
         <ArrowUpRight
           aria-hidden
-          className="size-4 text-dash-ink-soft transition-transform duration-150 ease-snap group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          className="size-4 text-dash-ink-soft transition-[transform,color] duration-150 ease-snap group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-dash-ink"
         />
       </span>
       <span className="mt-6 text-[13px] text-dash-ink-soft">{m.label}</span>

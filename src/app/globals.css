@@ -51,6 +51,8 @@
   --color-dash-ink: var(--dash-ink);
   --color-dash-ink-soft: var(--dash-ink-soft);
   --color-dash-accent: var(--dash-accent);
+  --color-dash-on-accent: var(--dash-on-accent);
+  --color-dash-accent-on-ink: var(--dash-accent-on-ink);
   --color-dash-accent-from: var(--dash-accent-from);
   --color-dash-accent-to: var(--dash-accent-to);
   --color-dash-good: var(--dash-good);
@@ -104,7 +106,7 @@
   --destructive: #b42318;
   --border: #dfe2dc;
   --input: #d6d6d2;
-  --ring: #6b7078;
+  --ring: #cc420b;
   --inflow: #166534;
   --outflow: #b42318;
   --brass: #8a5a00;
@@ -121,7 +123,7 @@
   --sidebar-accent: #e0e3dd;
   --sidebar-accent-foreground: #111214;
   --sidebar-border: #dde0da;
-  --sidebar-ring: #6b7078;
+  --sidebar-ring: #cc420b;
 }
 
 .dark {
@@ -142,7 +144,7 @@
   --destructive: #f58b84;
   --border: #ffffff1a;
   --input: #ffffff2b;
-  --ring: #aeb4ae;
+  --ring: #f58445;
   --inflow: #86efac;
   --outflow: #fca5a5;
   --brass: #f0c25c;
@@ -158,7 +160,7 @@
   --sidebar-accent: #232826;
   --sidebar-accent-foreground: #f2f4f1;
   --sidebar-border: #ffffff14;
-  --sidebar-ring: #aeb4ae;
+  --sidebar-ring: #f58445;
 }
 
 /*
@@ -184,6 +186,10 @@
   --dash-accent: #f26b21;
   --dash-accent-from: #cc420b;
   --dash-accent-to: #a63409;
+  /* Ink on an orange fill (ticks, the + button): white in light, near-black in dark. */
+  --dash-on-accent: #ffffff;
+  /* Orange text on an ink surface (the toast pill): passes 4.5:1 in both themes. */
+  --dash-accent-on-ink: #f58445;
   --dash-good: #166534;
   --dash-good-bg: #dcfce7;
   --dash-bad: #b42318;
@@ -205,6 +211,8 @@
   --dash-ink: #f2f4f1;
   --dash-ink-soft: #aeb4ae;
   --dash-accent: #f58445;
+  --dash-on-accent: #121514;
+  --dash-accent-on-ink: #a63409;
   --dash-good: #86efac;
   --dash-good-bg: #14532d;
   --dash-bad: #fca5a5;
@@ -222,6 +230,7 @@
   }
   html {
     @apply font-sans;
+    accent-color: var(--dash-accent);
     /* Phones paint a grey flash over tapped controls; our controls have their own press state. */
     -webkit-tap-highlight-color: transparent;
     /* Keep room for the scrollbar, so a page that grows or shrinks (folding the journal facts)
@@ -262,6 +271,21 @@
   input[type="color"],
   input[type="file"]::file-selector-button {
     cursor: pointer;
+  }
+  /* The text caret is orange in every field (docs/new_design.md §1). */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    caret-color: var(--dash-accent);
+  }
+  /* Selected text and underlined links carry the one orange, quietly; the text stays ink. */
+  ::selection {
+    background-color: color-mix(in oklab, var(--dash-accent) 30%, transparent);
+  }
+  a {
+    text-decoration-color: var(--dash-accent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
   }
   /* Page titles use the display face; everything else stays in the quiet body face. */
   h1 {

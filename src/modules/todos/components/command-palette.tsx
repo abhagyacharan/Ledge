@@ -36,7 +36,7 @@ import { useTodos } from "./todos-provider";
 const groupClass =
   "px-2 pb-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-dash-ink-soft";
 const itemClass =
-  "flex h-11 cursor-pointer items-center gap-3 rounded-xl px-2.5 text-[14px] text-dash-ink outline-none select-none data-[selected=true]:bg-dash-well [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-dash-ink-soft";
+  "flex h-11 cursor-pointer items-center gap-3 rounded-xl px-2.5 text-[14px] text-dash-ink outline-none select-none data-[selected=true]:bg-dash-well [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-dash-ink-soft data-[selected=true]:[&_svg]:text-dash-accent";
 
 function Kbd({ children }: { children: string }) {
   return (

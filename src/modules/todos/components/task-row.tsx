@@ -96,11 +96,12 @@ export function CheckboxButton({
       <span
         className={cn(
           // The ring repeats the priority (the flag and word in the row say it too): 2px red for
-          // high, 2px amber for medium, 1.5px soft otherwise (docs/new_design.md §4).
+          // high, 2px amber for medium, 1.5px soft otherwise (docs/new_design.md §4). A done
+          // task is an orange tick: the small reward for finishing something.
           "flex items-center justify-center rounded-full transition-[background-color,border-color,transform] duration-150 ease-snap group-active/check:scale-90",
           size === "md" ? "size-5" : "size-4",
           done
-            ? "border-[1.5px] border-dash-ink bg-dash-ink text-dash-card"
+            ? "border-[1.5px] border-dash-accent bg-dash-accent text-dash-on-accent"
             : priority === 3
               ? "border-2 border-dash-bad hover:bg-dash-bad-bg"
               : priority === 2

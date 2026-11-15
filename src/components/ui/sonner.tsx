@@ -42,7 +42,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast:
             "cn-toast !items-center !gap-2.5 !py-3 !pr-3 !pl-4 !text-[13px] !font-medium !shadow-[0_16px_40px_-16px_rgb(0_0_0/0.45)]",
           actionButton:
-            "!h-8 !rounded-full !bg-transparent !px-3 !text-[13px] !font-semibold !text-[var(--dash-card)] hover:!bg-white/10",
+            "!h-8 !rounded-full !bg-transparent !px-3 !text-[13px] !font-semibold !text-dash-accent-on-ink hover:!bg-white/10 dark:hover:!bg-black/5",
           title: "!font-medium",
         },
       }}

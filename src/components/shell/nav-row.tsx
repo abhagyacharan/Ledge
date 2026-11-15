@@ -42,7 +42,14 @@ export function NavRow({
         strong && "font-medium",
       )}
     >
-      {Icon ? <Icon aria-hidden className="size-4 shrink-0" strokeWidth={1.85} /> : null}
+      {Icon ? (
+        <Icon
+          aria-hidden
+          // The current page's icon is orange: a quiet "you are here" beside the raised row.
+          className={cn("size-4 shrink-0", current && "text-dash-accent")}
+          strokeWidth={1.85}
+        />
+      ) : null}
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {trailing}
     </Link>
