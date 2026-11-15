@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { enabledModules } from "@/config/modules";
 import { cn } from "@/lib/utils";
+import { FILLED_TAB_ICONS } from "./tab-icons";
 
 /** At most three modules are pinned to the bar beside Home (docs/new_design.md §3). */
 const MAX_PINS = 3;
@@ -54,7 +55,15 @@ export function MobileTabBar() {
                   : "font-medium text-muted-foreground",
               )}
             >
-              <tab.icon aria-hidden className="size-[18px]" strokeWidth={1.85} />
+              {(() => {
+                // The current tab swaps its line icon for the filled one; no colour change.
+                const Filled = tab.current ? FILLED_TAB_ICONS[tab.id] : undefined;
+                return Filled ? (
+                  <Filled className="size-[18px]" />
+                ) : (
+                  <tab.icon aria-hidden className="size-[18px]" strokeWidth={1.85} />
+                );
+              })()}
               {tab.label}
             </Link>
           </li>
