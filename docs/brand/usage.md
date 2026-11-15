@@ -76,6 +76,18 @@ Inside the app, use the components in `src/components/shell/brand.tsx` (`Brand`,
 - `src/app/apple-icon.png` is 180 × 180, full bleed, with the orange rule; every edge lands on a whole pixel (3.5px per grid unit).
 - `src/proxy.ts` lets `apple-icon.png` through without sign-in, like the other two icons.
 
+## Home screen (phones, 2026-11-15)
+
+When Ledge is added to a phone's home screen, the icon is the black tile with the logo and the orange rule, never an off-white one. Android Chrome used to have only the small transparent browser-tab icon and drew it on a light backdrop, so `src/app/manifest.ts` (served at `/manifest.webmanifest`) now lists real icons:
+
+| File                                  | Use                                                                                                                        |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `public/icons/ledge-192.png`          | rounded black tile, purpose `any`                                                                                          |
+| `public/icons/ledge-512.png`          | the same at 512, purpose `any`                                                                                             |
+| `public/icons/ledge-maskable-512.png` | full-bleed black square, purpose `maskable`: the phone cuts its own shape out of it, the mark stays inside the safe centre |
+
+The PNGs are drawn by `scripts/make-icons.py` (needs Pillow) from the logo's grid, the same geometry as `ledge-app-icon.svg`; run it again if the logo ever changes. iPhones use `src/app/apple-icon.png` (180 px, black, full bleed). The manifest also sets `display: standalone` (Ledge opens without the browser bar) and a black `background_color` for the start-up screen. The proxy lets `/manifest.webmanifest` and `/icons/` through signed out, because a phone fetches them without cookies. A shortcut added earlier keeps its old icon: remove it and add it again.
+
 ## Not done yet
 
-- No web app manifest, so no 192 and 512 PNGs; Android falls back to the Apple icon or the favicon. Add one only if O wants "install as an app".
+- (Done 2026-11-15, see "Home screen" above.) Nothing else is open here.

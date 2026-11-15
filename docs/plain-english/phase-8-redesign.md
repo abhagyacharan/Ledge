@@ -240,3 +240,13 @@ Only the expense sheet changed; income, EMIs and investments keep their date box
 ## Adding a task: two buttons (2026-11-15)
 
 The Add a task sheet now ends like the expense sheet, with two buttons. **Save task** adds it and closes the sheet; a message at the bottom says where it went, with Undo. **Save and add another** adds it and leaves the sheet open for the next one. Pressing Enter in the box still works like Save and add another.
+
+## Update 2026-11-15: a black icon on the phone's home screen
+
+When you added Ledge to your phone's home screen, the icon had an off-white background around the logo. The reason: your phone only knew the small icon used in browser tabs, which has no background of its own, so it put it on a light square.
+
+Ledge now tells the phone about proper icons through a small file called a web app manifest. It lists a black square icon with the Ledge mark and its orange line in three versions. One of them is a "maskable" icon: it fills the whole square, and your phone cuts its own shape out of it (a circle or rounded square, depending on the phone) without adding any white around it. The icons are drawn by a small script, `scripts/make-icons.py`, from the same shapes as the logo, so they can be redrawn if the logo ever changes.
+
+Two other things changed with it. Ledge now opens from the home screen like an app, without the browser's address bar, and its start-up screen is black. And the app lets the phone fetch the icons without signing in first, which it has to, because a phone looks for them before you have a session.
+
+An icon you already added keeps the old picture. Remove the shortcut and add it again to get the black one. iPhones already used a black icon, so they should not have shown the off-white one. If your icon was on an iPhone, tell me, because then the cause is something different.

@@ -558,6 +558,14 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Not checked:** a real phone and iPhone Safari (only an emulated phone-size browser); the axe run (pnpm is blocked on this machine).
 - **Reason:** O's requests in chat (2026-11-13).
 
+## 2026-11-15: Home-screen icon on a black tile (web manifest)
+
+- **Problem:** the shortcut O added to his phone showed the logo on an off-white background. There was no web manifest, so Android Chrome had only the transparent browser-tab icon (`icon.svg`) and put it on a light backdrop. (`apple-icon.png` was already black, which iPhones use.)
+- **Fix:** `src/app/manifest.ts` with three PNG icons in `public/icons/`: 192 and 512 rounded black tiles (`any`) and a full-bleed black 512 (`maskable`, so Android uses its own shape and no light backdrop). `scripts/make-icons.py` draws them from the logo grid with Pillow, so they can be redrawn if the logo changes.
+- **Also decided:** `display: standalone`, so an added Ledge opens like an app, without the browser bar (this is what lets Android treat it as an installed app and honour the maskable icon). `background_color` and `theme_color` are the black `#121514`, which sets the start-up screen. Easy to change in the manifest if O prefers the browser bar back (`display: "browser"`).
+- **Proxy:** `/manifest.webmanifest` and `/icons/` are excluded from the sign-in redirect, because a phone fetches the manifest and icons without the session cookie (otherwise it would get the sign-in page and ignore the icons).
+- **Reason:** O's request in chat (2026-11-15). A shortcut added before this keeps the old icon until it is removed and added again.
+
 ## Pending decisions (log here when made)
 
 - Model provider for AI features (embeddings, RAG answers, the Journal's AI ideas): local model on the home server or a hosted API. Blocks the smarter-search item in `docs/ideas.md`.

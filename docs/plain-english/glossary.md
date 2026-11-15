@@ -266,6 +266,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Vitest.** The tool that runs the small automatic tests.
 
+**Web app manifest.** A small file that tells a phone what to call an app, which icons to use and how to open it when it is added to the home screen.
+
 **Worker (tests).** A background process that runs tests. Reusing one worker for all test files saves start-up time.
 
 **Zod.** The tool that does validation, with the same rules used in the browser and on the server.
