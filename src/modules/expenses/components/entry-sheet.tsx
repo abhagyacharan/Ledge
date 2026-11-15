@@ -1,11 +1,20 @@
 "use client";
 
-import { Check, CheckCircle2, ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useId, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DashButton } from "@/components/dash/dash-button";
 import { Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/dash/sheet";
-import { addDaysIso } from "@/lib/dates";
+import { addDaysIso, formatRowDay } from "@/lib/dates";
 import { minorToInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { EntryKind, FinanceEntry, SpendLabel } from "@/server/db/schema";
@@ -341,26 +350,44 @@ function EntryForm({
           {kind === "expense" ? (
             <ChoiceGroup
               id="entry-payment"
-              label="Payment method"
+              label="Paid with"
               value={paymentMethod}
               onChange={setPaymentMethod}
               options={PAYMENT_METHODS}
               error={errors.paymentMethod}
+              scroll
             />
           ) : null}
 
           {kind === "expense" ? (
-            <ChoiceGroup
-              id="entry-spend-label"
-              label="Need or want (optional)"
-              hint="Tap again to clear."
-              value={spendLabel}
-              onChange={setSpendLabel}
-              options={SPEND_LABEL_OPTIONS}
-              optionLabel={(o) => SPEND_LABEL_NAMES[o as SpendLabel].one}
-              clearable
-              error={errors.spendLabel}
-            />
+            // Need or want and the day share one line (O, 2026-11-15).
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <ChoiceGroup
+                    id="entry-spend-label"
+                    label="Need or want (optional, tap again to clear)"
+                    value={spendLabel}
+                    onChange={setSpendLabel}
+                    options={SPEND_LABEL_OPTIONS}
+                    optionLabel={(o) => SPEND_LABEL_NAMES[o as SpendLabel].one}
+                    clearable
+                    segmented
+                    hideLabel
+                    error={errors.spendLabel}
+                  />
+                </div>
+                <DatePill
+                  id="entry-date"
+                  label={DATE_LABELS[kind]}
+                  value={entryDate}
+                  today={context.today}
+                  onChange={setEntryDate}
+                  invalid={Boolean(errors.entryDate)}
+                />
+              </div>
+              <FieldError id="entry-date-error" error={errors.entryDate} />
+            </div>
           ) : null}
 
           {kind === "emi" ? (
@@ -436,35 +463,37 @@ function EntryForm({
             </Field>
           ) : null}
 
-          <Field id="entry-date" label={DATE_LABELS[kind]} error={errors.entryDate}>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                id="entry-date"
-                type="date"
-                value={entryDate}
-                onChange={(e) => setEntryDate(e.target.value)}
-                className={cn(field, "w-auto min-w-0 flex-1 basis-40")}
-                aria-invalid={errors.entryDate ? true : undefined}
-                aria-describedby={errors.entryDate ? "entry-date-error" : undefined}
-              />
-              {showQuickDates ? (
-                <div className="flex gap-2">
-                  <QuickDate
-                    active={entryDate === context.today}
-                    onClick={() => setEntryDate(context.today)}
-                  >
-                    Today
-                  </QuickDate>
-                  <QuickDate
-                    active={entryDate === yesterday}
-                    onClick={() => setEntryDate(yesterday)}
-                  >
-                    Yesterday
-                  </QuickDate>
-                </div>
-              ) : null}
-            </div>
-          </Field>
+          {kind === "expense" ? null : (
+            <Field id="entry-date" label={DATE_LABELS[kind]} error={errors.entryDate}>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  id="entry-date"
+                  type="date"
+                  value={entryDate}
+                  onChange={(e) => setEntryDate(e.target.value)}
+                  className={cn(field, "w-auto min-w-0 flex-1 basis-40")}
+                  aria-invalid={errors.entryDate ? true : undefined}
+                  aria-describedby={errors.entryDate ? "entry-date-error" : undefined}
+                />
+                {showQuickDates ? (
+                  <div className="flex gap-2">
+                    <QuickDate
+                      active={entryDate === context.today}
+                      onClick={() => setEntryDate(context.today)}
+                    >
+                      Today
+                    </QuickDate>
+                    <QuickDate
+                      active={entryDate === yesterday}
+                      onClick={() => setEntryDate(yesterday)}
+                    >
+                      Yesterday
+                    </QuickDate>
+                  </div>
+                ) : null}
+              </div>
+            </Field>
+          )}
 
           {!showNotes ? (
             <button
@@ -625,9 +654,15 @@ function ChoiceGroup({
   clearable = false,
   hint,
   limit,
+  scroll = false,
+  hideLabel = false,
 }: {
   /** Show only this many chips (plus the chosen one) until "N more" is tapped. */
   limit?: number;
+  /** One sideways-scrolling row instead of wrapping lines (payment methods). */
+  scroll?: boolean;
+  /** Keep the label for screen readers only (the segmented Need or want bar). */
+  hideLabel?: boolean;
   id: string;
   label: string;
   /** Optional: tapping the chosen chip again (or Delete on it) clears the choice. */
@@ -654,7 +689,7 @@ function ChoiceGroup({
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       >
-        <p id={`${id}-label`} className="mb-2 text-[13px] font-medium">
+        <p id={`${id}-label`} className={hideLabel ? "sr-only" : "mb-2 text-[13px] font-medium"}>
           {label}
           {hint && value ? (
             <span className="ml-1.5 font-normal text-dash-ink-soft">{hint}</span>
@@ -664,7 +699,9 @@ function ChoiceGroup({
           className={cn(
             segmented
               ? "grid auto-cols-fr grid-flow-col gap-1 rounded-full bg-dash-well p-1"
-              : "flex flex-wrap gap-2",
+              : scroll
+                ? "no-scrollbar dash-fade-x -mx-4 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
+                : "flex flex-wrap gap-2",
           )}
         >
           {shown.map((option) => {
@@ -673,7 +710,7 @@ function ChoiceGroup({
               <label
                 key={option}
                 className={cn(
-                  "relative inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-[transform,background-color,color,box-shadow] duration-150 ease-snap select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 active:scale-[0.97] md:h-9",
+                  "relative inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap transition-[transform,background-color,color,box-shadow] duration-150 ease-snap select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 active:scale-[0.97] md:h-9",
                   segmented
                     ? checked
                       ? "bg-dash-raised text-dash-ink shadow-(--dash-lift)"
@@ -722,9 +759,90 @@ function ChoiceGroup({
               <ChevronDown aria-hidden className="size-3.5" />
             </button>
           ) : null}
+          {limit && expanded && options.length > limit ? (
+            // After the last category: fold the list back to the first few.
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="inline-flex h-11 items-center gap-1 rounded-full bg-dash-well px-3.5 text-[13px] font-medium text-dash-ink outline-none hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9"
+            >
+              Show less
+              <ChevronUp aria-hidden className="size-3.5" />
+            </button>
+          ) : null}
         </div>
       </div>
       <FieldError id={`${id}-error`} error={error} />
+    </div>
+  );
+}
+
+/**
+ * The day as one pill ("Today, 13 Nov") that opens the system date picker; used beside Need or
+ * want on the expense sheet. The real date input sits inside it, invisible, so the form still
+ * submits a proper date.
+ */
+function DatePill({
+  id,
+  label,
+  value,
+  today,
+  onChange,
+  invalid,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  today: string;
+  onChange: (value: string) => void;
+  invalid: boolean;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const dayMonth = (iso: string) => formatRowDay(iso, today).replace(/^\S+ /, "");
+  const text =
+    value === today
+      ? `Today, ${dayMonth(value)}`
+      : value === addDaysIso(today, -1)
+        ? `Yesterday, ${dayMonth(value)}`
+        : value
+          ? formatRowDay(value, today)
+          : "Pick a day";
+  function open() {
+    const el = input.current;
+    if (!el) return;
+    try {
+      el.showPicker();
+    } catch {
+      el.focus();
+    }
+  }
+  return (
+    <div
+      className={cn(
+        "relative inline-flex h-13 shrink-0 items-center rounded-full bg-dash-well has-focus-visible:ring-3 has-focus-visible:ring-ring/50 md:h-11",
+        invalid && "ring-1 ring-dash-bad/60",
+      )}
+    >
+      <button
+        type="button"
+        onClick={open}
+        aria-label={`${label}: ${text}. Change`}
+        aria-describedby={invalid ? `${id}-error` : undefined}
+        className="inline-flex h-full items-center gap-2 rounded-full px-4 text-[13px] font-medium whitespace-nowrap text-dash-ink outline-none"
+      >
+        <CalendarDays aria-hidden className="size-4" />
+        {text}
+      </button>
+      <input
+        ref={input}
+        id={id}
+        type="date"
+        tabIndex={-1}
+        aria-hidden
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pointer-events-none absolute inset-0 opacity-0"
+      />
     </div>
   );
 }

@@ -180,7 +180,7 @@ test("add income, an EMI series, an expense and an investment, and the summary f
   await dialog.getByLabel("Date").fill("2025-03-10");
   await dialog.getByLabel("Item").fill("E2E groceries");
   await choose(dialog, "Category", "Food & Groceries");
-  await choose(dialog, "Payment method", "UPI");
+  await choose(dialog, "Paid with", "UPI");
   await dialog.getByLabel("Amount").fill("8,000.50");
   await dialog.getByRole("button", { name: "Add expense" }).click();
   await expect(page.getByRole("button", { name: "Edit E2E groceries", exact: true })).toBeVisible();
@@ -228,7 +228,7 @@ test("a form refuses bad input with clear messages, then edit and delete with Un
   // A malformed amount is explained.
   await dialog.getByLabel("Item").fill("Bad amount");
   await choose(dialog, "Category", "Shopping");
-  await choose(dialog, "Payment method", "Cash");
+  await choose(dialog, "Paid with", "Cash");
   await dialog.getByLabel("Date").fill("2025-04-02");
   await dialog.getByLabel("Amount").fill("12.345");
   await dialog.getByRole("button", { name: "Add expense" }).click();
@@ -279,7 +279,7 @@ test("filter by category, sort, and search", async ({ page }) => {
     await dialog.getByLabel("Date").fill("2025-05-03");
     await dialog.getByLabel("Item").fill(item);
     await choose(dialog, "Category", category);
-    await choose(dialog, "Payment method", "UPI");
+    await choose(dialog, "Paid with", "UPI");
     await dialog.getByLabel("Amount").fill(amount);
     if (notes) await dialog.getByLabel("Notes (optional)").fill(notes);
     await dialog.getByRole("button", { name: "Add expense" }).click();
