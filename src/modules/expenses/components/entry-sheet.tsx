@@ -31,6 +31,7 @@ import {
   SPEND_LABEL_NAMES,
   SPEND_LABEL_OPTIONS,
 } from "../categories";
+import { MicButton } from "@/modules/voice/components/mic-button";
 import { CategoryIcon } from "../category-icons";
 import { MAX_EXTRA_MONTHS } from "../emi-series";
 import { QUICK_ADD_EVENT } from "@/modules/todos/components/quick-add-button";
@@ -251,6 +252,7 @@ function EntryForm({
       <SheetHeader
         title={sheetTitle}
         description={kind === "emi" ? "Its due date decides which month it belongs to." : undefined}
+        action={editing ? undefined : <MicButton onBeforeStart={close} />}
       />
 
       <SheetBody>

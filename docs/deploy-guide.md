@@ -536,6 +536,16 @@ curl http://127.0.0.1:3000/api/health
 
 **If an update goes wrong:** go back to the previous code with `git log --oneline` (find the old commit) and `git checkout <that-commit>`, then `docker compose up -d --build`. If the new version had already changed the database tables, also restore the safety backup you took (step 9.4).
 
+### Turning on voice capture
+
+Voice capture (hold + and speak, `docs/voice-spec.md`) needs a Groq API key. Create one at console.groq.com (read Groq's data policy first: your recordings and words go to Groq), then on the server add it to `~/ledge/.env`:
+
+```bash
+GROQ_API_KEY=gsk_...your key...
+```
+
+and run `sh ~/ledge/scripts/deploy.sh` (or `docker compose up -d`). A **Voice capture** switch then appears in Settings > Preferences. Leave the key out to keep voice off. Voice needs HTTPS for the microphone, which the tunnel gives you.
+
 ---
 
 ## 11. Everyday commands

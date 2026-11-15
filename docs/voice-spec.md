@@ -1,6 +1,6 @@
 # Voice capture spec
 
-Proposed for O on 2026-11-15. **Not built and not a phase yet.** O picked the provider (Groq, for both Whisper speech-to-text and the language model). Nothing here is built until O approves this file; the plan is in §12 and would become Phase 12 in CLAUDE.md §14. Anything beyond this file goes to `docs/ideas.md` first.
+Written and approved on 2026-11-15 (O picked Groq, then said "start building"). **Built as Phase 12 (CLAUDE.md §14) the same day**, tested with fake mode; not yet tried with a real Groq key or a real microphone. The §13 questions use the recommendations until O answers. Two differences from the text below: saving is all or nothing by taking back what was written when a step fails, not one database transaction (the data functions each use their own connection); and the desktop mic button sits in the capture sheets' header. Anything beyond this file goes to `docs/ideas.md` first.
 
 ## 1. Why
 

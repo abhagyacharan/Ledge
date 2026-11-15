@@ -22,6 +22,32 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema>;
 
+/** Voice capture settings (docs/voice-spec.md §9). Read fresh, like ALLOW_SIGNUP. */
+export type VoiceConfig = {
+  /** No key and no fake mode: voice is off everywhere. */
+  enabled: boolean;
+  /** VOICE_FAKE=1 answers from fixtures instead of calling Groq (tests and local trials). */
+  fake: boolean;
+  apiKey: string | null;
+  transcribeModel: string;
+  parseModel: string;
+  dailyLimit: number;
+};
+
+export function getVoiceConfig(): VoiceConfig {
+  const apiKey = process.env.GROQ_API_KEY?.trim() || null;
+  const fake = process.env.VOICE_FAKE === "1";
+  const limit = Number.parseInt(process.env.VOICE_DAILY_LIMIT ?? "", 10);
+  return {
+    enabled: fake || apiKey !== null,
+    fake,
+    apiKey,
+    transcribeModel: process.env.GROQ_TRANSCRIBE_MODEL?.trim() || "whisper-large-v3-turbo",
+    parseModel: process.env.GROQ_PARSE_MODEL?.trim() || "openai/gpt-oss-120b",
+    dailyLimit: Number.isFinite(limit) && limit > 0 ? limit : 300,
+  };
+}
+
 /**
  * Read fresh on every call (not cached) so flipping ALLOW_SIGNUP and restarting is the only
  * step needed, and tests can toggle it. Anything other than the literal "false" allows sign-up.

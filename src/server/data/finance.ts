@@ -348,3 +348,53 @@ export function emisDueBetween(userId: string, from: string, to: string): Promis
     )
     .orderBy(asc(financeEntries.entryDate));
 }
+
+/** Unpaid EMIs (scheduled or delayed) due in a window, soonest first: voice capture's context. */
+export async function listUnpaidEmis(
+  userId: string,
+  from: string,
+  to: string,
+  limit = 20,
+): Promise<FinanceEntry[]> {
+  return db
+    .select()
+    .from(financeEntries)
+    .where(
+      and(
+        live(userId),
+        eq(financeEntries.kind, "emi"),
+        or(eq(financeEntries.status, "scheduled"), eq(financeEntries.status, "delayed")),
+        gte(financeEntries.entryDate, from),
+        lte(financeEntries.entryDate, to),
+      ),
+    )
+    .orderBy(asc(financeEntries.entryDate))
+    .limit(limit);
+}
+
+/** The titles used most often lately (Whisper's spelling hints). */
+export async function frequentEntryTitles(userId: string, limit = 20): Promise<string[]> {
+  const rows = await db
+    .select({ title: financeEntries.title, uses: sql<number>`count(*)::int` })
+    .from(financeEntries)
+    .where(live(userId))
+    .groupBy(financeEntries.title)
+    .orderBy(desc(sql`count(*)`), asc(financeEntries.title))
+    .limit(limit);
+  return rows.map((r) => r.title);
+}
+
+/** Puts an EMI's status back (voice Undo). Only the user's own EMIs. */
+export async function setEmiStatus(
+  userId: string,
+  id: string,
+  status: EmiStatus,
+  paidOn: string | null,
+): Promise<boolean> {
+  const rows = await db
+    .update(financeEntries)
+    .set({ status, paidOn: status === "paid" ? paidOn : null })
+    .where(and(owned(userId, id), eq(financeEntries.kind, "emi")))
+    .returning({ id: financeEntries.id });
+  return rows.length > 0;
+}

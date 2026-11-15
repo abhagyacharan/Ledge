@@ -18,6 +18,7 @@ export const preferencesSchema = z
     timezone: z.string().max(64).refine(isTimeZone, "Pick a time zone from the list.").optional(),
     weekStartsOn: z.union([z.literal(1), z.literal(7)]).optional(),
     theme: z.enum(["system", "light", "dark"]).optional(),
+    voiceEnabled: z.boolean().optional(),
   })
   .strict();
 

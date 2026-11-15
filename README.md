@@ -35,6 +35,10 @@ Copy `.env.example` to `.env` and fill it in.
 | `ALLOW_SIGNUP`                                      | `true` or `false`. Set to `false` on the server after creating the owner account    |
 | `TZ`                                                | Server timezone (`Asia/Kolkata`)                                                    |
 | `CLIENT_IP_HEADER` (optional)                       | Header a proxy sets to the visitor's address (`cf-connecting-ip` behind Cloudflare) |
+| `GROQ_API_KEY` (optional)                           | Turns voice capture on (docs/voice-spec.md). Empty: voice is off                    |
+| `VOICE_FAKE` (optional)                             | `1` answers voice requests from built-in examples, without Groq (testing)           |
+| `GROQ_TRANSCRIBE_MODEL`, `GROQ_PARSE_MODEL` (opt.)  | Groq model ids; defaults `whisper-large-v3-turbo`, `openai/gpt-oss-120b`            |
+| `VOICE_DAILY_LIMIT` (optional)                      | Voice requests per person per day (default 300)                                     |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                   |
 | `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server)  |
 

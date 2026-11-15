@@ -4,7 +4,7 @@ Anything not in CLAUDE.md §1 or §6 goes here instead of being built. Add a lin
 
 ## Voice capture (specced 2026-11-15)
 
-Hold the + button and speak tasks and expenses; Groq Whisper plus a Groq language model; always reviewed before saving. Full spec and phase plan: `docs/voice-spec.md`. Waiting for O's go-ahead. Its "later" list (voice for existing tasks, new EMIs, journal dictation, spoken questions, auto-save, Hinglish, local Whisper) stays parked here until then.
+Hold the + button and speak tasks and expenses; Groq Whisper plus a Groq language model; always reviewed before saving. Built as Phase 12 on 2026-11-15 (`docs/voice-spec.md`). Its "later" list (voice for existing tasks, new EMIs, journal dictation, spoken questions, auto-save, Hinglish, local Whisper) stays parked here until then.
 
 ## Roadmap after deployment (O's plan, 2026-11-13)
 

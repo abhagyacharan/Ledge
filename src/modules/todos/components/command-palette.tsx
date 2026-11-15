@@ -6,6 +6,7 @@ import {
   IndianRupee,
   Keyboard,
   LogOut,
+  Mic,
   Moon,
   Plus,
   Search,
@@ -27,6 +28,7 @@ import {
 import { enabledModules } from "@/config/modules";
 import { authClient } from "@/lib/auth-client";
 import { LOG_TRANSACTION_EVENT } from "@/modules/expenses/components/transaction-launcher";
+import { sendVoice, useVoiceAvailable } from "@/modules/voice/components/voice-events";
 import { ListFormDialog } from "./list-form-dialog";
 import { ListGlyph } from "../list-icons";
 import { QUICK_ADD_EVENT } from "./quick-add-button";
@@ -82,6 +84,7 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [creatingList, setCreatingList] = useState(false);
+  const voice = useVoiceAvailable();
 
   useEffect(() => {
     const show = () => {
@@ -192,6 +195,16 @@ export function CommandPalette() {
                 >
                   Log a transaction
                 </Item>
+                {voice ? (
+                  <Item
+                    value="speak voice talk dictate add"
+                    icon={Mic}
+                    hint="V"
+                    onSelect={() => act(() => sendVoice("toggle"))}
+                  >
+                    Speak to add
+                  </Item>
+                ) : null}
                 <Item
                   value="new list create"
                   icon={Folder}

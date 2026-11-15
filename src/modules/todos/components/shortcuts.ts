@@ -7,6 +7,7 @@ export const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["Ctrl", "K"], label: "Open the command palette (Cmd+K on a Mac)" },
   { keys: ["/"], label: "Search your tasks" },
   { keys: ["q"], label: "Quick add a task" },
+  { keys: ["v"], label: "Speak to add tasks and money, then v again to finish (when voice is on)" },
   { keys: ["j"], label: "Move down to the next task (or the Down arrow)" },
   { keys: ["k"], label: "Move up to the previous task (or the Up arrow)" },
   { keys: ["Enter"], label: "Open the selected task" },

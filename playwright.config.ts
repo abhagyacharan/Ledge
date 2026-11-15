@@ -55,6 +55,9 @@ export default defineConfig({
       BETTER_AUTH_URL: `http://localhost:${PORT}`,
       NEXT_DIST_DIR: ".next-e2e",
       ALLOW_SIGNUP: "true",
+      // Voice answers from built-in examples, never Groq (docs/voice-spec.md §11).
+      VOICE_FAKE: "1",
+      GROQ_API_KEY: "",
     },
   },
 });

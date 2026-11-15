@@ -6,15 +6,15 @@
 
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
-| Field                  | Value                                                                                                                                                                                                                                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Last updated           | 2026-11-15                                                                                                                                                                                                                                                                                                                                                          |
-| Current phase          | **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, O began deploying by hand on 2026-11-12 (Ledge route added to his existing Cloudflare tunnel; HTTPS check, account creation and step 9 backups still to do); Phase 11 Journal built, its e2e run pending until pnpm runs again)                                                     |
-| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                     |
-| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                              |
-| Last verified test run | 2026-11-15 (after the quick add footer, expense sheet rows, filled tab icons and orange accents): `typecheck`, `lint`, `format:check` clean and 486 Vitest tests pass, run with `node`; checked by hand in the browser at phone and desktop widths, light and dark (port 3200). e2e not run (pnpm is blocked). Last e2e run 2026-11-11: 102 Playwright tests passed |
-| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                |
-| Enabled modules        | expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists); journal ("Journal": one page per day with the day's facts, mood, day picker)                                                                                                                               |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Last updated           | 2026-11-15                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Current phase          | **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, O began deploying by hand on 2026-11-12 (Ledge route added to his existing Cloudflare tunnel; HTTPS check, account creation and step 9 backups still to do); Phase 11 Journal built, its e2e run pending until pnpm runs again; Phase 12 Voice capture built 2026-11-15 with fake mode, not yet tried with a real Groq key or microphone) |
+| Start date             | 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)                                                                                                                                                                                                                                                                                                                                                           |
+| Versions in use        | see §3                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Last verified test run | 2026-11-15 (after voice capture): `typecheck`, `lint`, `format:check` clean and 524 Vitest tests pass (38 new for voice), run with `node`; voice checked by hand in the browser in fake mode (hold +, the microphone-blocked message, Type instead, review, save, Undo, `v` on desktop). e2e not run (pnpm is blocked); `voice.spec.ts` written. Last e2e run 2026-11-11: 102 Playwright tests passed                     |
+| Open blockers          | none                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Enabled modules        | expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists); journal ("Journal": one page per day with the day's facts, mood, day picker); voice capture (app-wide, hold + to speak; needs `GROQ_API_KEY`)                                                                                                                    |
 
 ---
 
@@ -33,7 +33,7 @@ A self-hosted personal life-management app that the owner (O) will use daily for
 
 ### Non-goals for v0.1 (do not build, even if tempting)
 
-Social features, blogs (posting journal entries publicly is parked in `docs/ideas.md`), public profile or portfolio, calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features (including the journal's AI ideas, until O picks a provider), file attachments, i18n, rich-text editor, team or shared workspaces, billing.
+Social features, blogs (posting journal entries publicly is parked in `docs/ideas.md`), public profile or portfolio, calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features beyond voice capture (O chose Groq for voice on 2026-11-15, `docs/voice-spec.md`; the journal's AI ideas stay parked), file attachments, i18n, rich-text editor, team or shared workspaces, billing.
 
 Park any new idea in `docs/ideas.md` instead of building it.
 
@@ -107,6 +107,7 @@ src/
       expenses/             # layout (tabs + period picker), page (summary), income, emis, spending, investments (§7); loading.tsx skeleton in each
       journal/              # one page per day (?d=), loading.tsx skeleton; see docs/journal-spec.md
       settings/
+    api/voice/transcribe, api/voice/understand  # voice capture: audio to words, words to a plan (docs/voice-spec.md)
     api/health, api/export  # health check; export/expense-breakdown and export/cash-flow (PDF reports); export/everything (JSON) and export/tasks (CSV)
   modules/
     auth/                   # sign-in/up forms, Zod schemas (client side of auth)
@@ -114,6 +115,7 @@ src/
     expenses/               # components/ (tab bar and period picker, pending state, transaction launcher, summary sections, cash-flow chart, entries overview and list, entry sheet, money-flow, skeletons), actions.ts, schema.ts (Zod), categories.ts, category-icons.ts, periods.ts, summary.ts, entries-logic.ts, emi-series.ts, context.ts (pure maths tested), report-pdf.ts and reports.ts (PDF reports); see docs/expenses-spec.md
     home/                   # hints.ts (greeting, task sentence; pure, tested), home-actions.tsx (Add a task, Log a transaction, Jump to anything)
     account/                # Settings: actions.ts (preferences, sign out everywhere, delete account), schema.ts, card.tsx, settings-parts.tsx
+    voice/                  # voice capture: schema.ts (Zod), json-schema.ts (Groq strict schema), prompt.ts, resolve.ts, fake.ts (pure, tested), actions.ts (save and Undo), components/ (voice sheet, review cards, recorder, hold-to-talk, mic button)
     journal/                # components/ (day control, journal day: facts, mood, autosaving page), actions.ts, schema.ts (Zod), limits.ts, day-facts.ts and calendar.ts (pure, tested); see docs/journal-spec.md
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
@@ -121,6 +123,7 @@ src/
     env.ts                  # Zod-validated environment
     session.ts              # getSession() / requireUser() helpers
     user-defaults.ts        # ensureUserDefaults(): settings row + General (the default list, stored as the inbox), run on sign-up
+    groq.ts, voice.ts, voice-limit.ts   # Groq client (fetch + Zod), voice service (context, fake mode), per-user voice rate limit
     action-guard.ts         # guarded(): requireUser + Zod + typed result + revalidate, shared by todo and expense actions
     data/                   # data functions (lists, tasks, views, settings, finance, journal, trash): every one takes userId
   components/
@@ -318,6 +321,9 @@ BETTER_AUTH_URL=http://localhost:3000
 ALLOW_SIGNUP=true
 TZ=Asia/Kolkata
 CLIENT_IP_HEADER=               # optional: cf-connecting-ip behind Cloudflare Tunnel
+GROQ_API_KEY=                   # optional: turns voice capture on (docs/voice-spec.md)
+VOICE_FAKE=                     # optional: 1 = answer voice from built-in rules, no Groq (tests, trials)
+# GROQ_TRANSCRIBE_MODEL, GROQ_PARSE_MODEL, VOICE_DAILY_LIMIT: optional overrides
 ```
 
 The server uses `.env.production.example` (adds `TUNNEL_TOKEN`, `BACKUP_UID`, `BACKUP_GID`, optional `BACKUP_AT`, `APP_PORT`); compose builds `DATABASE_URL` itself.
@@ -370,20 +376,21 @@ This is the canonical plan. It expands the original suggested build order into p
 
 **Stop line:** if it is Saturday evening and P0 is not done, drop all P1 work. If it is Sunday night, deploy what exists and freeze. After that, maintenance is capped at about 2 hours per week so the main plan is not starved. When the stop line triggers, record it in the status snapshot.
 
-| #   | Phase                           | Status                   |
-| --- | ------------------------------- | ------------------------ |
-| 0   | Scaffold                        | `[x]` done 2026-11-10    |
-| 1   | Auth                            | `[x]` done 2026-11-10    |
-| 2   | Data model                      | `[x]` done 2026-11-10    |
-| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10    |
-| 4   | Views (P0)                      | `[x]` done 2026-11-10    |
-| 5   | Safety (P0)                     | `[x]` done 2026-11-10    |
-| 6   | Polish                          | `[x]` done 2026-11-10    |
-| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11    |
-| 8   | Frontend redesign               | `[x]` done 2026-11-11    |
-| 9   | Deploy and backup               | `[~]` built; O deploys   |
-| 10  | P1 items (only if time remains) | `[~]`                    |
-| 11  | Journal                         | `[~]` built; e2e pending |
+| #   | Phase                           | Status                    |
+| --- | ------------------------------- | ------------------------- |
+| 0   | Scaffold                        | `[x]` done 2026-11-10     |
+| 1   | Auth                            | `[x]` done 2026-11-10     |
+| 2   | Data model                      | `[x]` done 2026-11-10     |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10     |
+| 4   | Views (P0)                      | `[x]` done 2026-11-10     |
+| 5   | Safety (P0)                     | `[x]` done 2026-11-10     |
+| 6   | Polish                          | `[x]` done 2026-11-10     |
+| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11     |
+| 8   | Frontend redesign               | `[x]` done 2026-11-11     |
+| 9   | Deploy and backup               | `[~]` built; O deploys    |
+| 10  | P1 items (only if time remains) | `[~]`                     |
+| 11  | Journal                         | `[~]` built; e2e pending  |
+| 12  | Voice capture                   | `[~]` built; Groq untried |
 
 ### Phase 0: Scaffold
 
@@ -565,9 +572,22 @@ Goal: a private journal page per day, with the day's facts from Tasks and Expens
 
 Exit: a day's page saves and reloads; facts match the day's tasks and money; another user cannot read or change a page; the §15 definition of done holds (desktop and phone, light and dark, keyboard, empty and loading states).
 
+### Phase 12: Voice capture
+
+Goal: hold + (or press `v`) and speak to add tasks and money, reviewed before saving (spec: `docs/voice-spec.md`). O chose Groq and said "start building" on 2026-11-15, which approved the spec; §13 open questions use the spec's recommendations until O says otherwise (always review, English, new lists created in the plan, 300 a day, `v`).
+
+- [x] 12.1 Foundations: env vars, Groq client (`src/server/groq.ts`, fetch + Zod), `user_settings.voice_enabled` (migration 0011) and the Settings switch, `microphone=(self)`, per-user rate limit (2026-11-15)
+- [x] 12.2 Understanding: schema, strict JSON schema, prompt, resolver, `POST /api/voice/understand`, fake mode; unit tests (2026-11-15)
+- [ ] 12.2 Eval set of 60+ real sentences run against Groq (needs O's key)
+- [x] 12.3 Recording: recorder hook, long-press on both + buttons, voice sheet, `POST /api/voice/transcribe`, desktop mic button, `v`, palette entry, Type instead (2026-11-15)
+- [x] 12.4 Review and save: cards, guessed marks, EMI picker, `applyVoicePlanAction` (all or nothing by taking back on failure), one Undo; integration tests (2026-11-15)
+- [~] 12.5 Hardening: error states, docs and e2e spec written; e2e not run (pnpm); real microphone and real Groq not yet tried
+
+Exit: on O's phone over the tunnel, the §1 example commands go from voice to saved items correctly and Undo reverses each; the §15 definition of done holds.
+
 ### After the phases: O's roadmap (plan only, 2026-11-13)
 
-Not phases yet; do not build any of it without a spec and O's go-ahead. Order: fix small bugs, deploy by hand (Phase 9), automatic deploys on push, then one at a time and each live before the next: glass redesign (looks only), smarter search (pgvector, then RAG; needs a model provider), a phone app sharing the same data (PWA first), and last open source plus public hosting. Details, options and risks: `docs/ideas.md` ("Roadmap after deployment"). **Voice capture** (hold + to speak tasks and expenses; Groq Whisper and a Groq language model, chosen by O on 2026-11-15) is specced in `docs/voice-spec.md` with a phase plan (proposed Phase 12); not built until O approves the spec.
+Not phases yet; do not build any of it without a spec and O's go-ahead. Order: fix small bugs, deploy by hand (Phase 9), automatic deploys on push, then one at a time and each live before the next: glass redesign (looks only), smarter search (pgvector, then RAG; needs a model provider), a phone app sharing the same data (PWA first), and last open source plus public hosting. Details, options and risks: `docs/ideas.md` ("Roadmap after deployment"). **Voice capture** (hold + to speak tasks and expenses; Groq Whisper and a Groq language model, chosen by O on 2026-11-15) is now Phase 12 above.
 
 ---
 
@@ -694,6 +714,7 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-13 | Phone fixes: sheets and dialogs do not focus a field on touch screens, blurred overlays, Ledge mark as the More tab, About card in Settings; test-run line                                                                                                                                                                                                                 | O's requests in chat after trying it on his phone                                                                                |
 | 2026-11-13 | Repeats can end (`recurrence_until`, migration 0010) and Upcoming previews later dates of repeating tasks: §6.2 recurring line, §6.3 tasks table, test-run line                                                                                                                                                                                                            | O: a daily task for a month did not show in Today or Upcoming                                                                    |
 | 2026-11-13 | Phone tab bar is a floating pill (`viewport-fit=cover`, `--tabbar-gap`); §8 layout line. Glass (a beta switch, a glass tab bar, then app-wide glass) was tried and removed the same day                                                                                                                                                                                    | O's requests in chat                                                                                                             |
+| 2026-11-15 | Phase 12 Voice capture built: status snapshot, §1 non-goal wording (AI beyond voice), §4 layout, §11 env, §14 table and Phase 12                                                                                                                                                                                                                                           | O: "start building the voice mode" (approves docs/voice-spec.md, counts as OK per §17.3)                                         |
 | 2026-11-15 | §4 and §10: `scripts/deploy.sh`, one command for server updates                                                                                                                                                                                                                                                                                                            | O asked to stop typing the update commands by hand                                                                               |
 | 2026-11-15 | Quick add footer: Save task and Save and add another, like the transaction sheet; status snapshot test run                                                                                                                                                                                                                                                                 | O's request in chat                                                                                                              |
 | 2026-11-15 | §4 and §14 roadmap note: `docs/voice-spec.md` (voice capture with Groq, proposed Phase 12, not built)                                                                                                                                                                                                                                                                      | O asked for a full spec and phase plan for voice mode with Groq and Whisper                                                      |

@@ -135,7 +135,7 @@ It is also a cheap way to test your bigger Odyssey idea: if you read the briefin
 - Whether the phone app stops at the installable website.
 - The licence.
 
-## Voice capture (planned 2026-11-15, not built)
+## Voice capture (planned 2026-11-15, built the same day: see phase-12-voice.md)
 
 The idea: hold the round + button on your phone, say something like "spent 500 on petrol today" or "make a list called Photography with two tasks", let go, and the app fills everything in for you to check.
 

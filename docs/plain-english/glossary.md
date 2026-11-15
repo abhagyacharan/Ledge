@@ -271,3 +271,17 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Worker (tests).** A background process that runs tests. Reusing one worker for all test files saves start-up time.
 
 **Zod.** The tool that does validation, with the same rules used in the browser and on the server.
+
+**Groq.** A company that runs AI models very fast. Ledge's voice capture sends your recording there to be turned into words, and the words there to be understood.
+
+**Language model.** An AI that reads and writes sentences. In voice capture it turns what you said into a list of tasks and entries to add.
+
+**Rate limit (voice).** A cap on how many voice requests one person can make: 20 a minute and 300 a day, so nothing can run up a bill by accident.
+
+**Speech-to-text.** Turning a recording of someone speaking into written words.
+
+**Structured output.** Asking an AI to answer in a strict, fixed format (like a form with set boxes) instead of free text, so the app can read the answer reliably.
+
+**Transcript.** The written words of what was said in a recording.
+
+**Whisper.** A speech-to-text model. Ledge uses the copy that Groq runs.

@@ -632,3 +632,15 @@ The Add a task sheet ends with the same pair of buttons as the transaction sheet
 ## 2026-11-15: One-command server update
 
 `scripts/deploy.sh` replaces the five update commands O typed on the server: safety backup (stops if it fails), `git pull --ff-only` (refuses if tracked files were edited on the server), `docker compose up -d --build`, a wait of up to a minute for `/api/health` on `APP_PORT`, then `docker image prune -f` (skipped when the app is unhealthy, so the old images stay for a rollback). `--skip-backup` skips step 1. The body runs inside a function so the shell has read the whole file before `git pull` can replace it. It lives in the repo (not only on the server) so it is versioned and arrives with each pull. Automatic deploys on push stay on O's roadmap (`docs/ideas.md`).
+
+## 2026-11-15: Voice capture built (Phase 12)
+
+Built from `docs/voice-spec.md` after O said "start building". Choices made while building:
+
+- **All or nothing without one transaction.** The task, list and entry data functions each use the shared connection, so `applyVoicePlanAction` checks everything first (own lists, own unpaid EMIs, real categories and methods), then saves in order and, if any step fails, takes back what it wrote (trash then delete forever; EMIs put back to their earlier status) before answering. Tested.
+- **Fake mode** (`VOICE_FAKE=1`): rule-based replies for the spec's examples, used by the integration and e2e tests and for trying voice locally (`.env.local`, git-ignored). It never calls Groq.
+- **The model never sees ids.** EMIs are sent as E1, E2...; lists by name. The resolver maps them back and falls back to defaults or asks O to pick.
+- **The hold listens on the window**, not the button, so letting go still counts after the sheet slides over the button; `[-webkit-touch-callout:none]` and `select-none` on the + stop the phone's long-press menu.
+- **Rate limit in memory** (20 a minute, 300 a day per user): Ledge is one process; a restart resets the counts.
+- **§13 open questions** use the spec's recommendations until O answers: always review, `language: "en"`, unknown list names become new lists in the plan, 300 a day, `v`.
+- **Desktop mic button** in the Add a task and Log a transaction sheet headers (closes that sheet, then listens), plus "Speak to add" in Ctrl K.

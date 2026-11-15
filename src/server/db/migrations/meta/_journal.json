@@ -78,6 +78,13 @@
       "when": 1794521053641,
       "tag": "0010_task_repeat_end_date",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794732998892,
+      "tag": "0011_voice_setting",
+      "breakpoints": true
     }
   ]
 }

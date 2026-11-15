@@ -12,6 +12,7 @@ import { loadMoneyContext } from "@/modules/expenses/context";
 import { ArchivedLists } from "@/modules/todos/components/archived-lists";
 import { listArchivedLists } from "@/server/data/lists";
 import { getUserSettings } from "@/server/data/settings";
+import { getVoiceConfig } from "@/server/env";
 import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -83,6 +84,7 @@ export default async function SettingsPage() {
           weekStartsOn={settings.weekStartsOn}
           currencyLabel={`${currencyName} (${symbol})`}
           localeLabel={`${localeName} · ${sample}`}
+          voice={getVoiceConfig().enabled ? { enabled: settings.voiceEnabled } : null}
         />
 
         <ReportsCard thisMonth={money.defaultPeriod} />

@@ -30,7 +30,7 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=()",
   },
   // Browsers ignore this over plain http, so it only takes effect behind the HTTPS tunnel.
   ...(isProduction ? [{ key: "Strict-Transport-Security", value: "max-age=15552000" }] : []),

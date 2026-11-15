@@ -16,6 +16,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { DashButton } from "@/components/dash/dash-button";
 import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
+import { MicButton } from "@/modules/voice/components/mic-button";
+import { useHoldToTalk, useVoiceAvailable } from "@/modules/voice/components/voice-events";
 import { Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/dash/sheet";
 import {
   Select,
@@ -97,6 +99,9 @@ export function QuickAdd() {
   // A new key starts the form fresh each time it is opened.
   const [openCount, setOpenCount] = useState(0);
   const titleRef = useRef<HTMLInputElement>(null);
+  // Hold the + to speak instead (docs/voice-spec.md §3).
+  const voice = useVoiceAvailable();
+  const hold = useHoldToTalk(voice);
 
   // Default to the list being viewed, otherwise General (the default list).
   const viewed = /^\/lists\/([0-9a-f-]{36})/.exec(pathname)?.[1];
@@ -134,9 +139,14 @@ export function QuickAdd() {
       {under(pathname, "/expenses") ? null : (
         <button
           type="button"
-          aria-label="Quick add task (shortcut: q)"
-          title="Add a task (q)"
-          onClick={() => show()}
+          aria-label={
+            voice ? "Quick add task (shortcut: q). Hold to speak" : "Quick add task (shortcut: q)"
+          }
+          title={voice ? "Add a task (q) · hold to speak" : "Add a task (q)"}
+          {...hold.handlers}
+          onClick={() => {
+            if (!hold.consumeHold()) show();
+          }}
           className={cn(
             FAB_CLASS,
             PHONE_ONLY_ADD_BUTTON.some((p) => under(pathname, p)) && "md:hidden",
@@ -310,7 +320,7 @@ function QuickAddForm({
 
   return (
     <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
-      <SheetHeader title="Add a task" />
+      <SheetHeader title="Add a task" action={<MicButton onBeforeStart={onClose} />} />
       <SheetBody>
         <div className="flex flex-col gap-4">
           {/* The type row, as on the transaction sheet (docs/new_design.md §5 "Capture sheet"). */}

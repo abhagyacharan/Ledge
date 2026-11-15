@@ -86,17 +86,21 @@ export function PreferencesCard({
   weekStartsOn,
   currencyLabel,
   localeLabel,
+  voice,
 }: {
   timezone: string;
   weekStartsOn: number;
   currencyLabel: string;
   localeLabel: string;
+  /** Null when the server has no Groq key: the switch is not shown at all. */
+  voice: { enabled: boolean } | null;
 }) {
   const router = useRouter();
   const { theme = "system", setTheme } = useTheme();
   const [, startTransition] = useTransition();
   const [zone, setZone] = useState(timezone);
   const [week, setWeek] = useState(weekStartsOn);
+  const [voiceOn, setVoiceOn] = useState(voice?.enabled ?? false);
   const zones = (() => {
     try {
       const all = Intl.supportedValuesOf("timeZone");
@@ -179,6 +183,43 @@ export function PreferencesCard({
             save({ weekStartsOn: Number(next) }, () => setWeek(before));
           }}
         />
+        {voice ? (
+          <div className={cn(row, "items-start")}>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span id="voice-label" className="text-[14px]">
+                Voice capture
+              </span>
+              <span id="voice-hint" className="text-[12px] leading-snug text-dash-ink-soft">
+                Hold + and speak to add tasks and money. Your voice is sent to Groq to be turned
+                into text and understood. Ledge keeps neither the audio nor the words.
+              </span>
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={voiceOn}
+              aria-labelledby="voice-label"
+              aria-describedby="voice-hint"
+              onClick={() => {
+                const next = !voiceOn;
+                setVoiceOn(next);
+                save({ voiceEnabled: next }, () => setVoiceOn(!next));
+              }}
+              className={cn(
+                "relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50",
+                voiceOn ? "bg-dash-ink" : "bg-dash-track",
+              )}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "size-6 rounded-full bg-dash-card shadow-(--dash-lift) transition-transform duration-150 ease-snap",
+                  voiceOn && "translate-x-5",
+                )}
+              />
+            </button>
+          </div>
+        ) : null}
         <div className={row}>
           <span className="text-[14px]">Currency</span>
           <span className="text-[14px] font-medium">{currencyLabel}</span>

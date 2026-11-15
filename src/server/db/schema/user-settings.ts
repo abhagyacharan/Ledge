@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, pgTable, smallint, text, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, pgTable, smallint, text, uuid } from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./_columns";
 import { user } from "./auth";
 
@@ -19,6 +19,8 @@ export const userSettings = pgTable(
     /** ISO 4217 currency code. */
     currency: text("currency").notNull().default("INR"),
     locale: text("locale").notNull().default("en-IN"),
+    /** Voice capture on or off (docs/voice-spec.md §9); it also needs GROQ_API_KEY on the server. */
+    voiceEnabled: boolean("voice_enabled").notNull().default(true),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

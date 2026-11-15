@@ -56,6 +56,11 @@ services:
       TZ: ${TZ:-Asia/Kolkata}
       # Cloudflare sets this header to the visitor's real address; rate limits use it.
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+      # Voice capture (docs/voice-spec.md). No key: voice is off and its buttons are hidden.
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_TRANSCRIBE_MODEL: ${GROQ_TRANSCRIBE_MODEL:-}
+      GROQ_PARSE_MODEL: ${GROQ_PARSE_MODEL:-}
+      VOICE_DAILY_LIMIT: ${VOICE_DAILY_LIMIT:-}
     ports:
       # This machine only. The tunnel reaches the app over the internal Docker network instead.
       - "127.0.0.1:${APP_PORT:-3000}:3000"

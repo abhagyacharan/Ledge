@@ -23,7 +23,9 @@ export const getUserSettings = cache(async (userId: string): Promise<UserSetting
   return created;
 });
 
-export type SettingsPatch = Partial<Pick<UserSettings, "timezone" | "weekStartsOn" | "theme">>;
+export type SettingsPatch = Partial<
+  Pick<UserSettings, "timezone" | "weekStartsOn" | "theme" | "voiceEnabled">
+>;
 
 /** Changes the user's own preferences (Settings, docs/new_design.md screen 5f). */
 export async function updateUserSettings(userId: string, patch: SettingsPatch): Promise<void> {
