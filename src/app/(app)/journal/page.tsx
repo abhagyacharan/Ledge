@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { todayIn } from "@/lib/dates";
+import { daysBetween, todayIn } from "@/lib/dates";
 import { journalDay, monthEnd, monthOf, monthStart } from "@/modules/journal/calendar";
 import { DayControl } from "@/modules/journal/components/day-control";
 import { JournalDay, type ShownFact } from "@/modules/journal/components/journal-day";
@@ -32,6 +32,17 @@ function factHref(kind: FactKind, date: string, input: DayFactsInput): string {
   }
 }
 
+/** "Today", "Yesterday", else the weekday and how long ago ("Monday · 4 days ago"). */
+function relative(date: string, today: string, locale: string): string {
+  const diff = daysBetween(date, today);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(
+    new Date(`${date}T00:00:00Z`),
+  );
+  return `${weekday} · ${diff} days ago`;
+}
+
 /**
  * The journal (docs/journal-spec.md): one page per day. `?d=` picks the day; no `d` is today.
  * The day's facts come from Tasks and Expenses; the page and mood are the user's own words.
@@ -56,10 +67,10 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
   }));
 
   return (
-    <div className="dash mx-auto w-full max-w-4xl pb-24">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between md:mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Journal</h1>
-        {/* The day control alone at the right: no Search button and no + here (O, 2026-11-12). */}
+    <div className="dash mx-auto w-full max-w-[680px] pb-24">
+      <header className="mb-4 flex flex-col md:mb-2">
+        <h1 className="sr-only">Journal</h1>
+        {/* The day with its arrows (docs/new_design.md screens 4a and 4d). */}
         <DayControl
           day={date}
           today={today}
@@ -80,6 +91,13 @@ export default async function JournalPage({ searchParams }: PageProps<"/journal"
         savedAt={entry?.updatedAt.toISOString() ?? null}
         locale={settings.locale}
         timeZone={settings.timezone}
+        relativeLabel={relative(date, today, settings.locale)}
+        longDate={new Intl.DateTimeFormat(settings.locale, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          timeZone: "UTC",
+        }).format(new Date(`${date}T00:00:00Z`))}
       />
     </div>
   );

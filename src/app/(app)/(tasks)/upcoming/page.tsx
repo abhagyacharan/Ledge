@@ -1,18 +1,16 @@
 import { CalendarDays } from "lucide-react";
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/shell/empty-state";
-import { addDaysIso, formatDayHeading } from "@/lib/dates";
-import { describeStored, parseRule, upcomingOccurrences } from "@/lib/recurrence";
+import { addDaysIso, formatRowDay } from "@/lib/dates";
 import { InlineAdd } from "@/modules/todos/components/inline-add";
 import { RepeatPreview } from "@/modules/todos/components/repeat-preview";
 import { QuickAddButton } from "@/modules/todos/components/quick-add-button";
 import { TaskDrawerHost } from "@/modules/todos/components/task-drawer-host";
 import { TaskList } from "@/modules/todos/components/task-groups";
-import { TaskGroup, TaskPanel } from "@/modules/todos/components/task-panel";
+import { PageTitle, SectionCard } from "@/components/dash/page-title";
 import { loadDateContext } from "@/modules/todos/date-context";
-import { groupUpcoming, mergeUpcoming, type Preview } from "@/modules/todos/day-views";
+import { loadUpcomingDays } from "@/modules/todos/upcoming.server";
 import { getInbox } from "@/server/data/lists";
-import { getDueBetweenTasks, getRepeatingTasks } from "@/server/data/views";
 import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Upcoming" };
@@ -32,71 +30,73 @@ export default async function UpcomingPage({ searchParams }: PageProps<"/upcomin
   ]);
   const tomorrow = addDaysIso(ctx.today, 1);
   const last = addDaysIso(ctx.today, DAYS);
-  const [tasks, repeating] = await Promise.all([
-    getDueBetweenTasks(userId, tomorrow, last),
-    getRepeatingTasks(userId, last),
-  ]);
-  const real = groupUpcoming(tasks, ctx.today, DAYS);
-  const previews = new Map<string, Preview[]>();
-  for (const task of repeating) {
-    const rule = task.recurrenceRule ? parseRule(task.recurrenceRule) : null;
-    if (!rule) continue;
-    const repeatText = describeStored(
-      task.recurrenceRule,
-      task.recurrenceMode,
-      task.recurrenceUntil,
-      ctx.locale,
-    );
-    for (const date of upcomingOccurrences({
-      rule,
-      mode: task.recurrenceMode,
-      dueDate: task.dueDate,
-      until: task.recurrenceUntil,
-      from: tomorrow,
-      to: last,
-    })) {
-      previews.set(date, [
-        ...(previews.get(date) ?? []),
-        { taskId: task.id, title: task.title, repeatText: repeatText ?? "Repeats" },
-      ]);
-    }
-  }
-  const days = mergeUpcoming(real, previews);
+  const days = await loadUpcomingDays(userId, ctx, DAYS);
+
+  const dayName = (date: string) =>
+    date === tomorrow
+      ? "Tomorrow"
+      : new Intl.DateTimeFormat(ctx.locale, { weekday: "long", timeZone: "UTC" }).format(
+          new Date(`${date}T00:00:00Z`),
+        );
+  const shortDay = (date: string) => formatRowDay(date, ctx.today, ctx.locale).replace(/^\S+ /, "");
 
   return (
     <>
-      <TaskPanel
-        id="upcoming"
+      <PageTitle
+        back={{ href: "/tasks", label: "Tasks" }}
         title="Upcoming"
-        subtitle={`The next ${DAYS} days. Tasks without a date are not shown.`}
-      >
+        meta={`Next ${DAYS} days · ${tomorrow.slice(0, 7) === last.slice(0, 7) ? shortDay(tomorrow).split(" ")[0] : shortDay(tomorrow)} to ${shortDay(last)}`}
+      />
+      <div className="flex flex-col gap-3 md:gap-4">
         {days.length === 0 ? (
-          <EmptyState
-            icon={CalendarDays}
-            title="Nothing coming up"
-            hint={`No tasks are due, and none of your repeating tasks come back, in the next ${DAYS} days.`}
-            action={<QuickAddButton />}
-          />
+          <SectionCard id="upcoming-empty" heading="Next 14 days" className="pb-4">
+            <EmptyState
+              icon={CalendarDays}
+              title="A clear two weeks."
+              hint={`No tasks are due, and none of your repeating tasks come back, in the next ${DAYS} days. Undated tasks are left out.`}
+              action={<QuickAddButton />}
+            />
+          </SectionCard>
         ) : null}
         {days.map((day) => (
-          <TaskGroup
+          <SectionCard
             key={day.date}
             id={`day-${day.date}`}
-            label={formatDayHeading(day.date, ctx.today, ctx.locale)}
-            count={day.tasks.length + day.previews.length}
+            className="scroll-mt-6"
+            heading={
+              <>
+                {dayName(day.date)}{" "}
+                <span className="font-normal text-dash-ink-soft">
+                  {day.date === tomorrow
+                    ? formatRowDay(day.date, ctx.today, ctx.locale)
+                    : shortDay(day.date)}
+                </span>
+              </>
+            }
           >
-            {day.tasks.length > 0 ? <TaskList tasks={day.tasks} allTasks={[]} ctx={ctx} /> : null}
+            {day.tasks.length > 0 ? (
+              <TaskList tasks={day.tasks} allTasks={[]} ctx={ctx} timeOnly />
+            ) : null}
             {day.previews.length > 0 ? (
               <ul aria-label="Repeating tasks coming back">
                 {day.previews.map((p) => (
-                  <RepeatPreview key={p.taskId} {...p} />
+                  <RepeatPreview
+                    key={p.taskId}
+                    taskId={p.taskId}
+                    title={p.title}
+                    dueTime={p.dueTime}
+                    listName={p.listName}
+                    locale={ctx.locale}
+                  />
                 ))}
               </ul>
             ) : null}
-          </TaskGroup>
+          </SectionCard>
         ))}
-        <InlineAdd listId={inbox.id} dueDate={tomorrow} label="Add a task for tomorrow" />
-      </TaskPanel>
+        <div className="rounded-2xl border border-dash-edge bg-dash-card px-4 shadow-(--dash-card-shadow) md:px-5">
+          <InlineAdd listId={inbox.id} dueDate={tomorrow} label="Add a task for tomorrow" />
+        </div>
+      </div>
       <TaskDrawerHost
         userId={userId}
         taskParam={typeof task === "string" ? task : undefined}

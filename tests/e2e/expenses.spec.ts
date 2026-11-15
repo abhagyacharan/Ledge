@@ -13,7 +13,9 @@ const YEAR = new Date().getFullYear();
 
 /** The tile with this label on the summary (a <dt> and its value). */
 function tile(page: Page, label: string): Locator {
-  return page.locator("dl > div", { has: page.locator("dt", { hasText: label }) });
+  return page.locator("dl > div:visible", {
+    has: page.locator("dt", { hasText: new RegExp(`^${label}$`) }),
+  });
 }
 
 const toast = (page: Page) => page.locator("[data-sonner-toast]").first();
@@ -53,30 +55,26 @@ async function openAdd(page: Page, name: RegExp) {
 
 test("the summary for this month matches the sample sheet", async ({ page }) => {
   await page.goto("/expenses");
-  await expect(page.getByRole("heading", { level: 1, name: "Expenses" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /Summary/ })).toBeVisible();
 
-  // The four tiles (the sheet's five, with the savings rate and investing on the orange tile).
-  await expect(tile(page, "Total inflows")).toContainText("₹28,000.00");
-  await expect(tile(page, "Total EMIs & loans")).toContainText("₹10,142.00");
-  await expect(tile(page, "Total EMIs & loans")).toContainText("₹9,142.00 paid");
-  await expect(tile(page, "Total EMIs & loans")).toContainText("₹1,000.00 to pay");
-  await expect(tile(page, "Living expenses")).toContainText("₹4,600.00");
-  await expect(tile(page, "Net savings")).toContainText("₹13,258.00");
-  await expect(tile(page, "Net savings")).toContainText("Savings rate 47.4%");
-  // The extra row for investing.
-  await expect(tile(page, "Net savings")).toContainText("₹5,000.00 invested");
-  await expect(tile(page, "Net savings")).toContainText("₹8,258.00 left after investing");
+  // The five tiles (docs/new_design.md screen 3f). Whole rupees drop the paise.
+  await expect(tile(page, "Inflows")).toContainText("₹28,000");
+  await expect(tile(page, "EMIs & loans")).toContainText("₹10,142");
+  await expect(tile(page, "EMIs & loans")).toContainText("₹1,000 to pay");
+  await expect(tile(page, "Living expenses")).toContainText("₹4,600");
+  await expect(tile(page, "Net savings")).toContainText("₹13,258");
+  await expect(tile(page, "Net savings")).toContainText("47.4%");
+  await expect(tile(page, "Invested")).toContainText("₹5,000");
+  await expect(tile(page, "Invested")).toContainText("₹8,258 left after");
 
   // Expense breakdown: every category listed, shares as in the sheet.
-  const breakdown = page.getByRole("table", { name: /Expense breakdown/ });
-  await expect(breakdown.getByRole("row", { name: /Transportation/ })).toContainText("4,000.00");
-  await expect(breakdown.getByRole("row", { name: /Transportation/ })).toContainText("87.0%");
-  await expect(breakdown.getByRole("row", { name: /Subscriptions & Tech/ })).toContainText("13.0%");
-  await expect(breakdown.getByRole("row", { name: /Healthcare/ })).toContainText("0.0%");
-  await expect(breakdown.getByRole("row", { name: /Total living expenses/ })).toContainText(
-    "4,600.00",
-  );
-  await expect(breakdown.getByRole("row")).toHaveCount(1 + 9 + 1); // header, nine categories, total
+  const breakdown = page.getByRole("region", { name: "Expense breakdown" });
+  const row = (name: string) => breakdown.getByRole("listitem").filter({ hasText: name });
+  await expect(row("Transportation")).toContainText("₹4,000");
+  await expect(row("Transportation")).toContainText("87.0%");
+  await expect(row("Subscriptions & Tech")).toContainText("13.0%");
+  await expect(row("Healthcare")).toContainText("0.0%");
+  await expect(breakdown.getByRole("listitem")).toHaveCount(9);
 
   // Annual trend: twelve months, the selected one marked, and a full-year row.
   const trend = page.getByRole("table", {
@@ -92,16 +90,16 @@ test("the summary for this month matches the sample sheet", async ({ page }) => 
 
 test("the five tabs, and the period picker that follows you around", async ({ page }) => {
   await page.goto("/expenses");
-  const tabs = page.getByRole("navigation", { name: "Expense sections" });
+  const tabs = page.locator("[data-sidebar=sidebar]");
   for (const name of ["Summary", "Income", "EMIs & loans", "Expenses", "Investments"]) {
-    await expect(tabs.getByRole("link", { name })).toBeVisible();
+    await expect(tabs.getByRole("link", { name, exact: true })).toBeVisible();
   }
   await expect(tabs.getByRole("link", { name: "Summary" })).toHaveAttribute("aria-current", "page");
 
   // Whole year: the tiles add up every month.
   await pickPeriod(page, "Whole year");
   await expect(page).toHaveURL(/m=all/);
-  await expect(page.getByRole("heading", { name: `${YEAR} at a glance` })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Summary for ${YEAR}` })).toBeVisible();
 
   // The chosen period travels to the other tabs.
   await tabs.getByRole("link", { name: "Income" }).click();
@@ -118,7 +116,7 @@ test("the five tabs, and the period picker that follows you around", async ({ pa
   await expect(periodButton(page)).toContainText("February");
   // "This month" comes straight back, and the bars of the chart open a month too.
   await periodButton(page).click();
-  await page.getByRole("button", { name: "This month", exact: true }).click();
+  await page.getByRole("button", { name: "Back to this month", exact: true }).click();
   await expect(page).not.toHaveURL(/m=2(&|$)/);
 
   // A year with nothing in it shows an empty state with an action.
@@ -200,16 +198,17 @@ test("add income, an EMI series, an expense and an investment, and the summary f
 
   // The summary for March 2025 now adds up (amounts are exact, down to the paisa).
   await page.goto(`/expenses${march}`);
-  await expect(tile(page, "Total inflows")).toContainText("₹50,000.00");
-  await expect(tile(page, "Total EMIs & loans")).toContainText("₹12,000.00");
-  await expect(tile(page, "Total EMIs & loans")).toContainText("₹12,000.00 paid");
+  await expect(tile(page, "Inflows")).toContainText("₹50,000");
+  await expect(tile(page, "EMIs & loans")).toContainText("₹12,000");
   await expect(tile(page, "Living expenses")).toContainText("₹8,000.50");
   await expect(tile(page, "Net savings")).toContainText("₹29,999.50");
-  await expect(tile(page, "Net savings")).toContainText("Savings rate 60.0%");
-  await expect(tile(page, "Net savings")).toContainText("₹5,000.00 invested");
-  await expect(tile(page, "Net savings")).toContainText("₹24,999.50 left after investing");
-  const breakdown = page.getByRole("table", { name: /Expense breakdown/ });
-  await expect(breakdown.getByRole("row", { name: /Food & Groceries/ })).toContainText("100.0%");
+  await expect(tile(page, "Net savings")).toContainText("60.0%");
+  await expect(tile(page, "Invested")).toContainText("₹5,000");
+  await expect(tile(page, "Invested")).toContainText("₹24,999.50 left after");
+  const breakdown = page.getByRole("region", { name: "Expense breakdown" });
+  await expect(
+    breakdown.getByRole("listitem").filter({ hasText: "Food & Groceries" }),
+  ).toContainText("100.0%");
 });
 
 test("a form refuses bad input with clear messages, then edit and delete with Undo", async ({
@@ -337,16 +336,19 @@ test("the chart's bars open a month", async ({ page }) => {
   );
 });
 
-test("the round button asks what to log, then opens that form", async ({ page }) => {
+test("the round button opens the sheet on the page's kind, and the type row switches", async ({
+  page,
+}) => {
   await page.goto("/expenses/spending?y=2025&m=7");
   // On expense screens the round button logs a transaction instead of adding a task.
   await expect(page.getByRole("button", { name: /Quick add task/ })).toHaveCount(0);
   await page.getByRole("button", { name: "Log a transaction" }).click();
-  const menu = page.getByRole("menu");
-  for (const kind of ["Income", "Expense", "EMI or loan", "Investment"]) {
-    await expect(menu.getByRole("menuitem", { name: new RegExp(`^${kind}`) })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Add expense" })).toBeVisible();
+  const types = page.getByRole("radiogroup", { name: "Type" });
+  for (const kind of ["Task", "Expense", "Income", "EMI or loan", "Investment"]) {
+    await expect(types.getByRole("radio", { name: kind })).toBeVisible();
   }
-  await menu.getByRole("menuitem", { name: /^Income/ }).click();
+  await types.getByRole("radio", { name: "Income" }).click();
   const dialog = page.getByRole("dialog", { name: "Add income" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("Amount", { exact: true })).toBeFocused();

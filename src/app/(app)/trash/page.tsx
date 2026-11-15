@@ -1,13 +1,13 @@
-import { Trash2 } from "lucide-react";
+import { Folder, ListChecks, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
+import { PageTitle } from "@/components/dash/page-title";
 import { EmptyState } from "@/components/shell/empty-state";
-import { PageHeader } from "@/components/shell/page-header";
-import { formatDate } from "@/lib/dates";
-import { formatMoney } from "@/lib/money";
-import { KIND_LABELS } from "@/modules/expenses/categories";
+import { addDaysIso, daysBetween, formatRowDay, todayIn } from "@/lib/dates";
+import { KIND_LABELS, KIND_ROUTES } from "@/modules/expenses/categories";
+import { CategoryIcon } from "@/modules/expenses/category-icons";
+import { money } from "@/modules/expenses/components/summary-sum";
 import { loadMoneyContext } from "@/modules/expenses/context";
-import { TaskPanel } from "@/modules/todos/components/task-panel";
-import { TrashList, type TrashItem } from "@/modules/todos/components/trash-list";
+import { EmptyTrashButton, TrashList, type TrashItem } from "@/modules/todos/components/trash-list";
 import {
   daysLeftInTrash,
   listTrash,
@@ -18,66 +18,108 @@ import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Trash" };
 
+/**
+ * Trash (docs/new_design.md screen 5c): everything deleted, newest first. Each row says what it is,
+ * where it came from, when it was deleted and when it goes for good.
+ */
 export default async function TrashPage() {
   const { userId } = await requireUser();
   await maybePurgeTrash(userId);
-  const [{ lists, tasks: trashedTasks, entries }, money] = await Promise.all([
+  const [{ lists, tasks: trashedTasks, entries }, ctx] = await Promise.all([
     listTrash(userId),
     loadMoneyContext(userId),
   ]);
+  const fmt = { currency: ctx.currency, locale: ctx.locale };
 
   const now = new Date();
+  const today = todayIn(ctx.timeZone, now);
+  const shortDay = (iso: string) => formatRowDay(iso, today, ctx.locale).replace(/^\S+ /, "");
+  /** "deleted today", "deleted yesterday", "deleted 10 Nov". */
+  const deleted = (at: Date | null) => {
+    const day = todayIn(ctx.timeZone, at ?? now);
+    const ago = daysBetween(day, today);
+    return ago === 0
+      ? "deleted today"
+      : ago === 1
+        ? "deleted yesterday"
+        : `deleted ${shortDay(day)}`;
+  };
+  const timing = (at: Date | null) => {
+    const left = daysLeftInTrash(at ?? now, now);
+    return { daysLeft: left, goneOn: shortDay(addDaysIso(today, left)) };
+  };
+
+  /** "today", "yesterday", "3 Nov": when something was deleted. */
+  const when = (at: Date | null) => deleted(at).replace(/^deleted /, "");
+  const kindName = (kind: (typeof entries)[number]["kind"]) =>
+    kind === "expense" ? "Expense" : KIND_LABELS[kind].tab;
+
   const items: (TrashItem & { at: number })[] = [
-    ...lists.map((l) => {
-      const n = l.taskCount;
-      return {
-        kind: "list" as const,
-        id: l.id,
-        title: l.name,
-        icon: l.icon,
-        detail: `List with ${n} ${n === 1 ? "task" : "tasks"}`,
-        daysLeft: daysLeftInTrash(l.deletedAt ?? now, now),
-        at: l.deletedAt?.getTime() ?? 0,
-      };
-    }),
+    ...lists.map((l) => ({
+      kind: "list" as const,
+      id: l.id,
+      title: l.name,
+      extra: `${l.taskCount} ${l.taskCount === 1 ? "task" : "tasks"}`,
+      icon: <Folder className="size-[18px]" strokeWidth={1.75} />,
+      detail: `List with ${l.taskCount} ${l.taskCount === 1 ? "task" : "tasks"} · ${deleted(l.deletedAt)}`,
+      from: `List · ${when(l.deletedAt)}`,
+      href: `/lists/${l.id}`,
+      ...timing(l.deletedAt),
+      at: l.deletedAt?.getTime() ?? 0,
+    })),
     ...trashedTasks.map((t) => ({
       kind: "task" as const,
       id: t.id,
       title: t.title,
-      icon: null,
-      detail: t.parentTitle ? `Subtask of ${t.parentTitle} in ${t.listName}` : `In ${t.listName}`,
-      daysLeft: daysLeftInTrash(t.deletedAt ?? now, now),
+      icon: <ListChecks className="size-[18px]" strokeWidth={1.75} />,
+      detail: `${t.parentTitle ? "Subtask" : "Task"} · from ${t.listName} · ${deleted(t.deletedAt)}`,
+      from: `${t.parentTitle ? "Subtask" : "Task"} in ${t.listName} · ${when(t.deletedAt)}`,
+      ...timing(t.deletedAt),
       at: t.deletedAt?.getTime() ?? 0,
     })),
     ...entries.map((e) => ({
       kind: "entry" as const,
       id: e.id,
       title: e.title,
-      icon: null,
-      detail: `${KIND_LABELS[e.kind].tab} entry, ${formatDate(e.entryDate, money.locale)}, ${formatMoney(e.amountMinor, money.currency, money.locale)}`,
-      daysLeft: daysLeftInTrash(e.deletedAt ?? now, now),
+      extra: money(e.amountMinor, fmt),
+      extraIsMoney: true,
+      icon: (
+        <CategoryIcon
+          kind={e.kind}
+          category={e.category}
+          className="size-[18px]"
+          strokeWidth={1.75}
+        />
+      ),
+      detail: `${kindName(e.kind)} · ${shortDay(e.entryDate)} · ${deleted(e.deletedAt)}`,
+      from: `${kindName(e.kind)}, ${shortDay(e.entryDate)} · ${when(e.deletedAt)}`,
+      href: `${KIND_ROUTES[e.kind]}?y=${e.entryDate.slice(0, 4)}&m=${Number(e.entryDate.slice(5, 7))}`,
+      ...timing(e.deletedAt),
       at: e.deletedAt?.getTime() ?? 0,
     })),
   ].sort((a, b) => b.at - a.at);
 
   return (
     <div className="dash">
-      <PageHeader title="Trash" />
-      <TaskPanel
-        id="trash"
-        title="Deleted items"
-        subtitle={`Tasks, lists and money entries stay here for ${TRASH_RETENTION_DAYS} days, then they are erased for good.`}
-      >
-        {items.length === 0 ? (
+      <PageTitle
+        back={{ href: "/", label: "Home" }}
+        title="Trash"
+        action={<EmptyTrashButton count={items.length} />}
+      />
+      <p className="-mt-3 mb-4 text-[14px] text-dash-ink-soft">
+        Items are removed for good {TRASH_RETENTION_DAYS} days after they&apos;re deleted.
+      </p>
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-dash-edge bg-dash-card shadow-(--dash-card-shadow)">
           <EmptyState
             icon={Trash2}
-            title="The Trash is empty"
-            hint="Deleted tasks, lists and entries show up here so you can bring them back."
+            title="Trash is empty."
+            hint={`Deleted items wait here for ${TRASH_RETENTION_DAYS} days.`}
           />
-        ) : (
-          <TrashList items={items} />
-        )}
-      </TaskPanel>
+        </div>
+      ) : (
+        <TrashList items={items} />
+      )}
     </div>
   );
 }

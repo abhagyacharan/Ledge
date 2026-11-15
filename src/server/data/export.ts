@@ -1,0 +1,93 @@
+import "server-only";
+import { and, asc, eq, isNull } from "drizzle-orm";
+import { toCsv } from "@/lib/csv";
+import { db } from "@/server/db/client";
+import { financeEntries, journalEntries, lists, tasks, userSettings } from "@/server/db/schema";
+
+/**
+ * Export (CLAUDE.md §6.2, P1): everything a user owns, so they can leave at any time. Every query
+ * filters by `userId` (CLAUDE.md §5). Items in Trash are left out.
+ */
+
+/** Everything as one JSON document: settings, lists, tasks, money entries and journal pages. */
+export async function exportEverything(userId: string) {
+  const [settings, myLists, myTasks, entries, pages] = await Promise.all([
+    db.select().from(userSettings).where(eq(userSettings.userId, userId)),
+    db
+      .select()
+      .from(lists)
+      .where(and(eq(lists.userId, userId), isNull(lists.deletedAt)))
+      .orderBy(asc(lists.position)),
+    db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), isNull(tasks.deletedAt)))
+      .orderBy(asc(tasks.createdAt)),
+    db
+      .select()
+      .from(financeEntries)
+      .where(and(eq(financeEntries.userId, userId), isNull(financeEntries.deletedAt)))
+      .orderBy(asc(financeEntries.entryDate)),
+    db
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.userId, userId))
+      .orderBy(asc(journalEntries.entryDate)),
+  ]);
+  // The internal search column is not data the user wrote.
+  const cleanTasks = myTasks.map((task) => {
+    const rest: Partial<typeof task> = { ...task };
+    delete rest.search;
+    return rest;
+  });
+  return {
+    app: "Ledge",
+    exportedAt: new Date().toISOString(),
+    note: "Money amounts are in minor units (paise for INR). Dates are the user's local days.",
+    settings: settings[0] ?? null,
+    lists: myLists,
+    tasks: cleanTasks,
+    moneyEntries: entries,
+    journal: pages,
+  };
+}
+
+/** Tasks as CSV, one row per task (subtasks included, with their parent's title). */
+export async function exportTasksCsv(userId: string): Promise<string> {
+  const rows = await db
+    .select({ task: tasks, listName: lists.name })
+    .from(tasks)
+    .innerJoin(lists, eq(lists.id, tasks.listId))
+    .where(and(eq(tasks.userId, userId), isNull(tasks.deletedAt)))
+    .orderBy(asc(lists.position), asc(tasks.position));
+  const titles = new Map(rows.map((r) => [r.task.id, r.task.title]));
+  const priorities = ["", "Low", "Medium", "High"];
+  return toCsv(
+    [
+      "Title",
+      "List",
+      "Parent task",
+      "Status",
+      "Priority",
+      "Due date",
+      "Due time",
+      "Repeat",
+      "Notes",
+      "Completed at",
+      "Created at",
+    ],
+    rows.map(({ task, listName }) => [
+      task.title,
+      listName,
+      task.parentId ? (titles.get(task.parentId) ?? "") : "",
+      task.status,
+      priorities[task.priority] ?? "",
+      task.dueDate,
+      task.dueTime,
+      task.recurrenceRule,
+      task.notes,
+      task.completedAt?.toISOString() ?? "",
+      task.createdAt.toISOString(),
+    ]),
+  );
+}

@@ -1,6 +1,15 @@
 "use client";
 
-import { Archive, ArrowDown, ArrowUp, MoreHorizontal, Pencil, Target, Trash2 } from "lucide-react";
+import {
+  Archive,
+  ArrowDown,
+  ArrowUp,
+  ChevronLeft,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,27 +21,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { daysBetween, formatDueDate } from "@/lib/dates";
+import { daysBetween, formatRowDay } from "@/lib/dates";
 import type { List } from "@/server/db/schema";
 import {
   archiveListAction,
   moveListAction,
   restoreListAction,
   trashListAction,
+  trashListKeepTasksAction,
 } from "../actions/lists";
 import { ConfirmDialog } from "./confirm-dialog";
 import { ListFormDialog } from "./list-form-dialog";
 import { ListGlyph } from "../list-icons";
 import { run, undoToast } from "./run-action";
 import type { DateContext } from "./types";
-
-function goalText(targetDate: string, ctx: DateContext): string {
-  const days = daysBetween(ctx.today, targetDate);
-  const when = formatDueDate(targetDate, ctx.today, ctx.locale);
-  if (days < 0) return `Goal date passed (${when})`;
-  if (days === 0) return "Goal date is today";
-  return `Goal: by ${when} (${days} ${days === 1 ? "day" : "days"} left)`;
-}
 
 export function ListHeader({
   list,
@@ -68,88 +70,126 @@ export function ListHeader({
     undoToast(`Moved "${list.name}" to Trash`, () => void run(restoreListAction({ id: list.id })));
   }
 
+  async function trashKeepingTasks() {
+    const result = await run(trashListKeepTasksAction({ id: list.id }));
+    if (!result.ok) return;
+    router.push("/tasks");
+    toast.success(`Moved the tasks to ${result.data.moved} and "${list.name}" to Trash`);
+  }
+
+  // Only a list that still has tasks asks first (docs/new_design.md §1); an empty one goes
+  // straight to Trash with Undo.
+  function askToDelete() {
+    if (taskCount > 0) setConfirmingDelete(true);
+    else void trash();
+  }
+
   const share = taskCount === 0 ? 0 : doneCount / taskCount;
+  const left = list.targetDate ? daysBetween(ctx.today, list.targetDate) : null;
 
   return (
-    <header className="flex min-w-0 items-start gap-4 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 shadow-(--dash-card-shadow) text-dash-ink sm:p-5 md:rounded-3xl md:p-6">
-      <span
-        aria-hidden
-        className="grid size-12 shrink-0 place-items-center rounded-2xl bg-dash-well"
-      >
-        <ListGlyph icon={list.icon} className="size-6 text-dash-ink" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight break-words">
-          {list.name}
-        </h2>
-        {list.description ? (
-          <p className="mt-1 text-sm text-pretty text-dash-ink-soft">{list.description}</p>
-        ) : null}
-        {list.targetDate ? (
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-dash-ink-soft">
-            <Target className="size-4" aria-hidden />
-            {goalText(list.targetDate, ctx)}
-          </p>
-        ) : null}
-        {taskCount > 0 ? (
-          <div className="mt-3 flex items-center gap-3">
-            <div
-              aria-hidden
-              className="h-1.5 max-w-64 flex-1 overflow-hidden rounded-full bg-dash-well"
-            >
-              <div
-                className="h-full origin-left rounded-full bg-dash-ink transition-transform duration-500 ease-snap"
-                style={{ transform: `scaleX(${share})` }}
-              />
-            </div>
-            <span className="figures shrink-0 text-xs text-dash-ink-soft">
-              {doneCount}/{taskCount} done
-            </span>
+    <div className="flex flex-col gap-3 md:gap-4">
+      <header className="flex min-w-0 flex-col">
+        <Link
+          href="/tasks"
+          className="-ml-2 inline-flex h-11 w-fit items-center gap-1 rounded-full pr-3 pl-1.5 text-[13px] font-medium text-dash-ink-soft outline-none hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
+        >
+          <ChevronLeft aria-hidden className="size-4" />
+          Tasks
+        </Link>
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            aria-hidden
+            className="grid size-12 shrink-0 place-items-center rounded-full border border-dash-edge bg-dash-card"
+          >
+            <ListGlyph icon={list.icon} className="size-[22px] text-dash-ink" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.015em] break-words md:text-[32px]">
+              {list.name}
+            </h1>
+            {list.description ? (
+              <p className="mt-0.5 text-sm text-pretty text-dash-ink-soft">{list.description}</p>
+            ) : null}
           </div>
-        ) : null}
-      </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <DashButton variant="ghost" size="icon" aria-label={`Options for ${list.name}`}>
-            <MoreHorizontal />
-          </DashButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onSelect={() => setEditing(true)}>
-            <Pencil /> Edit details
-          </DropdownMenuItem>
-          {list.isInbox ? null : (
-            <>
-              <DropdownMenuItem onSelect={() => void move("up")}>
-                <ArrowUp /> Move up
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <DashButton
+                variant="secondary"
+                size="icon"
+                className="shrink-0"
+                aria-label={`Options for ${list.name}`}
+              >
+                <MoreHorizontal />
+              </DashButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onSelect={() => setEditing(true)}>
+                <Pencil /> Edit details
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void move("down")}>
-                <ArrowDown /> Move down
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void archive()}>
-                <Archive /> Archive
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmingDelete(true)}>
-                <Trash2 /> Delete
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+              {list.isInbox ? null : (
+                <>
+                  <DropdownMenuItem onSelect={() => void move("up")}>
+                    <ArrowUp /> Move up
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void move("down")}>
+                    <ArrowDown /> Move down
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void archive()}>
+                    <Archive /> Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant="destructive" onSelect={askToDelete}>
+                    <Trash2 /> Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      {taskCount > 0 || list.targetDate ? (
+        <section
+          aria-label="Progress"
+          className="rounded-2xl border border-dash-edge bg-dash-card px-4 py-3.5 shadow-(--dash-card-shadow) md:px-5"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-[13px]">
+            <span className="font-medium">
+              {doneCount} of {taskCount} done
+            </span>
+            {list.targetDate && left !== null ? (
+              <span className="text-dash-ink-soft">
+                Target {formatRowDay(list.targetDate, ctx.today, ctx.locale).replace(/^\S+ /, "")} ·{" "}
+                {left > 0
+                  ? `${left} ${left === 1 ? "day" : "days"} left`
+                  : left === 0
+                    ? "due today"
+                    : `${-left} ${left === -1 ? "day" : "days"} past`}
+              </span>
+            ) : null}
+          </div>
+          {/* The list's one highlight: the orange progress bar. */}
+          <div aria-hidden className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-dash-track">
+            <div
+              className="h-full origin-left rounded-full bg-dash-accent transition-transform duration-500 ease-snap"
+              style={{ transform: `scaleX(${share})` }}
+            />
+          </div>
+        </section>
+      ) : null}
+
       <ListFormDialog open={editing} onOpenChange={setEditing} list={list} />
       <ConfirmDialog
         open={confirmingDelete}
         onOpenChange={setConfirmingDelete}
-        title={`Delete "${list.name}"?`}
-        description={
-          taskCount > 0
-            ? `This list and its ${taskCount} ${taskCount === 1 ? "task" : "tasks"} will move to Trash. You can undo this right after.`
-            : "This list will move to Trash. You can undo this right after."
-        }
-        confirmLabel="Move to Trash"
+        title={`Delete "${list.name}" and its ${taskCount} ${taskCount === 1 ? "task" : "tasks"}?`}
+        description="The list and its tasks go to Trash and can be restored for 30 days."
+        confirmLabel="Delete list and tasks"
         onConfirm={() => void trash()}
+        alternativeLabel="Move tasks to General, then delete"
+        onAlternative={() => void trashKeepingTasks()}
       />
-    </header>
+    </div>
   );
 }

@@ -1,4 +1,6 @@
 import { AppMain } from "@/components/shell/app-main";
+import { todayIn } from "@/lib/dates";
+import { TransactionLauncher } from "@/modules/expenses/components/transaction-launcher";
 import { AppSidebar } from "@/components/shell/app-sidebar";
 import { MobileTabBar } from "@/components/shell/mobile-tab-bar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -10,7 +12,7 @@ import { maybePurgeTrash } from "@/server/data/trash";
 import { requireUser } from "@/server/session";
 
 /**
- * The signed-in shell (docs/design.md §5e): the sidebar from tablet width up, the bottom tab bar
+ * The signed-in shell (docs/new_design.md §3): the sidebar from tablet width up, the bottom tab bar
  * on phones, and each module's always-mounted UI (the round + button, shortcuts, palette).
  */
 export default async function AppLayout({ children }: LayoutProps<"/">) {
@@ -37,9 +39,18 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <SidebarProvider>
         <AppSidebar user={account} />
         <SidebarInset className="min-w-0 bg-background">
-          <AppMain>{children}</AppMain>
+          {/* One transaction sheet for every page (Home's button, quick add's type row). The
+              Expense Tracker adds its own launcher with the round button. */}
+          <TransactionLauncher
+            currency={settings.currency}
+            today={todayIn(settings.timezone)}
+            button={false}
+            listen
+          >
+            <AppMain>{children}</AppMain>
+          </TransactionLauncher>
         </SidebarInset>
-        <MobileTabBar user={account} />
+        <MobileTabBar />
         {enabledModules().map((m) => (m.Global ? <m.Global key={m.id} /> : null))}
       </SidebarProvider>
     </TodosProvider>

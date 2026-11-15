@@ -45,15 +45,18 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  overlay = true,
   onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
+  /** False for a docked panel that sits beside the page instead of over it. */
+  overlay?: boolean;
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      {overlay ? <SheetOverlay /> : null}
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}

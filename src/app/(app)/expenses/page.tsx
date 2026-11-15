@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { DashCard } from "@/components/dash/dash-card";
 import { loadMoneyContext } from "@/modules/expenses/context";
+import { TrendTable } from "@/modules/expenses/components/summary-sections";
 import {
-  BreakdownTable,
-  SummaryStats,
-  TrendTable,
-} from "@/modules/expenses/components/summary-sections";
+  BreakdownList,
+  InvestTiles,
+  SummarySum,
+  SummaryTiles,
+} from "@/modules/expenses/components/summary-sum";
+import { CashFlowCard } from "@/modules/expenses/components/cash-flow-card";
 import { CashFlowChart } from "@/modules/expenses/components/cash-flow-chart";
 import { DownloadReport } from "@/modules/expenses/components/download-report";
 import { SummaryEmpty } from "@/modules/expenses/components/summary-empty";
@@ -22,6 +24,11 @@ import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Expenses summary" };
 
+/**
+ * The Summary (docs/new_design.md screens 3a and 3f). Phone: the period written as a sum, two
+ * small figures for investing, where the money went, then the year's cash flow. Desktop: five
+ * figures in a row, the cash flow chart with its table beside the breakdown.
+ */
 export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/expenses">) {
   const { userId } = await requireUser();
   const [money, params] = await Promise.all([loadMoneyContext(userId), searchParams]);
@@ -40,79 +47,93 @@ export default async function ExpensesSummaryPage({ searchParams }: PageProps<"/
   const totals = periodTotals(monthly, period.month);
   const previous =
     period.month === "all" ? null : previousMonthTotals(monthly, previousYear, period.month);
+  const previousMonth = period.month === "all" ? null : period.month === 1 ? 12 : period.month - 1;
   const trend = annualTrend(monthly);
   const breakdown = expenseBreakdown(expenseRows);
   const emi = emiProgress(emiRows);
   const nothingYet = totals.income + totals.emi + totals.expense + totals.investment === 0;
+  const label = periodLabel(period);
+
+  const breakdownPdf = (
+    <DownloadReport
+      href={`/api/export/expense-breakdown?y=${period.year}&m=${period.month}`}
+      label={`Download the expense breakdown for ${label} as a PDF`}
+    />
+  );
 
   return (
-    <div className="dash flex flex-col gap-4">
-      <h2 className="sr-only">Summary for {periodLabel(period)}</h2>
+    <div className="dash flex flex-col gap-3 md:gap-4">
+      <h2 className="sr-only">Summary for {label}</h2>
 
-      {nothingYet ? <SummaryEmpty periodLabel={periodLabel(period)} /> : null}
+      {nothingYet ? <SummaryEmpty periodLabel={label} /> : null}
 
-      {/* The dashboard look (docs/design.md): four blocks, two rows, one column on small screens. */}
-      <div className="grid gap-4 xl:grid-cols-12">
-        <DashCard
-          id="tiles"
-          title={`${periodLabel(period)} at a glance`}
-          hideTitle
-          // Phones: one card of four equal rows, edge to edge. Wider: no outer box, the four
-          // figures are cards of their own in a 2 by 2 grid (like the Tasks overview).
-          className="flex flex-col max-sm:overflow-hidden max-sm:p-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:rounded-none md:p-0 xl:col-span-6"
+      <div className="flex flex-col gap-2.5 md:hidden">
+        <SummarySum
+          totals={totals}
+          previous={previous}
+          previousMonth={previousMonth}
+          emi={emi}
+          fmt={fmt}
+        />
+        <InvestTiles totals={totals} fmt={fmt} />
+      </div>
+      <div className="hidden md:block">
+        <SummaryTiles
+          totals={totals}
+          previous={previous}
+          previousMonth={previousMonth}
+          emi={emi}
+          expenseCount={breakdown.total.count}
+          fmt={fmt}
+        />
+      </div>
+
+      <div className="grid gap-3 md:gap-4 xl:grid-cols-12 xl:items-start">
+        <section
+          aria-labelledby="breakdown-title"
+          className="order-first rounded-2xl border border-dash-edge bg-dash-card px-4 pt-4 pb-2 text-dash-ink shadow-(--dash-card-shadow) md:rounded-3xl md:px-5 xl:order-last xl:col-span-5"
         >
-          <SummaryStats totals={totals} previous={previous} emi={emi} fmt={fmt} />
-        </DashCard>
-
-        <DashCard
-          id="cash-flow"
-          title="Annual cash flow"
-          subtitle={`Money in and out, each month of ${period.year}`}
-          className="flex flex-col xl:col-span-6"
-        >
-          <CashFlowChart
-            months={trend.months}
-            year={period.year}
-            selectedMonth={period.month}
+          <div className="flex items-center justify-between gap-2">
+            <h2 id="breakdown-title" className="text-[15px] font-semibold">
+              <span className="md:hidden">Where it went</span>
+              <span className="hidden md:inline">Expense breakdown</span>
+            </h2>
+            {breakdownPdf}
+          </div>
+          <BreakdownList
+            rows={[...breakdown.rows].sort((a, b) => b.amountMinor - a.amountMinor)}
             fmt={fmt}
           />
-        </DashCard>
+        </section>
 
-        <DashCard
-          id="breakdown"
-          title="Expense breakdown by category"
-          subtitle={periodLabel(period)}
-          action={
-            <DownloadReport
-              href={`/api/export/expense-breakdown?y=${period.year}&m=${period.month}`}
-              label={`Download the expense breakdown for ${periodLabel(period)} as a PDF`}
-            />
-          }
-          className="xl:col-span-6"
-        >
-          <BreakdownTable rows={breakdown.rows} total={breakdown.total} fmt={fmt} />
-        </DashCard>
-
-        <DashCard
-          id="details"
-          title={`Annual cash flow trend, ${period.year}`}
-          subtitle="Month by month, with the full-year total"
-          action={
-            <DownloadReport
-              href={`/api/export/cash-flow?y=${period.year}`}
-              label={`Download the annual cash flow trend for ${period.year} as a PDF`}
-            />
-          }
-          className="xl:col-span-6"
-        >
-          <TrendTable
-            months={trend.months}
-            total={trend.total}
-            selectedMonth={period.month}
-            year={period.year}
-            fmt={fmt}
+        <div className="xl:col-span-7">
+          <CashFlowCard
+            title={`Annual cash flow, ${period.year}`}
+            actions={
+              <DownloadReport
+                href={`/api/export/cash-flow?y=${period.year}`}
+                label={`Download the annual cash flow trend for ${period.year} as a PDF`}
+              />
+            }
+            chart={
+              <CashFlowChart
+                months={trend.months}
+                year={period.year}
+                selectedMonth={period.month}
+                fmt={fmt}
+              />
+            }
+            table={
+              <TrendTable
+                months={trend.months}
+                total={trend.total}
+                selectedMonth={period.month}
+                year={period.year}
+                fmt={fmt}
+              />
+            }
           />
-        </DashCard>
+        </div>
       </div>
     </div>
   );

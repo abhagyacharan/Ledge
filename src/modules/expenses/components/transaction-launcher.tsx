@@ -1,9 +1,8 @@
 "use client";
 
-import { Landmark, Plus, ShoppingBag, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DropdownMenu as Menu } from "radix-ui";
-import { createContext, use, useCallback, useRef, useState, type ReactNode } from "react";
+import { createContext, use, useCallback, useEffect, useState, type ReactNode } from "react";
 import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
 import { useOpenOnArrival } from "@/hooks/use-open-on-arrival";
 import { cn } from "@/lib/utils";
@@ -13,12 +12,15 @@ import { dateInPeriod, parsePeriod, periodFromToday } from "../periods";
 import { EntrySheet } from "./entry-sheet";
 
 /**
- * "Log a transaction" for the whole expense tracker. A round button (where the task quick-add
- * button sits on other screens) opens a short menu: Income, Expense, EMI or loan, Investment.
- * Picking one opens that kind's form in a sheet. The tabs' own Add buttons open the same sheet.
+ * "Log a transaction": one sheet for adding money entries. On Expense Tracker pages a round +
+ * opens it on the page's kind; the app-wide instance (no button) answers Home's button and quick
+ * add's type row. The header's Add buttons open the same sheet.
  */
 
-type Launcher = { open: (kind: EntryKind) => void };
+type Launcher = { open: (kind: EntryKind, date?: string) => void };
+
+/** Opens the app-wide transaction sheet from anywhere (quick add's type row). */
+export const LOG_TRANSACTION_EVENT = "ledge:log-transaction";
 
 const LauncherContext = createContext<Launcher | null>(null);
 
@@ -28,40 +30,60 @@ export function useLogTransaction(): Launcher {
   return launcher;
 }
 
-const OPTIONS: { kind: EntryKind; label: string; hint: string; icon: LucideIcon }[] = [
-  { kind: "income", label: "Income", hint: "Salary, bonus, refunds", icon: Wallet },
-  { kind: "expense", label: "Expense", hint: "Something you paid for", icon: ShoppingBag },
-  { kind: "emi", label: "EMI or loan", hint: "A loan, EMI or card bill", icon: Landmark },
-  { kind: "investment", label: "Investment", hint: "Funds, stocks, deposits", icon: TrendingUp },
-];
+/** The kind the + opens on each page: the area's own kind, an expense everywhere else. */
+function kindForPath(pathname: string): EntryKind {
+  const match = (Object.entries(KIND_ROUTES) as [EntryKind, string][]).find(
+    ([, route]) => pathname === route,
+  );
+  return match?.[0] ?? "expense";
+}
 
 export function TransactionLauncher({
   currency,
   today,
+  button = true,
+  listen = false,
   children,
 }: {
+  /** The app-wide launcher: opens its sheet when LOG_TRANSACTION_EVENT is sent. */
+  listen?: boolean;
   currency: string;
   today: string;
+  /** The round + button and its menu. Home leaves it out: its own + adds a task. */
+  button?: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [sheet, setSheet] = useState<{ open: boolean; kind: EntryKind; n: number }>({
+  const [sheet, setSheet] = useState<{
+    open: boolean;
+    kind: EntryKind;
+    n: number;
+    /** The day a new entry starts on (a day opened from the Journal); today otherwise. */
+    date?: string;
+  }>({
     open: false,
     kind: "expense",
     n: 0,
   });
-  // Picking from the menu hands focus to the sheet, so the menu must not take it back on close.
-  const picked = useRef(false);
-  // The welcome page's "Log a transaction" button arrives with ?add=transaction.
-  useOpenOnArrival("transaction", () => setMenuOpen(true));
 
   const open = useCallback(
-    (kind: EntryKind) => setSheet((s) => ({ open: true, kind, n: s.n + 1 })),
+    (kind: EntryKind, date?: string) => setSheet((s) => ({ open: true, kind, date, n: s.n + 1 })),
     [],
   );
+
+  // The welcome page's "Log a transaction" button arrives with ?add=transaction.
+  useOpenOnArrival("transaction", () => {
+    if (button) open(kindForPath(pathname));
+  });
+
+  useEffect(() => {
+    if (!listen) return;
+    const onEvent = (event: Event) => open((event as CustomEvent<EntryKind>).detail ?? "expense");
+    window.addEventListener(LOG_TRANSACTION_EVENT, onEvent);
+    return () => window.removeEventListener(LOG_TRANSACTION_EVENT, onEvent);
+  }, [listen, open]);
 
   /** "View" in the Added toast, unless the new entry is already on screen. */
   function addedAction(entryDate: string) {
@@ -76,63 +98,19 @@ export function TransactionLauncher({
     <LauncherContext value={{ open }}>
       {children}
 
-      {/* While the menu is open the page behind it is blurred and tinted, like the sheets. It
-          sits under the menu and the round button, which stay sharp. Tapping it closes the menu. */}
-      {menuOpen ? (
-        <div
-          aria-hidden
-          onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 z-[39] animate-in bg-black/15 backdrop-blur-[6px] duration-200 fade-in-0 dark:bg-black/35"
-        />
-      ) : null}
-
-      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen} modal={false}>
-        <Menu.Trigger
+      {/* The round + opens the sheet on the kind that fits the page (docs/new_design.md §5
+          "Capture sheet"): Income on Income, EMIs on EMIs, an expense elsewhere. The sheet's type
+          row switches kind, or hands over to quick add. */}
+      {button ? (
+        <button
+          type="button"
           aria-label="Log a transaction"
-          className={cn(FAB_CLASS, menuOpen && "z-[41]")}
+          onClick={() => open(kindForPath(pathname))}
+          className={FAB_CLASS}
         >
-          {/* The plus turns into a cross while the menu is open. */}
-          <Plus aria-hidden className={cn(FAB_ICON_CLASS, menuOpen && "rotate-45")} />
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Content
-            side="top"
-            align="end"
-            sideOffset={12}
-            collisionPadding={16}
-            onCloseAutoFocus={(event) => {
-              if (picked.current) event.preventDefault();
-              picked.current = false;
-            }}
-            className="dash z-40 w-72 origin-(--radix-dropdown-menu-content-transform-origin) rounded-2xl border border-dash-edge bg-dash-card p-2 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.35)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:duration-200 data-[state=closed]:duration-150"
-          >
-            <Menu.Label className="px-3 pt-2 pb-1.5 text-xs font-medium text-dash-ink-soft">
-              Log a transaction
-            </Menu.Label>
-            {OPTIONS.map((option) => (
-              <Menu.Item
-                key={option.kind}
-                onSelect={() => {
-                  picked.current = true;
-                  open(option.kind);
-                }}
-                className="group flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 outline-none select-none transition-colors duration-100 data-[highlighted]:bg-dash-well"
-              >
-                <span
-                  aria-hidden
-                  className="grid size-10 shrink-0 place-items-center rounded-full bg-dash-well transition-colors duration-100 group-data-[highlighted]:bg-dash-card"
-                >
-                  <option.icon className="size-[18px]" strokeWidth={1.75} />
-                </span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="text-sm font-medium">{option.label}</span>
-                  <span className="text-xs text-dash-ink-soft">{option.hint}</span>
-                </span>
-              </Menu.Item>
-            ))}
-          </Menu.Content>
-        </Menu.Portal>
-      </Menu.Root>
+          <Plus aria-hidden className={cn(FAB_ICON_CLASS, sheet.open && "rotate-45")} />
+        </button>
+      ) : null}
 
       <EntrySheet
         formKey={`new-${sheet.kind}-${sheet.n}`}
@@ -140,7 +118,9 @@ export function TransactionLauncher({
         onOpenChange={(next) => setSheet((s) => ({ ...s, open: next }))}
         kind={sheet.kind}
         context={{ currency, today }}
+        defaultDate={sheet.date}
         addedAction={addedAction}
+        onKindChange={(kind) => setSheet((s) => ({ ...s, kind, n: s.n + 1 }))}
       />
     </LauncherContext>
   );

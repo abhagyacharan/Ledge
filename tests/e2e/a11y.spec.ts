@@ -57,20 +57,20 @@ for (const scheme of SCHEMES) {
     test("a list and its View panel", async ({ page }) => {
       await page.goto("/tasks");
       await page.getByRole("link", { name: "Work", exact: true }).click();
-      await expect(page.getByRole("heading", { level: 2, name: "Work" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
       await audit(page, `the Work list (${scheme})`);
 
-      await page.getByRole("button", { name: /^View/ }).click();
-      await expect(page.getByLabel("Sort by")).toBeVisible();
+      await page.getByRole("button", { name: /^Sort by:/ }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
       await audit(page, `the View panel (${scheme})`);
     });
 
     test("the log-a-transaction menu and the period picker", async ({ page }) => {
       await page.goto("/expenses");
       await page.getByRole("button", { name: "Log a transaction" }).click();
-      await expect(page.getByRole("menu")).toBeVisible();
-      await page.waitForTimeout(300); // the menu pops in; let it settle
-      await audit(page, `log a transaction menu (${scheme})`);
+      await expect(page.getByRole("dialog", { name: "Add expense" })).toBeVisible();
+      await page.waitForTimeout(400); // the sheet slides in; let it settle
+      await audit(page, `log a transaction sheet (${scheme})`);
       await page.keyboard.press("Escape");
       await page.getByRole("button", { name: /^Choose period/ }).click();
       await expect(page.getByRole("dialog", { name: "Choose a period" })).toBeVisible();

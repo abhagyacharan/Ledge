@@ -564,3 +564,34 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - Licence for open sourcing (MIT or AGPL), and whether the seed data and git history are safe to publish.
 
 - Password reset: Ledge has no "forgot password" (no email service). A command-line reset script is parked in `docs/ideas.md`.
+
+## 2026-11-15: Home page and new navigation from the Claude Design mockups
+
+- **Decision:** O's new design spec is saved as `docs/new_design.md` (draft; wins over `docs/design.md` where they disagree). Built first: Home (screens 1a, 1b, 1e) with a time-of-day greeting, a tasks sentence and one live hint per registry module (pure wording in `src/modules/home/hints.ts`, unit tested); the phone tab bar is Home plus up to three pinned modules with the + beside it; Search and More tabs removed (Search, Trash, Settings are Home tiles; the header Search button now shows on phones; Theme moved into Settings); the desktop sidebar starts with Home and a "Modules" label.
+- **Why:** O asked to overhaul the UI to the mockups, tab by tab, starting with Home.
+- **Details:** Log a transaction on Home opens the Expense sheet in place (`TransactionLauncher` with `button={false}`), and `t` does the same on Home. The + now shows on Journal, Search, Settings and Trash on phones only (the spec's "one + on every screen" completes the bar); desktop keeps O's 2026-11-12 rule of none there. Sign out stays in the desktop sidebar as well as Settings (the mockup leaves it out; kept so nothing is lost). Not built yet: the unified capture sheet with a type row (screen 1c); quick add's parsed chips (1d) already exist.
+
+## 2026-11-15: Tasks, Expense Tracker and Journal in the new design
+
+- **Decision:** the three modules follow `docs/new_design.md` screens 2a to 4e. Tasks: the view chips live on the Overview only; other views have a big title with "‹ Tasks" on phones; groups are separate cards; rows say "Overdue: 2 days" with an alert icon and a folder for the list; Today keeps tasks ticked today, struck through; the task detail is a card of rows with a priority segmented control; the due date picker has a month calendar and understands typed dates (chrono-node); Repeat is chips; view settings are chips. Expense Tracker: the header changes per area; the phone Summary is written as a sum; desktop has five tiles; "Where it went" is a list; whole rupees drop the paise on screen. Journal: no page title, a word-based mood control, borderless writing, status with Retry at the top.
+- **New behaviour:** Duplicate task (copies open subtasks) and deleting a list can move its tasks to General first (`duplicateTask`, `trashListKeepingTasks`, tested). An empty list is deleted straight away with Undo.
+- **Not done from the mockups:** the docked task pane on desktop (the task still opens in the right-side sheet), per-month net figures in the period picker, swipe gestures on rows, the unified capture sheet (1c), and the desktop table layout for expense entries (3g).
+- **Why:** O asked for these three screens next.
+
+## 2026-11-15: Search, Trash, Settings, sign-in states, desktop Tasks, Income and Investments
+
+- **Decision:** built screens 5a to 5g and 6a to 6g of `docs/new_design.md`. Search highlights matches (weight 600 and an orange underline), shows a piece of the note when only the notes match, has All/Tasks/Money chips, remembers recent searches on the device (localStorage, a convenience only) and points to Trash when nothing matches. Trash rows say what, where from, when deleted and when they go (amber within 7 days). Settings has preferences, reports and exports, and security. The task detail docks beside the list from 1200px (non-modal sheet, no overlay; the page leaves room). All tasks is a table with a mouse. The Overview has a 14-day grid with repeat previews and EMIs due.
+- **P1 items built** (CLAUDE.md §6.2, asked for by these screens): export (JSON of everything, CSV of tasks), sign out everywhere (deletes the account's session rows, then signs this device out; other devices notice within 5 minutes because of the cookie cache) and delete account (typed "delete my ledge"; deleting the user row cascades to everything, and the inbox trigger allows it once the user row is gone).
+- **Preferences:** theme, time zone and week start can be changed. Currency and locale are shown but not editable, because changing them would relabel amounts already stored in rupees.
+- **Kept:** "Delete forever" on one Trash item still asks first (permanent; the e2e test expects it), although the mockup shows no dialog.
+- **Not done:** profile editing (name, email), per-month savings in the period picker, Settings sub-pages on phones (rows open in place instead).
+
+## 2026-11-15: Whole-app consistency pass
+
+- **One capture sheet.** The + and Home's buttons open one sheet whose first row is the type (Task, Expense, Income, EMI or loan, Investment). A button-less transaction launcher lives in the app layout and opens on `LOG_TRANSACTION_EVENT`, so quick add's type row works on every page. On Expense Tracker pages the + opens the sheet on the page's kind directly; the old four-item menu is gone. The sheet remembers the last category and payment method per kind on the device and has "Save and add another".
+- **Quick add** follows screen 1d: one field, "Understood as" with icon chips, the other fields under "More options" (open at once when coming from an inline field), and the last add confirmed inside the sheet with Undo (which deletes the task) instead of a toast.
+- **Toasts** are ink pills at the bottom centre, above the phone tab bar; the undo window is 6 seconds (was 5), as the design says.
+- **Trash** has kind chips and a desktop table (screen 6i). Restoring a task whose list is still in Trash moves it to General (`restoreTaskVisibly`, tested); before, the task came back invisible. The toast says where it went, with View.
+- **Back links** follow where you came from: an Expense area narrowed to a day from the Journal says "‹ Journal, 10 Nov", and "Log for this day" starts the entry on that day.
+- **Command palette** follows screen 1f, with a "Search everything" row for the typed words.
+- **Skeletons** for task pages, Summary, entry areas and the Journal redrawn to the new layouts.

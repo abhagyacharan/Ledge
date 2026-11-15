@@ -4,7 +4,9 @@ import { EmptyState } from "@/components/shell/empty-state";
 import { InlineAdd } from "@/modules/todos/components/inline-add";
 import { QuickAddButton } from "@/modules/todos/components/quick-add-button";
 import { TaskDrawerHost } from "@/modules/todos/components/task-drawer-host";
+import { AllTasksTable } from "@/modules/todos/components/all-tasks-table";
 import { TaskGroups } from "@/modules/todos/components/task-groups";
+import { PageTitle } from "@/components/dash/page-title";
 import { TaskPanel } from "@/modules/todos/components/task-panel";
 import { UrlViewControls } from "@/modules/todos/components/url-view-controls";
 import { loadDateContext } from "@/modules/todos/date-context";
@@ -35,30 +37,56 @@ export default async function AllTasksPage({ searchParams }: PageProps<"/all">) 
   const topLevel = tasks.filter((t) => !t.parentId);
   const groups = applyView(topLevel, settings, ctx);
 
+  const open = topLevel.filter((t) => t.status === "open");
+  const listCount = new Set(open.map((t) => t.listId)).size;
+  const doneCount = topLevel.length - open.length;
+  const empty =
+    groups.length === 0 ? (
+      <EmptyState
+        icon={ListTodo}
+        title={topLevel.length === 0 ? "No tasks yet" : "No tasks match this view"}
+        hint={
+          topLevel.length === 0
+            ? "Add your first task and it will show up here."
+            : "Change or reset the view to see more."
+        }
+        action={topLevel.length === 0 ? <QuickAddButton /> : undefined}
+      />
+    ) : null;
+
   return (
     <>
+      <PageTitle
+        back={{ href: "/tasks", label: "Tasks" }}
+        title="All tasks"
+        meta={`${open.length} open across ${listCount} ${listCount === 1 ? "list" : "lists"} · ${doneCount} completed`}
+      />
+      <div className="mb-3">
+        <UrlViewControls settings={settings} base={BASE} />
+      </div>
+
+      {/* Phones and tablets: rows, grouped as the view says. */}
       <TaskPanel
         id="all"
         title="All tasks"
-        subtitle="Every task in every list."
-        action={<UrlViewControls settings={settings} base={BASE} />}
+        hideTitle
+        className="px-4 py-3 md:px-5 md:py-4 lg:hidden"
       >
-        {groups.length === 0 ? (
-          <EmptyState
-            icon={ListTodo}
-            title={topLevel.length === 0 ? "No tasks yet" : "No tasks match this view"}
-            hint={
-              topLevel.length === 0
-                ? "Add your first task and it will show up here."
-                : "Change or reset the view to see more."
-            }
-            action={topLevel.length === 0 ? <QuickAddButton /> : undefined}
-          />
-        ) : (
-          <TaskGroups groups={groups} allTasks={tasks} ctx={ctx} />
-        )}
+        {empty ?? <TaskGroups groups={groups} allTasks={tasks} ctx={ctx} />}
         <InlineAdd listId={inbox.id} label={`Add a task to ${inbox.name}`} />
       </TaskPanel>
+
+      {/* With a mouse: one table (screen 6d), in the view's order. */}
+      <div className="hidden flex-col gap-3 lg:flex">
+        {empty ? (
+          <div className="rounded-2xl border border-dash-edge bg-dash-card">{empty}</div>
+        ) : (
+          <AllTasksTable tasks={groups.flatMap((g) => g.tasks)} allTasks={tasks} ctx={ctx} />
+        )}
+        <div className="rounded-2xl border border-dash-edge bg-dash-card px-4 shadow-(--dash-card-shadow)">
+          <InlineAdd listId={inbox.id} label={`Add a task to ${inbox.name}`} />
+        </div>
+      </div>
       <TaskDrawerHost
         userId={userId}
         taskParam={typeof params.task === "string" ? params.task : undefined}

@@ -1,147 +1,65 @@
 "use client";
 
-import { Search, Settings, Trash2 } from "lucide-react";
+import { House, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Sheet, SheetBody, SheetHeader } from "@/components/dash/sheet";
 import { enabledModules } from "@/config/modules";
 import { cn } from "@/lib/utils";
-import { LedgeMark } from "./brand";
-import { NavRow } from "./nav-row";
-import { SignOutButton } from "./sign-out-button";
-import { ThemeToggle } from "./theme-toggle";
+
+/** At most three modules are pinned to the bar beside Home (docs/new_design.md §3). */
+const MAX_PINS = 3;
 
 /**
- * Phone navigation (docs/design.md §5e): a bottom tab bar with the main parts of the app, Search
- * and "More", which opens a sheet with Trash, Settings and your account. Your lists are in the
- * Lists menu at the top of the Tasks pages. Hidden from tablet width up, where the sidebar takes
- * over (and the headers' round Search button returns).
+ * Phone navigation (docs/new_design.md §3, `LedgeTabBar`): a floating 64px pill with Home and the
+ * pinned modules, each an icon and a short label. The round + button sits to its right on the same
+ * line (FAB_CLASS). There is no More or Search tab: Search, Trash and Settings are tiles on Home.
+ * Hidden from tablet width up, where the sidebar takes over.
  */
-export function MobileTabBar({ user }: { user: { name: string; email: string } }) {
+export function MobileTabBar() {
   const pathname = usePathname();
-  const [more, setMore] = useState(false);
-  const inSearch = pathname === "/search";
-  const tabs = enabledModules();
-  const inModule = inSearch || tabs.some((m) => m.owns(pathname));
-  const close = () => setMore(false);
-  // One column per module, then Search and More.
-  const columns = tabs.length === 3 ? "grid-cols-5" : "grid-cols-4";
+  const pins = enabledModules().slice(0, MAX_PINS);
+  const tabs: { id: string; href: string; label: string; icon: LucideIcon; current: boolean }[] = [
+    { id: "home", href: "/", label: "Home", icon: House, current: pathname === "/" },
+    ...pins.map((m) => ({
+      id: m.id,
+      href: m.route,
+      label: m.shortLabel ?? m.label,
+      icon: m.icon,
+      current: m.owns(pathname),
+    })),
+  ];
 
   return (
-    <>
-      <nav
-        aria-label="Main"
-        // A floating pill (docs/design.md §5e): 16px from the screen sides (the page gutter; the +
-        // button lines up with its right edge), clear of the home bar, and never wider than a
-        // large phone so every tab stays in thumb reach. 64px tall, corners half that.
-        className="fixed inset-x-4 bottom-(--tabbar-gap) z-30 mx-auto max-w-md rounded-full border border-dash-edge bg-card p-1.5 shadow-[0_12px_32px_-12px_rgb(16_24_16/0.28),0_2px_6px_-2px_rgb(16_24_16/0.08)] md:hidden dark:shadow-[0_14px_36px_-12px_rgb(0_0_0/0.7)]"
+    <nav
+      aria-label="Main"
+      // 16px from the left edge (the page gutter); the right edge stops 8px short of the 56px +
+      // button, which is centred on the bar's height.
+      className="fixed bottom-(--tabbar-gap) left-4 right-[5.5rem] z-30 h-16 rounded-full border border-dash-edge bg-card p-1.5 shadow-[0_12px_32px_-12px_rgb(16_24_16/0.28),0_2px_6px_-2px_rgb(16_24_16/0.08)] md:hidden dark:shadow-[0_14px_36px_-12px_rgb(0_0_0/0.7)]"
+    >
+      <ul
+        className="grid h-full gap-0.5"
+        style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
       >
-        <ul className={cn("grid h-13 gap-0.5", columns)}>
-          {tabs.map((m) => (
-            <li key={m.id}>
-              <Tab
-                href={m.route}
-                label={m.shortLabel ?? m.label}
-                current={!more && m.owns(pathname)}
-              >
-                <m.icon aria-hidden className="size-5" strokeWidth={1.85} />
-              </Tab>
-            </li>
-          ))}
-          <li>
-            <Tab href="/search" label="Search" current={!more && inSearch}>
-              <Search aria-hidden className="size-5" strokeWidth={1.85} />
-            </Tab>
-          </li>
-          <li>
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={more}
-              onClick={() => setMore(true)}
-              className={tabClass(!inModule || more)}
+        {tabs.map((tab) => (
+          <li key={tab.id}>
+            <Link
+              href={tab.href}
+              aria-current={tab.current ? "page" : undefined}
+              className={cn(
+                // A pill inside the pill: concentric with the bar, over the 44px tap minimum. The
+                // current tab is filled and its label turns ink and semibold, never colour alone.
+                "flex h-full w-full flex-col items-center justify-center gap-1 rounded-full text-[11px] leading-none outline-none transition-[background-color,color,transform] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active:scale-[0.96]",
+                tab.current
+                  ? "bg-dash-well font-semibold text-foreground"
+                  : "font-medium text-muted-foreground",
+              )}
             >
-              <TabIcon current={!inModule || more}>
-                {/* The Ledge mark stands in for the menu icon (O, 2026-11-13): the L in the text
-                    colour, so light on dark and dark on light, with its orange rule. */}
-                <LedgeMark className="text-foreground" />
-              </TabIcon>
-              More
-            </button>
+              <tab.icon aria-hidden className="size-[18px]" strokeWidth={1.85} />
+              {tab.label}
+            </Link>
           </li>
-        </ul>
-      </nav>
-
-      <Sheet open={more} onOpenChange={setMore}>
-        <SheetHeader title="More" />
-        <SheetBody>
-          <div className="flex flex-col gap-1">
-            <NavRow
-              href="/trash"
-              label="Trash"
-              icon={Trash2}
-              current={pathname === "/trash"}
-              onNavigate={close}
-            />
-            <NavRow
-              href="/settings"
-              label="Settings"
-              icon={Settings}
-              current={pathname === "/settings"}
-              onNavigate={close}
-            />
-          </div>
-          <div className="mt-5 flex items-center gap-3 border-t border-border pt-4">
-            <span
-              aria-hidden
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-sm font-semibold text-background"
-            >
-              {user.name.trim().charAt(0).toUpperCase() || "?"}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{user.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            </div>
-            <ThemeToggle />
-          </div>
-          <div className="mt-2">
-            <SignOutButton />
-          </div>
-        </SheetBody>
-      </Sheet>
-    </>
-  );
-}
-
-const tabClass = (current: boolean) =>
-  cn(
-    // Each tab is a pill inside the pill: 52px tall (over the 44px tap minimum), inset 6px and
-    // fully round, so it is concentric with the bar. The current one is filled and its label
-    // turns ink and semibold, so the state never rests on colour alone. Presses respond at once.
-    "flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-full text-[11px] leading-none outline-none transition-[background-color,color,transform] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset active:scale-[0.96]",
-    current ? "bg-dash-well font-semibold text-foreground" : "font-medium text-muted-foreground",
-  );
-
-function TabIcon({ children }: { current?: boolean; children: React.ReactNode }) {
-  return <span className="grid size-6 place-items-center">{children}</span>;
-}
-
-function Tab({
-  href,
-  label,
-  current,
-  children,
-}: {
-  href: string;
-  label: string;
-  current: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link href={href} aria-current={current ? "page" : undefined} className={tabClass(current)}>
-      <TabIcon current={current}>{children}</TabIcon>
-      {label}
-    </Link>
+        ))}
+      </ul>
+    </nav>
   );
 }

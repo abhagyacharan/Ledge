@@ -46,12 +46,15 @@ export function TaskList({
   allTasks,
   ctx,
   showList = true,
+  timeOnly = false,
 }: {
   tasks: ViewTask[];
   allTasks: ViewTask[];
   ctx: DateContext;
   /** Show which list each task is in (off inside a single list). */
   showList?: boolean;
+  /** Grouped by day already (Upcoming): rows show only the time. */
+  timeOnly?: boolean;
 }) {
   return (
     <ul>
@@ -61,6 +64,7 @@ export function TaskList({
           task={task}
           subtasks={allTasks.filter((t) => t.parentId === task.id)}
           ctx={ctx}
+          timeOnly={timeOnly}
           context={
             showList
               ? { listName: task.listName, listIcon: task.listIcon, parentTitle: task.parentTitle }

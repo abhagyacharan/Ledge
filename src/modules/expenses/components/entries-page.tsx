@@ -2,11 +2,12 @@ import { loadMoneyContext } from "../context";
 import { CATEGORIES_BY_KIND, KIND_LABELS } from "../categories";
 import { dateInPeriod, parsePeriod, periodLabel, periodRange, periodToParams } from "../periods";
 import { parseEntryFilters } from "../schema";
-import { emiProgress } from "../summary";
+import { emiProgress, periodTotals, previousMonthTotals } from "../summary";
 import {
   categoryTotals,
   emiStatusTotals,
   listEntries,
+  monthlyTotals,
   paymentMethodTotals,
 } from "@/server/data/finance";
 import { requireUser } from "@/server/session";
@@ -40,12 +41,36 @@ export async function EntriesPage({
   const filtered = Boolean(filters.category || filters.q || filters.label || filters.day);
   const listRange = filters.day ? { from: filters.day, to: filters.day } : range;
 
-  const [entries, all, breakdown] = await Promise.all([
+  const needsTotals = kind === "income" || kind === "investment";
+  const [entries, all, breakdown, year, lastYear] = await Promise.all([
     listEntries(userId, kind, listRange, filters),
     filtered ? listEntries(userId, kind, range, everything) : null,
     loadBreakdown(userId, kind, range),
+    needsTotals ? monthlyTotals(userId, period.year) : Promise.resolve([]),
+    needsTotals && period.month === 1
+      ? monthlyTotals(userId, period.year - 1)
+      : Promise.resolve([]),
   ]);
   const inPeriod = all ?? entries;
+  const totals = needsTotals ? periodTotals(year, period.month) : null;
+
+  // Income: the change against the month before (screen 6e).
+  const previous =
+    kind === "income" && period.month !== "all"
+      ? previousMonthTotals(year, lastYear, period.month)
+      : null;
+  const change =
+    previous && totals && period.month !== "all"
+      ? {
+          diffMinor: totals.income - previous.income,
+          month: period.month === 1 ? 12 : period.month - 1,
+        }
+      : null;
+  // Investments: how much of the period's savings went in, and what is left (screen 6f).
+  const savings =
+    kind === "investment" && totals
+      ? { netSavingsMinor: totals.netSavings, leftMinor: totals.leftAfterInvesting }
+      : null;
 
   return (
     <EntriesView
@@ -62,6 +87,8 @@ export async function EntriesPage({
       periodCount={inPeriod.length}
       categoriesUsed={[...new Set(inPeriod.map((e) => e.category))]}
       labelsUsed={inPeriod.some((e) => e.spendLabel !== null)}
+      change={change}
+      savings={savings}
     />
   );
 }

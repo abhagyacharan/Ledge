@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Circle, CircleCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { PASSWORD_MIN_LENGTH } from "@/config/app";
@@ -14,6 +15,8 @@ export function SignUpForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [passwordLength, setPasswordLength] = useState(0);
+  const longEnough = passwordLength >= PASSWORD_MIN_LENGTH;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,9 +59,21 @@ export function SignUpForm() {
         type="password"
         autoComplete="new-password"
         error={errors.password}
+        onChange={(e) => setPasswordLength(e.target.value.length)}
+        aria-describedby="password-rule"
       />
-      <p className="-mt-2 text-sm text-muted-foreground">
-        At least {PASSWORD_MIN_LENGTH} characters.
+      <p
+        id="password-rule"
+        aria-live="polite"
+        className={`-mt-2 inline-flex items-center gap-1.5 text-sm ${longEnough ? "font-medium text-dash-good" : "text-muted-foreground"}`}
+      >
+        {longEnough ? (
+          <CircleCheck aria-hidden className="size-4" />
+        ) : (
+          <Circle aria-hidden className="size-4" />
+        )}
+        At least {PASSWORD_MIN_LENGTH} characters
+        {!longEnough && passwordLength > 0 ? ` · ${passwordLength} so far` : ""}
       </p>
       {formError ? (
         <p role="alert" className="text-sm text-destructive">

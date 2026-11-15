@@ -6,10 +6,11 @@ import { getUserSettings } from "@/server/data/settings";
 import {
   completeRecurringTask,
   createTask,
+  duplicateTask,
   getTask,
   moveTaskToList,
   reorderTask,
-  restoreTask,
+  restoreTaskVisibly,
   setTaskDone,
   trashTask,
   undoRecurringCompletion,
@@ -121,9 +122,10 @@ export async function trashTaskAction(input: unknown) {
 
 export async function restoreTaskAction(input: unknown) {
   return guarded(taskIdSchema, input, async ({ id }, userId) => {
-    if (!(await restoreTask(userId, id))) return fail(NOT_FOUND);
+    const restored = await restoreTaskVisibly(userId, id);
+    if (!restored) return fail(NOT_FOUND);
     refresh();
-    return ok();
+    return ok(restored);
   });
 }
 
@@ -134,5 +136,18 @@ export async function reorderTaskAction(input: unknown) {
     if (!(await reorderTask(userId, id, move))) return fail("Couldn't move that task.");
     refresh();
     return ok();
+  });
+}
+
+/**
+ * Duplicate (CLAUDE.md §6.2, P1): a copy of the task in the same list, with "(copy)" after the
+ * title and the same notes, priority, date and repeat. Subtasks are copied too, all open.
+ */
+export async function duplicateTaskAction(input: unknown) {
+  return guarded(taskIdSchema, input, async ({ id }, userId) => {
+    const copy = await duplicateTask(userId, id);
+    if (!copy) return fail(NOT_FOUND);
+    refresh();
+    return ok({ id: copy.id });
   });
 }

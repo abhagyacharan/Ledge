@@ -7,7 +7,12 @@ test("press / to search, find a task by the start of a word, and open it", async
   await page.keyboard.press("q");
   await page.getByLabel("Task", { exact: true }).fill("Zebra crossing paint");
   await page.keyboard.press("Enter");
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /^Added / })
+      .first(),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0); // plain keys are ignored while a dialog is open
   await page.locator("body").click({ position: { x: 5, y: 300 } });
@@ -33,7 +38,7 @@ test("press / to search, find a task by the start of a word, and open it", async
   // Nothing matches: a clear message instead of an empty page.
   await page.getByRole("searchbox", { name: "Search everything" }).fill("qqqxyz");
   await page.getByRole("searchbox", { name: "Search everything" }).press("Enter");
-  await expect(page.getByText('Nothing found for "qqqxyz"')).toBeVisible();
+  await expect(page.getByText(/Nothing matches .qqqxyz./)).toBeVisible();
 });
 
 test("search is in the side menu and the command palette", async ({ page }) => {

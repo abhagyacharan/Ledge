@@ -3,6 +3,7 @@
 import { fail, ok } from "@/lib/result";
 import {
   createList,
+  getInbox,
   getList,
   moveList,
   restoreList,
@@ -11,6 +12,7 @@ import {
   trashList,
   updateList,
 } from "@/server/data/lists";
+import { trashListKeepingTasks } from "@/server/data/tasks";
 import {
   archiveListSchema,
   createListSchema,
@@ -89,5 +91,21 @@ export async function setListViewSettingsAction(input: unknown) {
     if (!(await setListViewSettings(userId, id, settings))) return fail(NOT_FOUND);
     refresh();
     return ok();
+  });
+}
+
+/**
+ * Deletes a list but keeps its tasks (docs/new_design.md screen 2i): every open or done task in
+ * it, with its subtasks, moves to the end of General first, then the empty list goes to Trash.
+ */
+export async function trashListKeepTasksAction(input: unknown) {
+  return guarded(listIdSchema, input, async ({ id }, userId) => {
+    const current = await getList(userId, id);
+    if (!current) return fail(NOT_FOUND);
+    if (current.isInbox) return fail("General can't be deleted.");
+    const inbox = await getInbox(userId);
+    if (!(await trashListKeepingTasks(userId, id, inbox.id))) return fail(NOT_FOUND);
+    refresh();
+    return ok({ moved: inbox.name });
   });
 }

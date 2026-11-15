@@ -35,7 +35,7 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
 
   // The new account starts with nothing to do, and no one else's tasks.
-  await expect(page.getByText("Nothing due today")).toBeVisible();
+  await expect(page.getByText("All caught up.")).toBeVisible();
   await expect(page.getByText("Pay rent")).toHaveCount(0);
 
   // Sign out.
@@ -48,18 +48,17 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("not-the-password");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("form [role=alert]")).toHaveText("Incorrect email or password.");
+  await expect(page.locator("form [role=alert]")).toHaveText(
+    "That email and password don't match.",
+  );
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/:\d+\/$/);
-  // The Expenses button opens the Log a transaction menu on the Summary.
-  await page
-    .getByRole("link", { name: /Expenses/ })
-    .filter({ hasText: "Log a transaction" })
-    .click();
-  await expect(page.getByRole("menu")).toBeVisible();
-  await expect(page).toHaveURL(/\/expenses$/);
+  // Home's Log a transaction button opens the expense sheet right there.
+  await page.getByRole("button", { name: "Log a transaction" }).first().click();
+  await expect(page.getByRole("dialog", { name: "Add expense" })).toBeVisible();
+  await expect(page).toHaveURL(/:\d+\/$/);
 });
 
 test("an unknown email gets the same message as a wrong password", async ({ page }) => {
@@ -67,5 +66,7 @@ test("an unknown email gets the same message as a wrong password", async ({ page
   await page.getByLabel("Email").fill("nobody-here@ledge.test");
   await page.getByLabel("Password").fill("whatever-it-is");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.locator("form [role=alert]")).toHaveText("Incorrect email or password.");
+  await expect(page.locator("form [role=alert]")).toHaveText(
+    "That email and password don't match.",
+  );
 });

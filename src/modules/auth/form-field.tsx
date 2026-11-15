@@ -9,8 +9,16 @@ type FormFieldProps = Omit<ComponentProps<typeof Input>, "id"> & {
 };
 
 /** Labelled input with an associated, announced error message. 44px tap target. */
-export function FormField({ id, label, error, className, ...props }: FormFieldProps) {
+export function FormField({
+  id,
+  label,
+  error,
+  className,
+  "aria-describedby": describedBy,
+  ...props
+}: FormFieldProps) {
   const errorId = `${id}-error`;
+  const described = [error ? errorId : null, describedBy].filter(Boolean).join(" ");
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
@@ -19,8 +27,8 @@ export function FormField({ id, label, error, className, ...props }: FormFieldPr
         name={id}
         className={`h-11 ${className ?? ""}`}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
         {...props}
+        aria-describedby={described || undefined}
       />
       {error ? (
         <p id={errorId} className="text-sm text-destructive">

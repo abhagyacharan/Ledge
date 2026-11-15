@@ -43,46 +43,32 @@ function Loading({
 
 const ROW_WIDTHS = ["w-40", "w-28", "w-48", "w-32", "w-36", "w-24"];
 
+/** An entry area (screens 3b, 3c, 6e, 6f): the total, the breakdown card, the list card. */
 export function EntriesSkeleton() {
   return (
     <Loading
       label="Loading entries"
-      className="grid gap-4 pb-20 xl:grid-cols-12 xl:grid-rows-[auto_1fr] xl:items-start"
+      className="grid gap-3 pb-20 md:gap-4 xl:grid-cols-12 xl:grid-rows-[auto_1fr] xl:items-start"
     >
-      <Card className="xl:col-span-4 xl:row-start-1">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between xl:flex-col xl:items-stretch">
-          <div>
-            <Bone className="h-4 w-40" />
-            <Bone className="mt-3 h-9 w-48" />
-            <Bone className="mt-2 h-3.5 w-16" />
-          </div>
-          <Bone className="h-11 rounded-full sm:w-40 md:h-10 xl:w-auto" />
-        </div>
-      </Card>
+      <div aria-hidden className="flex items-baseline gap-3 xl:col-span-4 xl:row-start-1">
+        <Bone className="h-9 w-40 md:h-10" />
+        <Bone className="h-3 w-16" />
+      </div>
 
-      <Card className="hidden xl:col-span-4 xl:row-start-2 xl:block">
-        <Bone className="h-4 w-36" />
-        <div className="mt-5 flex flex-col gap-4">
-          {[0.8, 0.55, 0.35].map((f) => (
-            <div key={f} className="flex flex-col gap-2">
-              <div className="flex justify-between">
-                <Bone className="h-3.5 w-24" />
-                <Bone className="h-3.5 w-20" />
-              </div>
-              <Bone className="h-1.5 rounded-full" />
-            </div>
+      <Card className="xl:col-span-4 xl:row-start-2">
+        <Bone className="h-2.5 rounded-full" />
+        <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
+          {["w-24", "w-20", "w-28", "w-16"].map((w, i) => (
+            <Bone key={i} className={cn("h-3.5", w)} />
           ))}
         </div>
       </Card>
 
       <Card className="xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1">
-        <div className="flex gap-2">
-          <Bone className="h-11 flex-1 rounded-full md:h-9" />
-          <Bone className="h-11 w-32 rounded-full md:h-9" />
-        </div>
+        <Bone className="h-11 rounded-full md:h-9" />
         <div className="mt-3 flex gap-2 overflow-hidden">
-          {["w-12", "w-24", "w-28", "w-20", "w-24"].map((w, i) => (
-            <Bone key={i} className={cn("h-11 shrink-0 rounded-full md:h-8", w)} />
+          {["w-14", "w-20", "w-20", "w-28", "w-28"].map((w, i) => (
+            <Bone key={i} className={cn("h-11 shrink-0 rounded-full md:h-9", w)} />
           ))}
         </div>
         <ul className="mt-3">
@@ -102,46 +88,64 @@ export function EntriesSkeleton() {
   );
 }
 
+/** The Summary (screens 3a and 3f): the sum or five tiles, then the breakdown and cash flow. */
 export function SummarySkeleton() {
   return (
-    <Loading label="Loading summary" className="grid gap-4 xl:grid-cols-12">
-      <Card className="xl:col-span-6">
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-5 md:gap-6">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="flex h-32 flex-col gap-3 rounded-[20px] bg-dash-well p-3.5 sm:h-40 sm:p-4"
-            >
-              <div className="flex justify-between">
-                <div className="dash-skeleton h-3.5 w-24 bg-dash-card" />
-                <div className="dash-skeleton hidden size-9 rounded-full bg-dash-card sm:block" />
-              </div>
-              <div className="dash-skeleton h-7 w-32 bg-dash-card" />
-              <div className="dash-skeleton h-4 w-20 rounded-full bg-dash-card" />
+    <Loading label="Loading summary" className="flex flex-col gap-3 md:gap-4">
+      {/* Phone: the sum and two small tiles. */}
+      <div className="flex flex-col gap-2.5 md:hidden">
+        <Card className="py-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex justify-between py-2">
+              <Bone className="h-4 w-28" />
+              <Bone className="h-4 w-20" />
             </div>
           ))}
-        </div>
-      </Card>
-      <Card className="xl:col-span-6">
-        <Bone className="h-4 w-36" />
-        <Bone className="mt-2 h-3.5 w-56" />
-        <Bone className="mt-5 h-56 rounded-[20px]" />
-      </Card>
-      {[0, 1].map((i) => (
-        <Card key={i} className="xl:col-span-6">
-          <Bone className="h-4 w-44" />
-          <Bone className="mt-2 h-3.5 w-28" />
-          <Bone className="mt-5 h-9 rounded-xl" />
-          <div className="mt-2 flex flex-col">
-            {[0, 1, 2, 3, 4].map((r) => (
-              <div key={r} className="flex justify-between border-b border-dash-edge py-3">
-                <Bone className="h-3.5 w-32" />
-                <Bone className="h-3.5 w-20" />
-              </div>
-            ))}
+          <Bone className="mt-2 h-1 rounded-none" />
+          <div className="mt-3 flex items-end justify-between">
+            <Bone className="h-4 w-24" />
+            <Bone className="h-8 w-32" />
           </div>
         </Card>
-      ))}
+        <div className="grid grid-cols-2 gap-2.5">
+          {[0, 1].map((i) => (
+            <Card key={i} className="p-3.5 sm:p-3.5 md:p-3.5">
+              <Bone className="h-3.5 w-16" />
+              <Bone className="mt-2 h-6 w-20" />
+            </Card>
+          ))}
+        </div>
+      </div>
+      {/* Desktop: five tiles. */}
+      <div className="hidden grid-cols-2 gap-3 md:grid lg:grid-cols-5">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Card key={i} className="h-28 p-4 md:p-4">
+            <Bone className="h-3.5 w-20" />
+            <Bone className="mt-2 h-7 w-28" />
+          </Card>
+        ))}
+      </div>
+      <div className="grid gap-3 md:gap-4 xl:grid-cols-12">
+        <Card className="xl:order-last xl:col-span-5">
+          <Bone className="h-4 w-32" />
+          {[0, 1, 2, 3, 4].map((r) => (
+            <div
+              key={r}
+              className="flex flex-col gap-2 border-b border-dash-edge py-3 last:border-0"
+            >
+              <div className="flex justify-between">
+                <Bone className="h-3.5 w-32" />
+                <Bone className="h-3.5 w-16" />
+              </div>
+              <Bone className="h-1.5 rounded-full" />
+            </div>
+          ))}
+        </Card>
+        <Card className="xl:col-span-7">
+          <Bone className="h-4 w-44" />
+          <Bone className="mt-5 h-56 rounded-[20px]" />
+        </Card>
+      </div>
     </Loading>
   );
 }

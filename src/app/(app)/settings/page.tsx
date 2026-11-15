@@ -1,68 +1,104 @@
 import type { Metadata } from "next";
-import { Brand } from "@/components/shell/brand";
-import { PageHeader } from "@/components/shell/page-header";
+import { PageTitle } from "@/components/dash/page-title";
 import { SignOutButton } from "@/components/shell/sign-out-button";
-import { ReportDownloads } from "@/modules/expenses/components/report-downloads";
+import { card, CardTitle } from "@/modules/account/card";
+import {
+  PreferencesCard,
+  ReportsCard,
+  SectionNav,
+  SecurityCard,
+} from "@/modules/account/settings-parts";
 import { loadMoneyContext } from "@/modules/expenses/context";
 import { ArchivedLists } from "@/modules/todos/components/archived-lists";
-import { TaskPanel } from "@/modules/todos/components/task-panel";
 import { listArchivedLists } from "@/server/data/lists";
+import { getUserSettings } from "@/server/data/settings";
 import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Settings" };
 
-/** Your account, Expense Tracker reports and your archived lists, in the app's usual cards. */
+/**
+ * Settings (docs/new_design.md screens 5f and 6g): profile, preferences, reports and exports,
+ * archived lists, security and an About line. With a mouse a section list sits beside the cards;
+ * on a phone the cards stack under "‹ Home".
+ */
 export default async function SettingsPage() {
   const { userId, user } = await requireUser();
-  const [archived, money] = await Promise.all([
+  const [archived, money, settings] = await Promise.all([
     listArchivedLists(userId),
     loadMoneyContext(userId),
+    getUserSettings(userId),
   ]);
+  const currencyName =
+    new Intl.DisplayNames([settings.locale], { type: "currency" }).of(settings.currency) ??
+    settings.currency;
+  const symbol =
+    new Intl.NumberFormat(settings.locale, { style: "currency", currency: settings.currency })
+      .formatToParts(0)
+      .find((p) => p.type === "currency")?.value ?? "";
+  const localeName =
+    new Intl.DisplayNames([settings.locale], { type: "language" }).of(settings.locale) ??
+    settings.locale;
+  const sample = new Intl.NumberFormat(settings.locale, {
+    style: "currency",
+    currency: settings.currency,
+    maximumFractionDigits: 0,
+  }).format(123456);
 
   return (
-    <div className="dash">
-      <PageHeader title="Settings" />
-      <div className="flex flex-col gap-4">
-        <TaskPanel id="about" title="About" hideTitle>
+    <div className="dash flex gap-8">
+      <SectionNav />
+      <div className="mx-auto flex w-full max-w-[640px] min-w-0 flex-col gap-3 md:gap-4">
+        <PageTitle back={{ href: "/", label: "Home" }} title="Settings" className="mb-1" />
+
+        <section id="profile" aria-label="Profile" className={`${card} py-4`}>
           <div className="flex items-center gap-4">
-            <Brand size="lg" />
-            <p className="min-w-0 text-sm text-pretty text-dash-ink-soft">
-              The everyday ledger: one book for the things you keep track of.
-            </p>
+            <span
+              aria-hidden
+              className="grid size-12 shrink-0 place-items-center rounded-full bg-dash-ink text-lg font-semibold text-dash-card md:size-14"
+            >
+              {user.name.trim().charAt(0).toUpperCase() || "?"}
+            </span>
+            <dl className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="text-xs text-dash-ink-soft">Name</dt>
+                <dd className="mt-0.5 truncate rounded-xl bg-dash-well px-3 py-2 text-[14px] font-medium">
+                  {user.name}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs text-dash-ink-soft">Email</dt>
+                <dd className="mt-0.5 truncate rounded-xl bg-dash-well px-3 py-2 text-[14px] font-medium">
+                  {user.email}
+                </dd>
+              </div>
+            </dl>
           </div>
-        </TaskPanel>
-
-        <TaskPanel id="account" title="Account">
-          <dl className="grid gap-2 text-sm">
-            <div className="flex gap-3">
-              <dt className="w-16 text-dash-ink-soft">Name</dt>
-              <dd className="min-w-0 break-words">{user.name}</dd>
-            </div>
-            <div className="flex gap-3">
-              <dt className="w-16 text-dash-ink-soft">Email</dt>
-              <dd className="min-w-0 break-all">{user.email}</dd>
-            </div>
-          </dl>
-          <div className="mt-4">
-            <SignOutButton variant="outline" />
+          <div className="mt-3 -ml-2">
+            <SignOutButton />
           </div>
-        </TaskPanel>
+        </section>
 
-        <TaskPanel
-          id="expense-reports"
-          title="Expense Tracker"
-          subtitle="Download a report as a PDF, for any month or year."
-        >
-          <ReportDownloads thisMonth={money.defaultPeriod} />
-        </TaskPanel>
+        <PreferencesCard
+          timezone={settings.timezone}
+          weekStartsOn={settings.weekStartsOn}
+          currencyLabel={`${currencyName} (${symbol})`}
+          localeLabel={`${localeName} · ${sample}`}
+        />
 
-        <TaskPanel
-          id="archived"
-          title="Archived lists"
-          subtitle="Lists you put away. Bring one back any time."
-        >
-          <ArchivedLists lists={archived} />
-        </TaskPanel>
+        <ReportsCard thisMonth={money.defaultPeriod} />
+
+        {archived.length > 0 ? (
+          <section aria-labelledby="archived-title" className={`${card} pb-3`}>
+            <CardTitle id="archived-title">Archived lists</CardTitle>
+            <ArchivedLists lists={archived} />
+          </section>
+        ) : null}
+
+        <SecurityCard />
+
+        <p id="about" className="scroll-mt-6 px-1 text-xs text-dash-ink-soft">
+          About · Ledge, the everyday ledger · Your data stays on this server
+        </p>
       </div>
     </div>
   );

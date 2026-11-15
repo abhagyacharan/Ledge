@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Search, Settings, Trash2 } from "lucide-react";
+import { ChevronRight, House, Search, Settings, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
@@ -12,9 +12,9 @@ import { SignOutButton } from "./sign-out-button";
 import { ThemeToggle } from "./theme-toggle";
 
 /**
- * The desktop sidebar (docs/design.md §5e): the two main parts of the app, Expense Tracker and
- * Tasks, as equal sections. Each one opens to show its views; Tasks also shows your lists. The
- * shared places (Search, Trash, Settings) and your account sit at the bottom. Phones use the
+ * The desktop sidebar (docs/new_design.md §3, `LedgeSidebar`): the brand, Home, a "Modules" label,
+ * then each module from the registry. A module with views opens to show them; Tasks also shows
+ * your lists. Search (Ctrl K), Trash, Settings and your account sit at the bottom. Phones use the
  * bottom tab bar instead (MobileTabBar).
  */
 export function AppSidebar({ user }: { user: { name: string; email: string } }) {
@@ -26,12 +26,28 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
         <Brand />
       </SidebarHeader>
       <SidebarContent className="gap-1 px-2.5">
+        <div className="py-1">
+          <NavRow href="/" label="Home" icon={House} strong current={pathname === "/"} />
+        </div>
+        <p className="px-2.5 pt-3 pb-1 font-mono text-[11px] font-medium text-muted-foreground">
+          Modules
+        </p>
         {enabledModules().map((m) => (
           <ModuleSection key={m.id} module={m} pathname={pathname} />
         ))}
       </SidebarContent>
       <SidebarFooter className="gap-1 px-2.5 pb-4">
-        <NavRow href="/search" label="Search" icon={Search} current={pathname === "/search"} />
+        <NavRow
+          href="/search"
+          label="Search"
+          icon={Search}
+          current={pathname === "/search"}
+          trailing={
+            <kbd aria-hidden className="font-mono text-[11px] font-medium text-muted-foreground">
+              Ctrl K
+            </kbd>
+          }
+        />
         <NavRow href="/trash" label="Trash" icon={Trash2} current={pathname === "/trash"} />
         <NavRow
           href="/settings"

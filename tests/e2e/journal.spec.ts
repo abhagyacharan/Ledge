@@ -13,7 +13,7 @@ test("write a page: facts fold away, the page and mood save themselves", async (
   await expect(page.getByRole("heading", { level: 1, name: "Journal" })).toBeVisible();
 
   // The facts come first; the expense card is there even on a quiet day.
-  const facts = page.getByRole("region", { name: "Your day" });
+  const facts = page.getByRole("region", { name: "The day in facts" });
   await expect(facts.getByRole("link", { name: /spent|No-spend day/ })).toBeVisible();
 
   // Writing folds the facts into one line; the line opens them again.
@@ -22,10 +22,10 @@ test("write a page: facts fold away, the page and mood save themselves", async (
   const summary = facts.getByRole("button", { name: /^Show your day/ });
   await expect(summary).toBeVisible();
   await box.fill("Morning walk.\nEvening: finished the report.");
-  await expect(page.getByText(/^Saved ·/)).toBeVisible();
+  await expect(page.getByText(/^Saved /)).toBeVisible();
 
   await page.getByRole("radio", { name: "Good" }).check();
-  await expect(page.getByText(/^Saved ·/)).toBeVisible();
+  await expect(page.getByText(/^Saved /)).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole("textbox", { name: "This day's page" })).toHaveValue(
@@ -37,7 +37,7 @@ test("write a page: facts fold away, the page and mood save themselves", async (
 test("the day picker marks days with a page and never goes past today", async ({ page }) => {
   await page.goto(`/journal?d=${DAY}`);
   await page.getByRole("textbox", { name: "This day's page" }).fill("A dot for this day.");
-  await expect(page.getByText(/^Saved ·/)).toBeVisible();
+  await expect(page.getByText(/^Saved /)).toBeVisible();
 
   await page.getByRole("button", { name: /^Choose a day/ }).click();
   const picker = page.getByRole("dialog", { name: "Choose a day" });
@@ -56,16 +56,16 @@ test("the day picker marks days with a page and never goes past today", async ({
 
 test("the fact cards open the same day in Tasks and Expenses", async ({ page }) => {
   await page.goto(`/journal?d=${DAY}`);
-  const facts = page.getByRole("region", { name: "Your day" });
+  const facts = page.getByRole("region", { name: "The day in facts" });
   await facts.getByRole("link", { name: /spent|No-spend day/ }).click();
   await expect(page).toHaveURL(new RegExp(`/expenses/spending\?.*day=${DAY}`));
   await expect(page.getByRole("button", { name: /Showing .* only/ })).toBeVisible();
 
   await page.goto(`/journal?d=${DAY}`);
   await page
-    .getByRole("region", { name: "Your day" })
+    .getByRole("region", { name: "The day in facts" })
     .getByRole("link", { name: /done|rest day|ticked off/ })
     .click();
   await expect(page).toHaveURL(new RegExp(`/completed\?day=${DAY}`));
-  await expect(page.getByRole("link", { name: "Show every day" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Show all days" })).toBeVisible();
 });

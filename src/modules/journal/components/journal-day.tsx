@@ -1,17 +1,15 @@
 "use client";
 
 import {
-  Annoyed,
+  AlertCircle,
   CalendarClock,
+  Check,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   CircleCheckBig,
-  Frown,
-  Laugh,
-  Meh,
+  IndianRupee,
   PiggyBank,
-  ReceiptIndianRupee,
-  Smile,
   type LucideIcon,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion, type Transition } from "motion/react";
@@ -26,23 +24,9 @@ export type ShownFact = Fact & { href: string };
 
 const FACT_ICONS: Record<FactKind, LucideIcon> = {
   tasks: CircleCheckBig,
-  spent: ReceiptIndianRupee,
+  spent: IndianRupee,
   slipped: CalendarClock,
   money: PiggyBank,
-};
-
-const MOOD_ICONS: Record<number, LucideIcon> = {
-  1: Frown,
-  2: Annoyed,
-  3: Meh,
-  4: Smile,
-  5: Laugh,
-};
-
-/** Columns for the wide-screen tiles, one per fact. */
-const TILE_COLUMNS: Record<number, string> = {
-  3: "md:grid-cols-3",
-  4: "md:grid-cols-2 lg:grid-cols-4",
 };
 
 const FOLD: Transition = { duration: 0.2, ease: [0.23, 1, 0.32, 1] };
@@ -65,6 +49,8 @@ export function JournalDay({
   savedAt,
   locale,
   timeZone,
+  relativeLabel,
+  longDate,
 }: {
   date: string;
   isToday: boolean;
@@ -75,6 +61,10 @@ export function JournalDay({
   savedAt: string | null;
   locale: string;
   timeZone: string;
+  /** "Today", "Yesterday" or the weekday: the line above the page. */
+  relativeLabel: string;
+  /** "Thursday, 12 November": the desktop title. */
+  longDate: string;
 }) {
   const reduceMotion = useReducedMotion();
   const factsId = useId();
@@ -83,6 +73,8 @@ export function JournalDay({
   const [mood, setMood] = useState<number | null>(initialMood);
   const [state, setState] = useState<SaveState>(savedAt ? "saved" : "idle");
   const [lastSavedAt, setLastSavedAt] = useState(savedAt);
+  const [writing, setWriting] = useState(false);
+  const textRef = useRef<HTMLTextAreaElement>(null);
 
   // What the server has, and what is on screen, for "is there anything to save?".
   const saved = useRef({ body: initialBody, mood: initialMood });
@@ -142,13 +134,69 @@ export function JournalDay({
 
   const transition = reduceMotion ? { duration: 0 } : FOLD;
   const nearLimit = body.length > MAX_JOURNAL_CHARS * 0.9;
+  const full = body.length >= MAX_JOURNAL_CHARS;
+  const moodLabel = MOODS.find((m) => m.value === mood)?.label;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4 md:gap-5">
+      {/* Which day this is in words, and the save status (docs/new_design.md screens 4a, 4d). */}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-mono text-xs font-medium text-dash-ink-soft">{relativeLabel}</p>
+          <h2 className="mt-1 hidden font-display text-[40px] leading-[1.05] font-semibold tracking-[-0.02em] md:block">
+            {longDate}
+          </h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <p
+            id="journal-status"
+            aria-live="polite"
+            className={cn(
+              "inline-flex items-center gap-1 text-xs",
+              state === "error" ? "font-semibold text-dash-bad" : "text-dash-ink-soft",
+            )}
+          >
+            {state === "saving" ? (
+              <>
+                <span aria-hidden className="size-1.5 rounded-full bg-dash-accent" />
+                Saving…
+              </>
+            ) : state === "error" ? (
+              <>
+                <AlertCircle aria-hidden className="size-3.5" />
+                Not saved
+              </>
+            ) : state === "saved" && lastSavedAt ? (
+              <>
+                <Check aria-hidden className="size-3.5" />
+                Saved {formatSavedAt(lastSavedAt, locale, timeZone)}
+              </>
+            ) : (
+              "Saves as you write"
+            )}
+          </p>
+          {state === "error" ? (
+            <button
+              type="button"
+              onClick={() => void save()}
+              className="h-11 rounded-full px-2 text-xs font-semibold text-dash-ink underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8"
+            >
+              Retry
+            </button>
+          ) : null}
+          {writing ? (
+            <button
+              type="button"
+              onClick={() => textRef.current?.blur()}
+              className="h-11 rounded-full bg-dash-well px-4 text-[13px] font-semibold text-dash-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
+            >
+              Done
+            </button>
+          ) : null}
+        </div>
+      </div>
+
       <section aria-labelledby={`${factsId}-title`}>
-        <h2 id={`${factsId}-title`} className="sr-only">
-          Your day
-        </h2>
         <AnimatePresence initial={false} mode="popLayout">
           {folded ? (
             <motion.div
@@ -158,18 +206,24 @@ export function JournalDay({
               exit={{ opacity: 0 }}
               transition={transition}
             >
+              <h2 id={`${factsId}-title`} className="sr-only">
+                The day in facts
+              </h2>
               <button
                 type="button"
                 aria-expanded={false}
                 onClick={() => setFolded(false)}
-                className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-full border border-dash-edge bg-dash-card px-4 py-2 text-left text-[13px] font-medium text-dash-ink shadow-(--dash-card-shadow) outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98] md:min-h-9"
+                className="flex min-h-11 w-full items-center justify-between gap-3 rounded-full border border-dash-edge bg-dash-card px-4 py-2 text-left text-[13px] text-dash-ink shadow-(--dash-card-shadow) outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50"
               >
-                <CircleCheckBig aria-hidden className="size-4 shrink-0 text-dash-ink-soft" />
-                <span className="min-w-0">
-                  <span className="sr-only">Show your day: </span>
+                <span className="min-w-0 truncate">
                   {summary}
+                  {moodLabel ? ` · ${moodLabel}` : ""}
                 </span>
-                <ChevronDown aria-hidden className="size-4 shrink-0 text-dash-ink-soft" />
+                <span className="inline-flex shrink-0 items-center gap-1 font-semibold">
+                  <span className="md:hidden">Show</span>
+                  <span className="hidden md:inline">Show facts</span>
+                  <ChevronDown aria-hidden className="size-4" />
+                </span>
               </button>
             </motion.div>
           ) : (
@@ -182,175 +236,153 @@ export function JournalDay({
               transition={transition}
               className="overflow-hidden"
             >
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <p className="font-mono text-xs text-dash-ink-soft">Your day</p>
-                <button
-                  type="button"
-                  aria-expanded
-                  aria-controls={`${factsId}-panel`}
-                  onClick={() => setFolded(true)}
-                  className="min-h-11 rounded-full px-3 text-[13px] font-medium text-dash-ink-soft outline-none transition-colors duration-150 hover:bg-dash-well hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-8"
-                >
-                  Fold away
-                </button>
+              <div className="rounded-2xl border border-dash-edge bg-dash-card px-4 pt-2 pb-1 shadow-(--dash-card-shadow)">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 id={`${factsId}-title`} className="text-[13px] font-semibold">
+                    The day in facts
+                  </h2>
+                  <button
+                    type="button"
+                    aria-expanded
+                    aria-controls={`${factsId}-panel`}
+                    onClick={() => setFolded(true)}
+                    className="-mr-2 inline-flex min-h-11 items-center gap-1 rounded-full px-2 text-[13px] font-semibold text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-8"
+                  >
+                    Fold
+                    <ChevronUp aria-hidden className="size-4" />
+                  </button>
+                </div>
+                <ul className="flex flex-col divide-y divide-dash-edge">
+                  {facts.map((fact) => (
+                    <li key={fact.kind}>
+                      <FactRow fact={fact} />
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul
-                className={cn(
-                  "flex flex-col divide-y divide-dash-edge rounded-2xl border border-dash-edge bg-dash-card px-4 shadow-(--dash-card-shadow) md:grid md:gap-2 md:divide-y-0 md:border-0 md:bg-transparent md:px-0 md:shadow-none",
-                  TILE_COLUMNS[facts.length],
-                )}
-              >
-                {facts.map((fact) => (
-                  <li key={fact.kind}>
-                    <FactTile fact={fact} />
-                  </li>
-                ))}
-              </ul>
             </motion.div>
           )}
         </AnimatePresence>
       </section>
 
-      <MoodPicker value={mood} onChange={changeMood} isToday={isToday} />
+      <MoodPicker value={mood} onChange={changeMood} />
 
       <div>
         <label htmlFor="journal-body" className="sr-only">
           {isToday ? "Today's page" : "This day's page"}
         </label>
         <textarea
+          ref={textRef}
           id="journal-body"
           value={body}
           onChange={(e) => changeBody(e.target.value)}
-          onFocus={() => setFolded(true)}
-          onBlur={() => void save()}
+          onFocus={() => {
+            setFolded(true);
+            setWriting(true);
+          }}
+          onBlur={() => {
+            setWriting(false);
+            void save();
+          }}
           maxLength={MAX_JOURNAL_CHARS}
-          placeholder={
-            isToday ? "How was today? A line is enough." : "What do you remember about this day?"
-          }
+          placeholder="How did today go?"
           aria-describedby="journal-status"
-          className="field-sizing-content block min-h-64 w-full resize-none rounded-2xl border border-dash-edge bg-dash-card px-4 py-4 text-base leading-relaxed text-dash-ink shadow-(--dash-card-shadow) outline-none placeholder:text-dash-ink-soft focus-visible:ring-3 focus-visible:ring-ring/40 md:min-h-80 md:px-6 md:py-5"
+          className="field-sizing-content block min-h-64 w-full resize-none bg-transparent py-1 text-lg leading-[1.7] text-dash-ink outline-none placeholder:text-dash-ink-soft md:min-h-80"
         />
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1">
+        {nearLimit ? (
           <p
-            id="journal-status"
-            aria-live="polite"
             className={cn(
-              "font-mono text-xs",
-              state === "error" ? "font-medium text-dash-bad" : "text-dash-ink-soft",
+              "mt-2 inline-flex items-center gap-1 font-mono text-xs",
+              full ? "font-semibold text-dash-bad" : "text-dash-warn",
             )}
           >
-            {state === "saving"
-              ? "Saving…"
-              : state === "error"
-                ? "Not saved yet. Check your connection; it will try again as you type."
-                : state === "saved" && lastSavedAt
-                  ? `Saved · ${formatSavedAt(lastSavedAt, locale, timeZone)}`
-                  : "Saves as you write."}
+            <AlertCircle aria-hidden className="size-3.5" />
+            {body.length.toLocaleString(locale)} / {MAX_JOURNAL_CHARS.toLocaleString(locale)}{" "}
+            characters{full ? ". This page is full." : ""}
           </p>
-          {nearLimit ? (
-            <p className="font-mono text-xs text-dash-ink-soft">
-              {body.length.toLocaleString(locale)} / {MAX_JOURNAL_CHARS.toLocaleString(locale)}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function FactTile({ fact }: { fact: ShownFact }) {
+function FactRow({ fact }: { fact: ShownFact }) {
   const Icon = FACT_ICONS[fact.kind];
   return (
     <Link
       href={fact.href}
-      className="group/fact flex min-h-15 items-center gap-3 py-3 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-full md:flex-col md:items-start md:gap-2 md:rounded-2xl md:border md:border-dash-edge md:bg-dash-card md:p-4 md:shadow-(--dash-card-shadow) md:transition-[transform,background-color] md:duration-150 md:ease-snap md:hover:bg-dash-well md:active:scale-[0.98]"
+      className="group/fact flex min-h-13 items-center gap-3 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
-      <span
+      <Icon
         aria-hidden
-        className={cn(
-          "grid size-9 shrink-0 place-items-center rounded-full bg-dash-well",
-          fact.empty ? "text-dash-good" : "text-dash-ink",
-        )}
-      >
-        <Icon className="size-[18px]" strokeWidth={1.75} />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "block text-[15px] font-semibold md:font-display md:text-lg md:tracking-tight",
-            fact.empty && "font-medium md:font-semibold",
-          )}
-        >
-          {fact.title}
-        </span>
-        {fact.detail ? (
-          <span className="block text-[13px] text-pretty text-dash-ink-soft">{fact.detail}</span>
-        ) : null}
+        className={cn("size-[18px] shrink-0", fact.empty ? "text-dash-good" : "text-dash-ink")}
+        strokeWidth={1.75}
+      />
+      <span className="min-w-0 flex-1 text-[14px] text-pretty">
+        <span className="font-semibold">{fact.title}</span>
+        {fact.detail ? <span className="text-dash-ink-soft"> · {fact.detail}</span> : null}
       </span>
       <ChevronRight
         aria-hidden
-        className="size-4 shrink-0 text-dash-ink-soft transition-transform duration-150 ease-snap group-hover/fact:translate-x-0.5 md:hidden"
+        className="size-4 shrink-0 text-dash-ink-soft transition-transform duration-150 ease-snap group-hover/fact:translate-x-0.5"
       />
     </Link>
   );
 }
 
+/**
+ * Mood as a five-step segmented control in words (docs/new_design.md §5 "Journal page"): the
+ * chosen one is raised with a check; choosing it again clears it, as does "Clear".
+ */
 function MoodPicker({
   value,
   onChange,
-  isToday,
 }: {
   value: number | null;
   onChange: (value: number | null) => void;
-  isToday: boolean;
 }) {
-  const label = isToday ? "How did today feel?" : "How did this day feel?";
   return (
-    <div
-      role="radiogroup"
-      aria-label={`${label} (optional)`}
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2"
-    >
-      <p aria-hidden className="text-sm text-dash-ink-soft">
-        {label}
-        {value ? <span className="ml-1.5 text-xs">Tap again to clear.</span> : null}
+    <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+      <p id="mood-label" className="text-[13px] text-dash-ink-soft">
+        Mood
       </p>
-      <div className="flex gap-1.5">
-        {MOODS.map((m) => {
-          const Icon = MOOD_ICONS[m.value];
-          const checked = value === m.value;
-          return (
-            <label
-              key={m.value}
-              title={m.label}
-              className={cn(
-                "relative grid size-11 cursor-pointer place-items-center rounded-full transition-[transform,background-color,color] duration-150 ease-snap select-none has-focus-visible:ring-3 has-focus-visible:ring-ring/50 active:scale-95 md:size-10",
-                checked
-                  ? "bg-dash-ink text-dash-card"
-                  : "bg-dash-well text-dash-ink-soft hover:bg-dash-edge hover:text-dash-ink",
-              )}
-            >
-              <input
-                type="radio"
-                name="journal-mood"
-                value={m.value}
-                checked={checked}
-                aria-label={m.label}
-                onChange={() => onChange(m.value)}
-                onClick={checked ? () => onChange(null) : undefined}
-                onKeyDown={
+      <div className="flex items-center gap-2">
+        <div
+          role="radiogroup"
+          aria-labelledby="mood-label"
+          className="grid flex-1 grid-cols-5 gap-0.5 rounded-full bg-dash-well p-1 md:flex-none"
+        >
+          {MOODS.map((m) => {
+            const checked = value === m.value;
+            return (
+              <button
+                key={m.value}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                onClick={() => onChange(checked ? null : m.value)}
+                className={cn(
+                  "inline-flex h-10 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-medium outline-none transition-[background-color,color] duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:px-3",
                   checked
-                    ? (e) => {
-                        if (e.key === "Delete" || e.key === "Backspace") onChange(null);
-                      }
-                    : undefined
-                }
-                className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
-              />
-              <Icon aria-hidden className="size-5" strokeWidth={1.75} />
-            </label>
-          );
-        })}
+                    ? "bg-dash-raised font-semibold text-dash-ink shadow-(--dash-lift)"
+                    : "text-dash-ink-soft hover:text-dash-ink",
+                )}
+              >
+                {checked ? <Check aria-hidden className="size-3.5 shrink-0" /> : null}
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="hidden h-8 rounded-full px-2 text-[13px] font-medium text-dash-ink-soft outline-none hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:inline"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
     </div>
   );

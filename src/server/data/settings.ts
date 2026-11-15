@@ -22,3 +22,12 @@ export const getUserSettings = cache(async (userId: string): Promise<UserSetting
   if (!created) throw new Error("Could not create user settings");
   return created;
 });
+
+export type SettingsPatch = Partial<Pick<UserSettings, "timezone" | "weekStartsOn" | "theme">>;
+
+/** Changes the user's own preferences (Settings, docs/new_design.md screen 5f). */
+export async function updateUserSettings(userId: string, patch: SettingsPatch): Promise<void> {
+  if (Object.keys(patch).length === 0) return;
+  await getUserSettings(userId); // makes sure the row exists
+  await db.update(userSettings).set(patch).where(eq(userSettings.userId, userId));
+}

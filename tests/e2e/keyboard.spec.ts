@@ -63,7 +63,12 @@ test("a task can be added, opened, changed and closed with the keyboard alone", 
   await page.keyboard.press("q");
   await page.keyboard.type("Keyboard only task");
   await page.keyboard.press("Enter");
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /^Added / })
+      .first(),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Select it with j, open it with Enter, change the title, close with Escape.

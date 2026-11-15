@@ -77,46 +77,39 @@ for (const path of SCREENS) {
   });
 }
 
-test("the bottom tab bar, the More sheet, the Lists menu and a list's View panel", async ({
+test("the bottom tab bar, Home's tiles, the Lists menu and a list's View panel", async ({
   page,
 }) => {
   await page.goto("/tasks");
   const bar = page.getByRole("navigation", { name: "Main" });
   await expect(bar.getByRole("link", { name: "Tasks" })).toHaveAttribute("aria-current", "page");
+  await expect(bar.getByRole("link", { name: "Home" })).toBeVisible();
   await expect(bar.getByRole("link", { name: "Expenses" })).toBeVisible();
   await expect(bar.getByRole("link", { name: "Journal" })).toBeVisible();
-  // Phones: Search is a tab (the header's round Search button is hidden), and no logo row.
-  await expect(bar.getByRole("link", { name: "Search" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Search tasks and expenses" })).toBeHidden();
-  await expect(page.getByRole("main").getByRole("link", { name: "Ledge" })).toHaveCount(0);
+  // No Search or More tab (docs/new_design.md §3): the header keeps its round Search button.
+  await expect(bar.getByRole("link", { name: "Search" })).toHaveCount(0);
+  await expect(bar.getByRole("button", { name: "More" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Search tasks and expenses" })).toBeVisible();
 
-  // More holds Trash, Settings and the account, not the lists.
-  await bar.getByRole("button", { name: "More" }).tap();
-  const more = page.getByRole("dialog", { name: "More" });
-  await expect(more).toBeVisible();
+  // Search, Trash and Settings are tiles on Home.
+  await bar.getByRole("link", { name: "Home" }).tap();
+  await expect(bar.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+  const more = page.getByRole("navigation", { name: "More" });
   await expect(more.getByRole("link", { name: "Settings" })).toBeVisible();
-  await expect(more.getByRole("link", { name: "Work", exact: true })).toHaveCount(0);
-  await settle(page);
-  expect(await smallTargets(page)).toEqual([]); // the More sheet
-  await page.keyboard.press("Escape");
-  await expect(more).toBeHidden();
+  await expect(more.getByRole("link", { name: "Trash" })).toBeVisible();
+  await expect(more.getByRole("link", { name: "Search" })).toBeVisible();
+  await page.goto("/tasks");
 
-  // The lists live in the Lists menu at the top of the Tasks pages.
-  await page.getByRole("button", { name: "Lists" }).tap();
-  const menu = page.getByRole("menu");
-  await expect(menu).toBeVisible();
-  await settle(page);
-  expect(await smallTargets(page)).toEqual([]); // the Lists menu
-  await menu.getByRole("menuitem", { name: "Work", exact: true }).tap();
-  await expect(menu).toBeHidden();
-  await expect(page.getByRole("button", { name: "Lists, now showing Work" })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Work" })).toBeVisible();
+  // The lists are on the Overview's Lists card (docs/new_design.md screen 2a).
+  await page.getByRole("region", { name: "Lists" }).getByRole("link", { name: /^Work/ }).tap();
+  await expect(page.getByRole("link", { name: "Tasks" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Work" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await noSidewaysScroll(page);
   expect(await smallTargets(page)).toEqual([]);
 
-  await page.getByRole("button", { name: /^View/ }).tap();
-  await expect(page.getByLabel("Sort by")).toBeVisible();
+  await page.getByRole("button", { name: /^Sort by:/ }).tap();
+  await expect(page.getByRole("menu")).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
 });
@@ -169,7 +162,7 @@ test("quick add chips have big enough tap targets", async ({ page }) => {
 
 test("the expense dialog fits a phone and has big enough tap targets", async ({ page }) => {
   await page.goto("/expenses/emis");
-  await page.getByRole("button", { name: "Add EMI or loan payment", exact: true }).first().tap();
+  await page.getByRole("button", { name: "Log a transaction" }).tap();
   await expect(page.getByRole("dialog")).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);
@@ -178,7 +171,7 @@ test("the expense dialog fits a phone and has big enough tap targets", async ({ 
 
 test("the expense tabs scroll sideways inside their own bar, not the page", async ({ page }) => {
   await page.goto("/expenses");
-  const tabs = page.getByRole("navigation", { name: "Expense sections" });
+  const tabs = page.getByRole("navigation", { name: "Expense areas" });
   await expect(tabs.getByRole("link", { name: "Summary" })).toBeVisible();
   await tabs.getByRole("link", { name: "Investments" }).scrollIntoViewIfNeeded();
   await tabs.getByRole("link", { name: "Investments" }).tap();
@@ -186,14 +179,9 @@ test("the expense tabs scroll sideways inside their own bar, not the page", asyn
   await noSidewaysScroll(page);
 });
 
-test("the log-a-transaction menu and the period picker fit a phone", async ({ page }) => {
+test("the log-a-transaction sheet and the period picker fit a phone", async ({ page }) => {
   await page.goto("/expenses");
   await page.getByRole("button", { name: "Log a transaction" }).tap();
-  await expect(page.getByRole("menu")).toBeVisible();
-  await settle(page);
-  expect(await smallTargets(page)).toEqual([]);
-  await noSidewaysScroll(page);
-  await page.getByRole("menuitem", { name: /^Expense/ }).tap();
   await expect(page.getByRole("dialog", { name: "Add expense" })).toBeVisible();
   await settle(page);
   expect(await smallTargets(page)).toEqual([]);

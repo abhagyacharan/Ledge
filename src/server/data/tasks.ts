@@ -4,7 +4,7 @@ import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
 import { db } from "@/server/db/client";
 import { lists, tasks, type Task } from "@/server/db/schema";
-import { getList } from "./lists";
+import { getInbox, getList, trashList } from "./lists";
 
 /**
  * Data functions for tasks. Every function takes the authenticated `userId` and filters by it
@@ -479,4 +479,113 @@ export async function updateTaskTitle(
   title: string,
 ): Promise<Task | null> {
   return updateTask(userId, taskId, { title });
+}
+
+/**
+ * Duplicate (CLAUDE.md §6.2, P1): a copy at the end of the same list (or of the same parent's
+ * subtasks), titled "<title> (copy)", with the same notes, priority, dates and repeat. A task's
+ * subtasks are copied too, all open. Returns null when the task is not the user's.
+ */
+export async function duplicateTask(userId: string, taskId: string): Promise<Task | null> {
+  const detail = await getTaskDetail(userId, taskId);
+  if (!detail) return null;
+  const { task: source, subtasks } = detail;
+  const copy = await createTask(userId, {
+    listId: source.listId,
+    parentId: source.parentId,
+    title: `${source.title} (copy)`.slice(0, 500),
+    notes: source.notes,
+    priority: source.priority,
+    dueDate: source.dueDate,
+    dueTime: source.dueTime,
+    recurrenceRule: source.recurrenceRule,
+    recurrenceMode: source.recurrenceMode,
+    recurrenceUntil: source.recurrenceUntil,
+  });
+  if (!copy) return null;
+  if (!source.parentId) {
+    for (const sub of subtasks) {
+      await createTask(userId, {
+        listId: source.listId,
+        parentId: copy.id,
+        title: sub.title,
+        notes: sub.notes,
+        priority: sub.priority,
+        dueDate: sub.dueDate,
+        dueTime: sub.dueTime,
+      });
+    }
+  }
+  return copy;
+}
+
+/**
+ * Deletes a list but keeps its tasks (docs/new_design.md screen 2i): every task in it, with its
+ * subtasks, moves to the end of `targetListId` first, then the empty list goes to Trash. Returns
+ * false when either list is not the user's, they are the same list, or the list is General.
+ */
+export async function trashListKeepingTasks(
+  userId: string,
+  listId: string,
+  targetListId: string,
+): Promise<boolean> {
+  if (listId === targetListId) return false;
+  const [list, target] = await Promise.all([
+    getList(userId, listId),
+    getList(userId, targetListId),
+  ]);
+  if (!list || !target || list.isInbox) return false;
+  for (const task of await listTasksInList(userId, listId)) {
+    if (!task.parentId) await moveTaskToList(userId, task.id, targetListId);
+  }
+  return trashList(userId, listId);
+}
+
+/**
+ * Restores a task from Trash where it can be seen (docs/new_design.md screen 6i): if its list is
+ * still in Trash, a top-level task moves to General. Returns the list it ended up in, or null when
+ * the task was not in the user's Trash.
+ */
+export async function restoreTaskVisibly(
+  userId: string,
+  taskId: string,
+): Promise<{ listId: string; listName: string; movedToGeneral: boolean } | null> {
+  if (!(await restoreTask(userId, taskId))) return null;
+  // Read the row directly: getTask hides tasks whose list is in Trash, which is the case here.
+  const [task] = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.userId, userId), eq(tasks.id, taskId)));
+  if (!task) return null;
+  const list = await getList(userId, task.listId, { includeTrashed: true });
+  if (list && !list.deletedAt)
+    return { listId: list.id, listName: list.name, movedToGeneral: false };
+
+  const inbox = await getInbox(userId);
+  const topId = task.parentId ?? task.id;
+  const position = positionAtEnd(await lastPositionInGroup(userId, inbox.id, null));
+  // Same steps as moveTaskToList: a subtask must share its parent's list at every moment.
+  await db.transaction(async (tx) => {
+    const children = await tx
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(and(eq(tasks.userId, userId), eq(tasks.parentId, topId)));
+    if (children.length > 0) {
+      await tx
+        .update(tasks)
+        .set({ parentId: null })
+        .where(and(eq(tasks.userId, userId), eq(tasks.parentId, topId)));
+    }
+    await tx
+      .update(tasks)
+      .set({ listId: inbox.id, sectionId: null, position, deletedAt: null })
+      .where(and(eq(tasks.userId, userId), eq(tasks.id, topId)));
+    for (const child of children) {
+      await tx
+        .update(tasks)
+        .set({ listId: inbox.id, parentId: topId })
+        .where(and(eq(tasks.userId, userId), eq(tasks.id, child.id)));
+    }
+  });
+  return { listId: inbox.id, listName: inbox.name, movedToGeneral: true };
 }

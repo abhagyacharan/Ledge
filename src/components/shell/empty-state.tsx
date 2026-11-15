@@ -31,14 +31,14 @@ export function EmptyState({
         <span
           aria-hidden
           className={cn(
-            "grid place-items-center rounded-full bg-dash-well text-dash-ink-soft",
+            "grid place-items-center rounded-full bg-dash-well text-dash-ink",
             compact ? "mb-2 size-10 md:mb-4 md:size-12" : "mb-4 size-12",
           )}
         >
           <Icon className="size-5" strokeWidth={1.75} />
         </span>
       ) : null}
-      <p className="font-medium text-balance">{title}</p>
+      <p className="font-display text-lg font-semibold text-balance md:text-xl">{title}</p>
       {hint ? <p className="mt-1 max-w-sm text-sm text-pretty text-dash-ink-soft">{hint}</p> : null}
       {action ? (
         <div className={cn("flex justify-center", compact ? "mt-3 md:mt-5" : "mt-5")}>{action}</div>

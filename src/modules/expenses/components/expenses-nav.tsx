@@ -46,7 +46,13 @@ export function ExpensesTabs() {
  * The Summary's period picker: the period control, with the choice kept in the URL as `?y=&m=`.
  * It answers at once and the page follows.
  */
-export function PeriodPicker({ fallback }: { fallback: Period }) {
+export function PeriodPicker({
+  fallback,
+  compact = false,
+}: {
+  fallback: Period;
+  compact?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -65,5 +71,5 @@ export function PeriodPicker({ fallback }: { fallback: Period }) {
     });
   }
 
-  return <PeriodControl period={period} fallback={fallback} onChange={go} />;
+  return <PeriodControl period={period} fallback={fallback} onChange={go} compact={compact} />;
 }

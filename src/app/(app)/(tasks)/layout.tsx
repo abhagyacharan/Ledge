@@ -1,11 +1,7 @@
-import { TasksHeader } from "@/modules/todos/components/tasks-header";
-
-/** Every Tasks page shares the header with the view tabs, Lists and Search (docs/design.md §5f). */
+/**
+ * Every Tasks page draws its own title (docs/new_design.md screens 2a to 2h): the Overview has
+ * the Tasks title with the view chips, the other views a big title with a "‹ Tasks" link on phones.
+ */
 export default function TasksLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="dash">
-      <TasksHeader />
-      {children}
-    </div>
-  );
+  return <div className="dash">{children}</div>;
 }

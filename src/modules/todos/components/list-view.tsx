@@ -30,6 +30,14 @@ type Props = {
  * manual order with no grouping the tasks can be dragged; any other sort or grouping shows a
  * grouped list instead. The view choices are saved per list.
  */
+function Kbd({ children }: { children: string }) {
+  return (
+    <kbd className="rounded-[5px] bg-dash-well px-1.5 py-0.5 font-mono text-[11px] font-medium text-dash-ink">
+      {children}
+    </kbd>
+  );
+}
+
 export function ListView({ list, tasks, ctx, settings: saved }: Props) {
   // Show a change at once, then follow whatever the server sends back after saving.
   const [seen, setSeen] = useState(saved);
@@ -57,33 +65,22 @@ export function ListView({ list, tasks, ctx, settings: saved }: Props) {
   const boardKey = visible.map((t) => `${t.id}:${t.position}:${t.status}`).join(",");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3 md:gap-4">
       <ListHeader list={list} taskCount={topLevel.length} doneCount={doneCount} ctx={ctx} />
 
-      <TaskPanel
-        id="list-tasks"
-        title="Tasks"
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            {doneCount > 0 ? (
-              <button
-                type="button"
-                aria-pressed={settings.showCompleted}
-                onClick={() => void change({ ...settings, showCompleted: !settings.showCompleted })}
-                className="h-11 rounded-full px-3.5 text-[13px] font-medium text-dash-ink-soft outline-none transition-colors duration-150 hover:bg-dash-well hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9"
-              >
-                {settings.showCompleted ? "Hide" : "Show"} {doneCount} completed
-              </button>
-            ) : null}
-            <ViewControls settings={settings} allowManual onChange={(next) => void change(next)} />
-          </div>
-        }
-      >
+      <ViewControls
+        settings={settings}
+        allowManual
+        onChange={(next) => void change(next)}
+        savedNote="Saved for this list"
+      />
+
+      <TaskPanel id="list-tasks" title="Tasks" hideTitle className="px-3 py-2 md:px-4 md:py-3">
         {topLevel.length === 0 ? (
           <EmptyState
             icon={ListTodo}
-            title="No tasks yet"
-            hint="Type one below and press Enter, or use the + button."
+            title="This list is empty"
+            hint="Add the first task, or press Q."
           />
         ) : null}
 
@@ -148,8 +145,31 @@ export function ListView({ list, tasks, ctx, settings: saved }: Props) {
           </>
         )}
 
-        <InlineAdd listId={list.id} />
+        <div className="mt-1 border-t border-dash-edge">
+          <InlineAdd listId={list.id} label={`Add to ${list.name}`} />
+        </div>
       </TaskPanel>
+
+      <p
+        aria-hidden
+        className="hidden flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-dash-ink-soft md:flex"
+      >
+        <span>
+          <Kbd>J</Kbd> <Kbd>K</Kbd> move
+        </span>
+        <span>
+          <Kbd>X</Kbd> complete
+        </span>
+        <span>
+          <Kbd>E</Kbd> edit title
+        </span>
+        <span>
+          <Kbd>Enter</Kbd> open
+        </span>
+        <span>
+          <Kbd>?</Kbd> all shortcuts
+        </span>
+      </p>
     </div>
   );
 }

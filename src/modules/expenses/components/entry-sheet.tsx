@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Minus, Plus, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
 import { useId, useRef, useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { DashButton } from "@/components/dash/dash-button";
@@ -24,6 +24,7 @@ import {
 } from "../categories";
 import { CategoryIcon } from "../category-icons";
 import { MAX_EXTRA_MONTHS } from "../emi-series";
+import { QUICK_ADD_EVENT } from "@/modules/todos/components/quick-add-button";
 
 export type EntryFormContext = { currency: string; today: string };
 
@@ -40,7 +41,38 @@ type Props = {
   addedAction?: (entryDate: string) => { label: string; onClick: () => void } | undefined;
   /** Changes whenever the form should start over (a new entry, or another entry to edit). */
   formKey: string;
+  /** New entries: the type row at the top switches kind, or hands over to quick add (Task). */
+  onKindChange?: (kind: EntryKind) => void;
+  /** New entries start on this day instead of today. */
+  defaultDate?: string;
 };
+
+/** The type row (docs/new_design.md screen 1c): Task first, then the money kinds. */
+const TYPES: { value: EntryKind | "task"; label: string }[] = [
+  { value: "task", label: "Task" },
+  { value: "expense", label: "Expense" },
+  { value: "income", label: "Income" },
+  { value: "emi", label: "EMI or loan" },
+  { value: "investment", label: "Investment" },
+];
+
+/** The last category and payment method used, per kind, on this device (a convenience only). */
+function readLast(kind: EntryKind): { category?: string; paymentMethod?: string } {
+  try {
+    const raw = window.localStorage.getItem(`ledge:last-${kind}`);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+function writeLast(kind: EntryKind, value: { category: string; paymentMethod: string }) {
+  try {
+    window.localStorage.setItem(`ledge:last-${kind}`, JSON.stringify(value));
+  } catch {
+    // Storage blocked: nothing to remember.
+  }
+}
 
 /** Text fields in the dashboard look. 16px text on phones so iOS does not zoom in. */
 const field =
@@ -60,6 +92,8 @@ export function EntrySheet({
   onMarkPaid,
   addedAction,
   formKey,
+  onKindChange,
+  defaultDate,
 }: Props) {
   const amountRef = useRef<HTMLInputElement>(null);
   const editing = Boolean(entry);
@@ -77,6 +111,8 @@ export function EntrySheet({
         onDelete={onDelete}
         onMarkPaid={onMarkPaid}
         addedAction={addedAction}
+        onKindChange={editing ? undefined : onKindChange}
+        defaultDate={defaultDate}
       />
     </Sheet>
   );
@@ -92,7 +128,11 @@ function EntryForm({
   onDelete,
   onMarkPaid,
   addedAction,
+  onKindChange,
+  defaultDate,
 }: {
+  onKindChange?: (kind: EntryKind) => void;
+  defaultDate?: string;
   kind: EntryKind;
   entry?: FinanceEntry;
   context: EntryFormContext;
@@ -104,14 +144,19 @@ function EntryForm({
   addedAction?: (entryDate: string) => { label: string; onClick: () => void } | undefined;
 }) {
   const editing = Boolean(entry);
-  const [entryDate, setEntryDate] = useState(entry?.entryDate ?? context.today);
+  const [entryDate, setEntryDate] = useState(entry?.entryDate ?? defaultDate ?? context.today);
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [category, setCategory] = useState(entry?.category ?? "");
+  const [last] = useState(() => (entry ? {} : readLast(kind)));
+  const [category, setCategory] = useState(entry?.category ?? last.category ?? "");
   const [amount, setAmount] = useState(
     entry ? minorToInput(entry.amountMinor, context.currency) : "",
   );
   const [notes, setNotes] = useState(entry?.notes ?? "");
-  const [paymentMethod, setPaymentMethod] = useState(entry?.paymentMethod ?? "");
+  const [paymentMethod, setPaymentMethod] = useState(
+    entry?.paymentMethod ?? last.paymentMethod ?? "",
+  );
+  const [showNotes, setShowNotes] = useState(Boolean(entry?.notes));
+  const another = useRef(false);
   const [spendLabel, setSpendLabel] = useState<string>(entry?.spendLabel ?? "");
   const [lender, setLender] = useState(entry?.lender ?? "");
   const [emiType, setEmiType] = useState(entry?.emiType ?? "");
@@ -162,10 +207,25 @@ function EntryForm({
           return;
         }
         const created = !entry && result.data && "created" in result.data ? result.data.created : 1;
+        if (!entry) writeLast(kind, { category, paymentMethod });
         toast.success(
-          entry ? "Saved" : created > 1 ? `Added ${created} ${KIND_LABELS.emi.plural}` : "Added",
+          entry
+            ? "Saved"
+            : created > 1
+              ? `Added ${created} ${KIND_LABELS.emi.plural}`
+              : `Added "${title.trim()}"`,
           entry || !addedAction ? undefined : { action: addedAction(entryDate) },
         );
+        if (!entry && another.current) {
+          // Ready for the next one: keep the type, category, method and date.
+          another.current = false;
+          setAmount("");
+          setTitle("");
+          setNotes("");
+          setErrors({});
+          amountRef.current?.focus();
+          return;
+        }
         close();
       } catch {
         setFormError("Couldn't reach the server. Check your connection and try again.");
@@ -186,18 +246,54 @@ function EntryForm({
 
       <SheetBody>
         <div className="flex flex-col gap-5">
-          {/* The amount: the one big field. */}
+          {onKindChange ? (
+            <div
+              role="radiogroup"
+              aria-label="Type"
+              className="no-scrollbar -mx-4 -mt-1 flex gap-2 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
+            >
+              {TYPES.map((t) => {
+                const on = t.value === kind;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => {
+                      if (on) return;
+                      if (t.value === "task") {
+                        close();
+                        window.dispatchEvent(new Event(QUICK_ADD_EVENT));
+                      } else onKindChange(t.value);
+                    }}
+                    className={cn(
+                      "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium whitespace-nowrap outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:text-[13px]",
+                      on
+                        ? "bg-dash-ink font-semibold text-dash-card"
+                        : "bg-dash-well text-dash-ink hover:bg-dash-edge",
+                    )}
+                  >
+                    {on ? <Check aria-hidden className="size-3.5" strokeWidth={2.5} /> : null}
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* The amount: the one big field, no box (screen 1c). */}
           <div>
-            <label htmlFor="entry-amount" className="mb-1.5 block text-[13px] font-medium">
+            <label htmlFor="entry-amount" className="sr-only">
               Amount
             </label>
             <div
               className={cn(
-                "flex items-center gap-1.5 rounded-2xl bg-dash-well px-4 py-1.5 transition-shadow duration-150 focus-within:ring-3 focus-within:ring-ring/40",
-                errors.amount && "ring-2 ring-dash-bad",
+                "flex items-baseline gap-2 rounded-2xl",
+                errors.amount && "ring-2 ring-dash-bad ring-offset-4 ring-offset-dash-card",
               )}
             >
-              <span aria-hidden className="font-display text-2xl text-dash-ink-soft">
+              <span aria-hidden className="font-display text-[28px] text-dash-ink-soft">
                 {symbol}
               </span>
               <input
@@ -206,58 +302,29 @@ function EntryForm({
                 inputMode="decimal"
                 enterKeyHint="next"
                 autoComplete="off"
-                placeholder="0.00"
+                placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 aria-invalid={errors.amount ? true : undefined}
                 aria-describedby={errors.amount ? "entry-amount-error" : undefined}
-                className="h-13 w-full min-w-0 bg-transparent font-display text-[2rem] leading-tight font-semibold tracking-tight text-dash-ink tabular-nums outline-none placeholder:text-dash-ink-soft/60"
+                className="h-16 w-full min-w-0 bg-transparent font-display text-[52px] leading-none font-semibold tracking-tight text-dash-ink tabular-nums caret-dash-accent outline-none placeholder:text-dash-ink-soft/40"
               />
             </div>
             <FieldError id="entry-amount-error" error={errors.amount} />
           </div>
 
-          <Field id="entry-title" label={TITLE_LABELS[kind]} error={errors.title}>
+          <Field id="entry-title" label={TITLE_LABELS[kind]} error={errors.title} hideLabel>
             <input
               id="entry-title"
+              placeholder={TITLE_LABELS[kind]}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
               enterKeyHint="next"
-              className={field}
+              className={cn(field, "h-12 bg-dash-well border-transparent md:h-11")}
               aria-invalid={errors.title ? true : undefined}
               aria-describedby={errors.title ? "entry-title-error" : undefined}
             />
-          </Field>
-
-          <Field id="entry-date" label={DATE_LABELS[kind]} error={errors.entryDate}>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                id="entry-date"
-                type="date"
-                value={entryDate}
-                onChange={(e) => setEntryDate(e.target.value)}
-                className={cn(field, "w-auto min-w-0 flex-1 basis-40")}
-                aria-invalid={errors.entryDate ? true : undefined}
-                aria-describedby={errors.entryDate ? "entry-date-error" : undefined}
-              />
-              {showQuickDates ? (
-                <div className="flex gap-2">
-                  <QuickDate
-                    active={entryDate === context.today}
-                    onClick={() => setEntryDate(context.today)}
-                  >
-                    Today
-                  </QuickDate>
-                  <QuickDate
-                    active={entryDate === yesterday}
-                    onClick={() => setEntryDate(yesterday)}
-                  >
-                    Yesterday
-                  </QuickDate>
-                </div>
-              ) : null}
-            </div>
           </Field>
 
           <ChoiceGroup
@@ -268,6 +335,7 @@ function EntryForm({
             options={CATEGORIES_BY_KIND[kind]}
             iconKind={kind}
             error={errors.category}
+            limit={3}
           />
 
           {kind === "expense" ? (
@@ -368,16 +436,57 @@ function EntryForm({
             </Field>
           ) : null}
 
-          <Field id="entry-notes" label="Notes (optional)" error={errors.notes}>
-            <textarea
-              id="entry-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              maxLength={1000}
-              rows={2}
-              className={cn(field, "h-auto min-h-20 resize-y py-2.5 leading-relaxed")}
-            />
+          <Field id="entry-date" label={DATE_LABELS[kind]} error={errors.entryDate}>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                id="entry-date"
+                type="date"
+                value={entryDate}
+                onChange={(e) => setEntryDate(e.target.value)}
+                className={cn(field, "w-auto min-w-0 flex-1 basis-40")}
+                aria-invalid={errors.entryDate ? true : undefined}
+                aria-describedby={errors.entryDate ? "entry-date-error" : undefined}
+              />
+              {showQuickDates ? (
+                <div className="flex gap-2">
+                  <QuickDate
+                    active={entryDate === context.today}
+                    onClick={() => setEntryDate(context.today)}
+                  >
+                    Today
+                  </QuickDate>
+                  <QuickDate
+                    active={entryDate === yesterday}
+                    onClick={() => setEntryDate(yesterday)}
+                  >
+                    Yesterday
+                  </QuickDate>
+                </div>
+              ) : null}
+            </div>
           </Field>
+
+          {!showNotes ? (
+            <button
+              type="button"
+              onClick={() => setShowNotes(true)}
+              className="inline-flex min-h-11 w-fit items-center gap-1.5 text-[13px] font-medium text-dash-ink-soft outline-none hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:min-h-8"
+            >
+              <Plus aria-hidden className="size-4" />
+              Add a note
+            </button>
+          ) : (
+            <Field id="entry-notes" label="Notes (optional)" error={errors.notes}>
+              <textarea
+                id="entry-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                maxLength={1000}
+                rows={2}
+                className={cn(field, "h-auto min-h-20 resize-y py-2.5 leading-relaxed")}
+              />
+            </Field>
+          )}
 
           {formError ? (
             <p
@@ -409,12 +518,30 @@ function EntryForm({
           </DashButton>
         ) : null}
         <div className="hidden flex-1 md:block" />
-        <DashButton variant="secondary" className="hidden md:inline-flex" onClick={close}>
-          Cancel
+        {editing ? (
+          <DashButton variant="secondary" className="hidden md:inline-flex" onClick={close}>
+            Cancel
+          </DashButton>
+        ) : null}
+        <DashButton
+          type="submit"
+          disabled={pending}
+          onClick={() => (another.current = false)}
+          className="h-12! font-semibold max-md:flex-1 md:h-10!"
+        >
+          {pending ? "Saving…" : editing ? "Save" : `Save ${label}`}
         </DashButton>
-        <DashButton type="submit" disabled={pending} className="max-md:flex-1">
-          {pending ? "Saving…" : editing ? "Save" : `Add ${label}`}
-        </DashButton>
+        {editing ? null : (
+          <DashButton
+            type="submit"
+            variant="secondary"
+            disabled={pending}
+            onClick={() => (another.current = true)}
+            className="h-12! max-md:flex-1 md:h-10!"
+          >
+            Save and add another
+          </DashButton>
+        )}
       </SheetFooter>
     </form>
   );
@@ -449,17 +576,20 @@ function Field({
   label,
   hint,
   error,
+  hideLabel = false,
   children,
 }: {
   id: string;
   label: string;
   hint?: string;
   error?: string;
+  /** The field shows its name as a placeholder instead (screen 1c). */
+  hideLabel?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[13px] font-medium">
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "text-[13px] font-medium"}>
         {label}
       </label>
       {children}
@@ -494,7 +624,10 @@ function ChoiceGroup({
   segmented = false,
   clearable = false,
   hint,
+  limit,
 }: {
+  /** Show only this many chips (plus the chosen one) until "N more" is tapped. */
+  limit?: number;
   id: string;
   label: string;
   /** Optional: tapping the chosen chip again (or Delete on it) clears the choice. */
@@ -510,6 +643,9 @@ function ChoiceGroup({
   segmented?: boolean;
 }) {
   const name = useId();
+  const [expanded, setExpanded] = useState(false);
+  const shown = limit && !expanded ? options.filter((o, i) => i < limit || o === value) : options;
+  const hidden = options.length - shown.length;
   return (
     <div className="flex flex-col gap-1.5">
       <div
@@ -531,7 +667,7 @@ function ChoiceGroup({
               : "flex flex-wrap gap-2",
           )}
         >
-          {options.map((option) => {
+          {shown.map((option) => {
             const checked = value === option;
             return (
               <label
@@ -565,13 +701,27 @@ function ChoiceGroup({
                   // Invisible but covering the whole chip, so a tap anywhere lands on the radio.
                   className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full opacity-0"
                 />
-                {iconKind ? (
+                {checked && !segmented ? (
+                  <Check aria-hidden className="size-3.5" strokeWidth={2.5} />
+                ) : checked && segmented ? (
+                  <Check aria-hidden className="size-3.5" />
+                ) : iconKind ? (
                   <CategoryIcon kind={iconKind} category={option} className="size-3.5" />
                 ) : null}
                 {optionLabel(option)}
               </label>
             );
           })}
+          {hidden > 0 ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="inline-flex h-11 items-center gap-1 rounded-full bg-dash-well px-3.5 text-[13px] font-medium text-dash-ink outline-none hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9"
+            >
+              {hidden} more
+              <ChevronDown aria-hidden className="size-3.5" />
+            </button>
+          ) : null}
         </div>
       </div>
       <FieldError id={`${id}-error`} error={error} />

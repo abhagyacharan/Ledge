@@ -1,18 +1,25 @@
-import { AlertCircle, ArrowRight, CalendarDays, CircleCheckBig, Sun } from "lucide-react";
+import { CircleCheckBig, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { StatTile } from "@/components/dash/stat-tile";
+import { SectionCard } from "@/components/dash/page-title";
 import { EmptyState } from "@/components/shell/empty-state";
-import { addDaysIso, formatDayHeading, formatLongDate } from "@/lib/dates";
+import { addDaysIso, formatRowDay, todayIn } from "@/lib/dates";
 import { NewListButton } from "@/modules/todos/components/new-list-button";
-import { ListsProgress, WeekBars } from "@/modules/todos/components/overview-parts";
+import {
+  ListsProgress,
+  OverviewTiles,
+  WeekGrid,
+  WeekStrip,
+  type GridDay,
+} from "@/modules/todos/components/overview-parts";
 import { QuickAddButton } from "@/modules/todos/components/quick-add-button";
 import { TaskDrawerHost } from "@/modules/todos/components/task-drawer-host";
 import { TaskList } from "@/modules/todos/components/task-groups";
-import { TaskGroup, TaskPanel } from "@/modules/todos/components/task-panel";
+import { TasksHeader } from "@/modules/todos/components/tasks-header";
 import { loadDateContext } from "@/modules/todos/date-context";
 import { countCompletedOn, groupUpcoming, splitToday, weekDates } from "@/modules/todos/day-views";
+import { loadUpcomingDays } from "@/modules/todos/upcoming.server";
+import { emisDueBetween } from "@/server/data/finance";
 import { listLists } from "@/server/data/lists";
 import {
   getCompletedTasks,
@@ -24,171 +31,189 @@ import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Tasks" };
 
-/** How many rows each card shows before pointing to the full view. */
+/** How many rows the Today and overdue card shows before pointing to Today. */
 const TODAY_ROWS = 6;
-const SOON_ROWS = 6;
-const SOON_DAYS = 7;
+const STRIP_DAYS = 7;
+const GRID_DAYS = 14;
+
+/** ISO week number (1 to 53) of a floating date. */
+function isoWeekNumber(iso: string): number {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+  return Math.ceil(((d.getTime() - yearStart) / 86_400_000 + 1) / 7);
+}
 
 /**
- * The Tasks overview (docs/design.md §5f), the home of the Tasks section: four figures (due today,
- * overdue, the next seven days, done this week), what needs doing today, what is coming up,
- * every list with its progress, and this week's finished tasks day by day.
+ * The Tasks overview (docs/new_design.md screen 2a): the view chips, three figures (due today,
+ * overdue, done this week), today's and overdue tasks, the next seven days as a strip, and every
+ * list with its progress.
  */
 export default async function TasksOverviewPage({ searchParams }: PageProps<"/tasks">) {
   const { userId } = await requireUser();
   const [{ ctx, timeZone }, { task }] = await Promise.all([loadDateContext(userId), searchParams]);
   const week = weekDates(ctx.today, ctx.weekStartsOn);
-  const [due, soon, completed, lists, progress] = await Promise.all([
+  const [due, soon, completed, lists, progress, gridDays, emis] = await Promise.all([
     getDueByTasks(userId, ctx.today),
-    getDueBetweenTasks(userId, addDaysIso(ctx.today, 1), addDaysIso(ctx.today, SOON_DAYS)),
+    getDueBetweenTasks(userId, addDaysIso(ctx.today, 1), addDaysIso(ctx.today, STRIP_DAYS)),
     getCompletedTasks(userId, 500),
     listLists(userId),
     getListProgress(userId),
+    loadUpcomingDays(userId, ctx, GRID_DAYS),
+    emisDueBetween(userId, addDaysIso(ctx.today, 1), addDaysIso(ctx.today, GRID_DAYS)),
   ]);
 
   const { overdue, today } = splitToday(due, ctx);
-  const upcoming = groupUpcoming(soon, ctx.today, SOON_DAYS);
-  const upcomingCount = upcoming.reduce((n, d) => n + d.tasks.length, 0);
-  const doneByDay = countCompletedOn(completed, week, timeZone);
-  const doneThisWeek = doneByDay.reduce((n, d) => n + d.count, 0);
-  const highToday = today.filter((t) => t.priority === 3).length;
+  const upcoming = groupUpcoming(soon, ctx.today, STRIP_DAYS);
+  const strip = Array.from({ length: STRIP_DAYS }, (_, i) => {
+    const date = addDaysIso(ctx.today, i + 1);
+    return { date, count: upcoming.find((d) => d.date === date)?.tasks.length ?? 0 };
+  });
+  const doneThisWeek = countCompletedOn(completed, week, timeZone).reduce((n, d) => n + d.count, 0);
+  const weekStart = week[0] ?? ctx.today;
+  const doneWeek = completed.filter(
+    (t) => t.completedAt !== null && todayIn(timeZone, t.completedAt) >= weekStart,
+  );
+  const doneTodayDue = completed.filter(
+    (t) =>
+      t.dueDate === ctx.today &&
+      t.completedAt !== null &&
+      todayIn(timeZone, t.completedAt) === ctx.today,
+  ).length;
+  const nextSeven = strip.reduce((n, d) => n + d.count, 0);
+  const oldest = overdue[0]?.dueDate ?? null;
+  const overdueSince = oldest
+    ? new Intl.DateTimeFormat(ctx.locale, { weekday: "short", timeZone: "UTC" }).format(
+        new Date(`${oldest}T00:00:00Z`),
+      )
+    : null;
+  const eyebrow = `${formatRowDay(ctx.today, ctx.today, ctx.locale)} · week ${isoWeekNumber(ctx.today)}`;
 
-  // Today's card: overdue first, then today, capped so the page stays calm.
-  const shownOverdue = overdue.slice(0, TODAY_ROWS);
-  const shownToday = today.slice(0, Math.max(0, TODAY_ROWS - shownOverdue.length));
-  const hiddenToday = overdue.length + today.length - shownOverdue.length - shownToday.length;
+  // The desktop grid: fourteen days of tasks, repeat previews and EMIs due.
+  const grid: GridDay[] = Array.from({ length: GRID_DAYS }, (_, i) => {
+    const date = addDaysIso(ctx.today, i + 1);
+    const day = gridDays.find((d) => d.date === date);
+    return {
+      date,
+      items: [
+        ...(day?.tasks ?? []).map((t) => ({
+          key: `t-${t.id}`,
+          kind: "task" as const,
+          title: t.title,
+          href: `/tasks?task=${t.id}`,
+        })),
+        ...(day?.previews ?? []).map((p) => ({
+          key: `r-${p.taskId}`,
+          kind: "repeat" as const,
+          title: p.title,
+          href: `/tasks?task=${p.taskId}`,
+        })),
+        ...emis
+          .filter((e) => e.entryDate === date)
+          .map((e) => ({
+            key: `e-${e.id}`,
+            kind: "emi" as const,
+            title: `${e.title} due`,
+            href: `/expenses/emis?y=${date.slice(0, 4)}&m=${Number(date.slice(5, 7))}`,
+          })),
+      ],
+    };
+  });
 
-  // The first few upcoming tasks, still grouped by day.
-  const shownSoon = upcoming
-    .map((day, i) => {
-      const before = upcoming.slice(0, i).reduce((n, d) => n + d.tasks.length, 0);
-      return { ...day, tasks: day.tasks.slice(0, Math.max(0, SOON_ROWS - before)) };
-    })
-    .filter((day) => day.tasks.length > 0);
+  // Overdue first, then today, capped so the page stays calm.
+  const rows = [...overdue, ...today];
+  const shown = rows.slice(0, TODAY_ROWS);
+  const hidden = rows.length - shown.length;
 
   return (
-    <div className="flex flex-col gap-4">
-      <TaskPanel
-        id="glance"
-        title={`Your tasks on ${formatLongDate(ctx.today, ctx.locale)}`}
-        hideTitle
-        // Phones: one card of four equal rows, edge to edge. Wider: no outer box, each figure is
-        // its own card.
-        className="max-sm:overflow-hidden max-sm:p-0 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:p-0"
-      >
-        <dl className="flex flex-col sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-          <StatTile
-            label="Due today"
-            value={String(today.length)}
-            icon={Sun}
-            highlight
-            variant="card"
-          >
-            <Note onAccent>{highToday > 0 ? `${highToday} high priority` : "Plan the day"}</Note>
-          </StatTile>
-          <StatTile
-            label="Overdue"
-            value={String(overdue.length)}
-            icon={AlertCircle}
-            variant="card"
-          >
-            <Note>{overdue.length > 0 ? "Pick these up first" : "Nothing late"}</Note>
-          </StatTile>
-          <StatTile
-            label="Next 7 days"
-            value={String(upcomingCount)}
-            icon={CalendarDays}
-            variant="card"
-          >
-            <Note>Due after today</Note>
-          </StatTile>
-          <StatTile
-            label="Done this week"
-            value={String(doneThisWeek)}
-            icon={CircleCheckBig}
-            variant="card"
-          >
-            <Note>Since {formatDayHeading(week[0], ctx.today, ctx.locale).split(" · ")[0]}</Note>
-          </StatTile>
-        </dl>
-      </TaskPanel>
+    <>
+      <TasksHeader todayCount={rows.length} eyebrow={eyebrow} />
+      <div className="flex flex-col gap-3 md:gap-4">
+        <OverviewTiles
+          dueToday={today.length}
+          dueTodayTotal={today.length + doneTodayDue}
+          overdue={overdue.length}
+          overdueSince={overdueSince}
+          nextSeven={nextSeven}
+          doneThisWeek={doneThisWeek}
+        />
 
-      <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-        <div className="flex min-w-0 flex-col gap-4 lg:col-span-7">
-          <TaskPanel
-            id="overview-today"
-            title="Today"
-            subtitle={formatLongDate(ctx.today, ctx.locale)}
-            action={<MoreLink href="/today" label="Open Today" />}
-          >
-            {overdue.length + today.length === 0 ? (
-              <EmptyState
-                icon={Sun}
-                compact
-                title="Nothing due today"
-                hint="You're clear. Add something, or look at what's coming up."
-                action={<QuickAddButton />}
+        <div className="grid gap-3 md:gap-4 lg:grid-cols-12 lg:items-start">
+          <div className="flex min-w-0 flex-col gap-3 md:gap-4 lg:col-span-7">
+            <SectionCard
+              id="overview-today"
+              heading={overdue.length > 0 ? "Today and overdue" : "Today"}
+              aside={<SeeAll href="/today" label="Open Today" />}
+            >
+              {rows.length === 0 ? (
+                <EmptyState
+                  icon={CircleCheckBig}
+                  compact
+                  title="All caught up."
+                  hint={
+                    strip[0] && strip[0].count > 0
+                      ? `Nothing left for today. Tomorrow has ${strip[0].count} ${strip[0].count === 1 ? "task" : "tasks"}.`
+                      : "Nothing left for today."
+                  }
+                  action={<QuickAddButton />}
+                />
+              ) : (
+                <TaskList tasks={shown} allTasks={[]} ctx={ctx} />
+              )}
+              {hidden > 0 ? (
+                <p className="pb-2 text-[13px] text-dash-ink-soft">
+                  {overdue.length > TODAY_ROWS ? (
+                    <TriangleAlert aria-hidden className="mr-1 inline size-3.5 text-dash-bad" />
+                  ) : null}
+                  And {hidden} more in{" "}
+                  <Link
+                    href="/today"
+                    className="font-medium text-dash-ink underline underline-offset-4"
+                  >
+                    Today
+                  </Link>
+                  .
+                </p>
+              ) : null}
+            </SectionCard>
+
+            <SectionCard
+              id="overview-week"
+              heading="Next 7 days"
+              aside={<SeeAll href="/upcoming" label="Open Upcoming" />}
+              className="pb-3"
+            >
+              <div className="lg:hidden">
+                <WeekStrip days={strip} locale={ctx.locale} />
+              </div>
+              <div className="hidden lg:block">
+                <WeekGrid days={grid} today={ctx.today} locale={ctx.locale} />
+              </div>
+            </SectionCard>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-3 md:gap-4 lg:col-span-5">
+            <SectionCard id="overview-lists" heading="Lists" aside={<NewListButton />}>
+              <ListsProgress
+                lists={lists}
+                progress={progress}
+                today={ctx.today}
+                locale={ctx.locale}
               />
-            ) : null}
-            {shownOverdue.length > 0 ? (
-              <TaskGroup id="ov-overdue" label="Overdue" count={overdue.length} tone="bad">
-                <TaskList tasks={shownOverdue} allTasks={[]} ctx={ctx} />
-              </TaskGroup>
-            ) : null}
-            {shownToday.length > 0 ? (
-              <TaskGroup id="ov-today" label="Today" count={today.length}>
-                <TaskList tasks={shownToday} allTasks={[]} ctx={ctx} />
-              </TaskGroup>
-            ) : null}
-            {hiddenToday > 0 ? (
-              <p className="mt-2 text-[13px] text-dash-ink-soft">
-                And {hiddenToday} more in{" "}
-                <Link
-                  href="/today"
-                  className="font-medium text-dash-ink underline underline-offset-4"
-                >
-                  Today
-                </Link>
-                .
-              </p>
-            ) : null}
-          </TaskPanel>
+            </SectionCard>
 
-          <TaskPanel
-            id="overview-soon"
-            title="Coming up"
-            subtitle={`The next ${SOON_DAYS} days`}
-            action={<MoreLink href="/upcoming" label="Open Upcoming" />}
-          >
-            {shownSoon.length === 0 ? (
-              <p className="py-4 text-sm text-dash-ink-soft">Nothing due in the next week.</p>
-            ) : null}
-            {shownSoon.map((day) => (
-              <TaskGroup
-                key={day.date}
-                id={`ov-day-${day.date}`}
-                label={formatDayHeading(day.date, ctx.today, ctx.locale)}
-                count={upcoming.find((d) => d.date === day.date)?.tasks.length ?? day.tasks.length}
+            {doneWeek.length > 0 ? (
+              <SectionCard
+                id="overview-done"
+                heading={`Done this week · ${doneWeek.length}`}
+                aside={<SeeAll href="/completed" label="Completed" />}
+                className="hidden lg:block"
               >
-                <TaskList tasks={day.tasks} allTasks={[]} ctx={ctx} />
-              </TaskGroup>
-            ))}
-          </TaskPanel>
-        </div>
-
-        <div className="flex min-w-0 flex-col gap-4 lg:col-span-5">
-          <TaskPanel id="overview-lists" title="Lists" action={<NewListButton />}>
-            <ListsProgress lists={lists} progress={progress} />
-          </TaskPanel>
-
-          <TaskPanel
-            id="overview-week"
-            title="This week"
-            subtitle={`${doneThisWeek} ${doneThisWeek === 1 ? "task" : "tasks"} finished`}
-            action={<MoreLink href="/completed" label="Open Completed" />}
-          >
-            <WeekBars days={doneByDay} today={ctx.today} locale={ctx.locale} />
-          </TaskPanel>
+                <TaskList tasks={doneWeek.slice(0, 5)} allTasks={[]} ctx={ctx} />
+              </SectionCard>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -197,27 +222,18 @@ export default async function TasksOverviewPage({ searchParams }: PageProps<"/ta
         taskParam={typeof task === "string" ? task : undefined}
         ctx={ctx}
       />
-    </div>
+    </>
   );
 }
 
-function Note({ children, onAccent = false }: { children: ReactNode; onAccent?: boolean }) {
-  return (
-    <span className={`hidden text-xs sm:inline ${onAccent ? "text-white" : "text-dash-ink-soft"}`}>
-      {children}
-    </span>
-  );
-}
-
-/** A quiet "open the full view" link in a card's corner (44px tall on phones). */
-function MoreLink({ href, label }: { href: string; label: string }) {
+/** A quiet link in a card's corner, 44px tall on phones. */
+function SeeAll({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="-my-2 inline-flex h-11 items-center gap-1 rounded-full px-3 text-[13px] font-medium text-dash-ink-soft outline-none transition-colors duration-150 hover:bg-dash-well hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9"
+      className="-my-2 -mr-2 inline-flex h-11 items-center rounded-full px-2.5 text-[13px] font-semibold text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9"
     >
       {label}
-      <ArrowRight aria-hidden className="size-3.5" />
     </Link>
   );
 }

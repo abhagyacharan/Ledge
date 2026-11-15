@@ -181,3 +181,24 @@ export function formatDate(iso: IsoDate, locale = "en-IN"): string {
     year: "numeric",
   }).format(parseIsoDate(iso));
 }
+
+/** "Fri, 13 Nov" for a floating date, in the user's locale (the Home eyebrow). */
+export function formatShortDay(iso: IsoDate, locale = "en-IN"): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(parseIsoDate(iso));
+}
+
+/** "Wed 11 Nov" for a floating date (task rows); the year is added when it is not this year. */
+export function formatRowDay(iso: IsoDate, today: IsoDate, locale = "en-IN"): string {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    ...(iso.slice(0, 4) === today.slice(0, 4) ? {} : { year: "numeric" }),
+  })
+    .format(parseIsoDate(iso))
+    .replace(/,/g, "");
+}

@@ -29,7 +29,7 @@ function RoundButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid size-11 shrink-0 place-items-center rounded-full text-dash-ink outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-raised focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:pointer-events-none disabled:opacity-40 md:size-9"
+      className="grid size-11 shrink-0 place-items-center rounded-full border border-dash-edge bg-dash-card text-dash-ink shadow-(--dash-card-shadow) outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:pointer-events-none disabled:opacity-40 md:size-9"
     >
       {children}
     </button>
@@ -94,13 +94,20 @@ export function DayControl({
   const shownMonth = monthKey(viewMonth);
   const marks = new Set(shownMonth === pageMonth ? marked : (dots[shownMonth] ?? []));
   const label = formatDayHeading(day, today, locale);
+  // "Thu, 12 Nov" on the phone top bar (screen 4a).
+  const shortLabel = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${day}T00:00:00Z`));
 
   return (
     <div
       role="group"
       aria-label="Day"
       aria-busy={pending || undefined}
-      className="flex w-full items-center gap-1 rounded-full bg-dash-track p-1 shadow-[inset_0_0_0_1px_var(--dash-track-edge)] sm:w-auto"
+      className="flex w-full items-center justify-between gap-2 md:w-auto md:justify-start"
     >
       <RoundButton label="Previous day" onClick={() => go(addDaysIso(day, -1))}>
         <ChevronLeft className="size-4" />
@@ -117,14 +124,11 @@ export function DayControl({
           setOpen(next);
         }}
       >
-        <Popover.Trigger className="group flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-raised focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-dash-raised sm:min-w-56 sm:flex-none md:h-9">
-          <CalendarDays aria-hidden className="size-4 text-dash-ink-soft" />
+        <Popover.Trigger className="group flex h-11 min-w-0 items-center justify-center gap-2 rounded-full px-3 text-[15px] font-semibold text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 data-[state=open]:bg-dash-well md:order-last md:text-sm md:font-medium md:text-dash-ink-soft">
           <span className="sr-only">Choose a day: </span>
-          <span className="truncate tabular-nums">{label}</span>
-          <ChevronDown
-            aria-hidden
-            className="size-4 text-dash-ink-soft transition-transform duration-200 ease-snap group-data-[state=open]:rotate-180"
-          />
+          <span className="truncate tabular-nums md:hidden">{shortLabel}</span>
+          <span className="hidden md:inline">Jump to a day</span>
+          <CalendarDays aria-hidden className="size-4 text-dash-ink-soft" />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content
@@ -132,7 +136,7 @@ export function DayControl({
             sideOffset={8}
             collisionPadding={16}
             aria-label="Choose a day"
-            className="dash z-50 w-[19.5rem] origin-(--radix-popover-content-transform-origin) rounded-2xl border border-dash-edge bg-dash-card p-3 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:duration-100 data-[state=open]:duration-150"
+            className="dash z-50 w-[min(22rem,calc(100vw-2rem))] origin-(--radix-popover-content-transform-origin) rounded-2xl border border-dash-edge bg-dash-card p-3 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)] outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:duration-100 data-[state=open]:duration-150"
           >
             {view === "days" ? (
               <>
@@ -194,25 +198,25 @@ export function DayControl({
                         aria-current={isToday ? "date" : undefined}
                         onClick={() => go(d)}
                         className={cn(
-                          "relative h-10 rounded-xl text-sm tabular-nums outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:pointer-events-none disabled:text-dash-ink-soft/45",
+                          "relative mx-auto grid size-10 place-items-center rounded-full text-sm tabular-nums outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:pointer-events-none disabled:text-dash-ink-soft/45",
                           selected
-                            ? "bg-dash-ink font-medium text-dash-card"
+                            ? "bg-dash-ink font-semibold text-dash-card"
                             : "text-dash-ink hover:bg-dash-well",
-                          isToday && !selected && "font-semibold text-dash-accent",
+                          isToday && !selected && "border-2 border-dash-ink font-semibold",
                         )}
                       >
                         <span aria-hidden>{Number(d.slice(8))}</span>
                         <span className="sr-only">
                           {formatLongDate(d, locale)}
                           {isToday ? " (today)" : ""}
-                          {hasPage ? ", has a page" : ""}
+                          {hasPage ? ", has entry" : ""}
                         </span>
                         {hasPage ? (
                           <span
                             aria-hidden
                             className={cn(
-                              "absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full",
-                              selected ? "bg-dash-card" : "bg-dash-ink-soft",
+                              "absolute -bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full",
+                              "bg-dash-accent",
                             )}
                           />
                         ) : null}
@@ -291,19 +295,20 @@ export function DayControl({
               </>
             )}
 
-            <div className="mt-2 grid grid-cols-2 gap-1 border-t border-dash-edge pt-2">
-              <button
-                type="button"
-                disabled={day === today}
-                onClick={() => go(today)}
-                className="h-11 rounded-2xl bg-dash-well text-sm font-medium text-dash-ink outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:opacity-45"
-              >
-                Today
-              </button>
-              <Popover.Close className="h-11 rounded-2xl bg-dash-well text-sm font-medium text-dash-ink outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95">
-                Close
-              </Popover.Close>
-            </div>
+            <p aria-hidden className="mt-3 flex items-center gap-3 text-xs text-dash-ink-soft">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-dash-accent" /> Has an entry
+              </span>
+              <span>Future days can&apos;t be opened</span>
+            </p>
+            <button
+              type="button"
+              disabled={day === today}
+              onClick={() => go(today)}
+              className="mt-3 h-12 w-full rounded-full bg-dash-ink text-[15px] font-semibold text-dash-card outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-ink/85 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.98] disabled:opacity-45 md:h-10 md:text-sm"
+            >
+              Go to today
+            </button>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

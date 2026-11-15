@@ -2,17 +2,20 @@
 
 import {
   AlertTriangle,
+  CalendarDays,
+  Check,
   CheckCircle2,
   Clock,
   Ellipsis,
+  Leaf,
   Pencil,
   Search,
   StickyNote,
-  CalendarDays,
   Trash2,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion, type Transition } from "motion/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useOptimistic, useRef, useState, useTransition, type FormEvent } from "react";
 import { DashButton, dashButton } from "@/components/dash/dash-button";
 import {
@@ -29,8 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDayHeading, formatDueDate } from "@/lib/dates";
-import { formatAmount, formatMoney } from "@/lib/money";
+import { formatDayHeading, formatDueDate, formatRowDay } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { EntryKind, FinanceEntry } from "@/server/db/schema";
 import { run, undoToast } from "@/modules/todos/components/run-action";
@@ -49,6 +51,7 @@ import { SPEND_LABEL_NAMES } from "../categories";
 import { EntriesBreakdown, EntriesOverview, type Breakdown } from "./entries-overview";
 import { EntrySheet } from "./entry-sheet";
 import { usePending, useQueryUpdate } from "./pending";
+import { money } from "./summary-sum";
 import { useLogTransaction } from "./transaction-launcher";
 
 export type { Breakdown };
@@ -71,6 +74,10 @@ export type EntriesViewProps = {
   /** Total and count of every entry in the period, before filters. */
   periodTotalMinor: number;
   periodCount: number;
+  /** Income: up or down against the month before. */
+  change?: { diffMinor: number; month: number } | null;
+  /** Investments: the period's net savings and what is left after investing. */
+  savings?: { netSavingsMinor: number; leftMinor: number } | null;
   /** Categories that appear in the period (for the filter chips). */
   categoriesUsed: string[];
   /** Whether any expense in the period has a need or want label (shows the label chips). */
@@ -94,6 +101,9 @@ export function EntriesView(props: EntriesViewProps) {
   // The sheet here edits; adding goes through the shared "Log a transaction" launcher.
   const [sheet, setSheet] = useState<{ open: boolean; entry?: FinanceEntry }>({ open: false });
   const launcher = useLogTransaction();
+  const router = useRouter();
+  const pathname = usePathname();
+  const search = useSearchParams();
   const [, startTransition] = useTransition();
   // Deletes and "mark paid" show at once; the server's answer replaces them a moment later.
   const [shown, change] = useOptimistic(entries, (list, c: Change) =>
@@ -130,7 +140,7 @@ export function EntriesView(props: EntriesViewProps) {
 
   return (
     // Phone order: total, list, breakdown. Wide screens: total and breakdown on the left, list on the right.
-    <div className="dash grid gap-4 pb-20 xl:grid-cols-12 xl:grid-rows-[auto_1fr] xl:items-start">
+    <div className="dash grid gap-3 pb-20 md:gap-4 xl:grid-cols-12 xl:grid-rows-[auto_1fr] xl:items-start">
       <h2 className="sr-only">
         {label.tab} in {periodLabel}
       </h2>
@@ -140,14 +150,23 @@ export function EntriesView(props: EntriesViewProps) {
         periodLabel={periodLabel}
         totalMinor={props.periodTotalMinor}
         count={props.periodCount}
+        change={props.change ?? null}
+        savings={props.savings ?? null}
         fmt={fmt}
         onAdd={openNew}
         className="xl:col-span-4 xl:row-start-1"
       />
 
+      <EntriesBreakdown
+        kind={kind}
+        breakdown={props.breakdown}
+        fmt={fmt}
+        className="xl:col-span-4 xl:row-start-2"
+      />
+
       <section
         aria-labelledby="entries-title"
-        className="min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-5 shadow-(--dash-card-shadow) sm:p-5 md:rounded-3xl text-dash-ink md:p-6 xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
+        className="min-w-0 rounded-2xl border border-dash-edge bg-dash-card px-4 py-4 shadow-(--dash-card-shadow) sm:p-5 md:rounded-3xl text-dash-ink xl:col-span-8 xl:col-start-5 xl:row-span-2 xl:row-start-1"
       >
         <h3 id="entries-title" className="sr-only">
           Entries
@@ -165,7 +184,7 @@ export function EntriesView(props: EntriesViewProps) {
           )}
           result={
             filtered
-              ? `${shown.length} of ${props.periodCount} shown · ${formatMoney(shownTotal, currency, locale)}`
+              ? `${shown.length} of ${props.periodCount} shown · ${money(shownTotal, fmt)}`
               : null
           }
         />
@@ -180,7 +199,12 @@ export function EntriesView(props: EntriesViewProps) {
                 : null
             }
             periodLabel={periodLabel}
-            onAdd={openNew}
+            onAdd={() => launcher.open(kind, filters.day ?? undefined)}
+            onClearDay={() => {
+              const query = new URLSearchParams(search.toString());
+              query.delete("day");
+              router.replace(`${pathname}?${query.toString()}`, { scroll: false });
+            }}
           />
         ) : (
           // A new period or filter is a new list: it appears without replaying row animations.
@@ -197,12 +221,6 @@ export function EntriesView(props: EntriesViewProps) {
           />
         )}
       </section>
-
-      <EntriesBreakdown
-        breakdown={props.breakdown}
-        fmt={fmt}
-        className="xl:col-span-4 xl:row-start-2"
-      />
 
       <EntrySheet
         formKey={sheet.entry?.id ?? "none"}
@@ -226,6 +244,12 @@ export function EntriesView(props: EntriesViewProps) {
 
 /* ------------------------------------------------------------------------------------------ */
 /* Toolbar: search, sort, and the category chips. Every choice lives in the address.          */
+
+const ALL_CATEGORIES = "__all";
+const chipClass =
+  "inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-9";
+const chipOn = "bg-dash-ink font-semibold text-dash-card";
+const chipOff = "bg-dash-well text-dash-ink hover:bg-dash-edge";
 
 function Toolbar({
   kind,
@@ -304,7 +328,7 @@ function Toolbar({
             autoComplete="off"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search"
+            placeholder="Search items and notes"
             maxLength={100}
             className="h-11 w-full rounded-full bg-dash-well pr-10 pl-10 text-base text-dash-ink outline-none placeholder:text-dash-ink-soft focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:text-sm [&::-webkit-search-cancel-button]:hidden"
           />
@@ -323,28 +347,6 @@ function Toolbar({
             </button>
           ) : null}
         </form>
-
-        <Select
-          value={sort}
-          onValueChange={(v) => {
-            const next = v as EntrySort;
-            update({ sort: next === "newest" ? null : next }, () => setSort(next));
-          }}
-        >
-          <SelectTrigger
-            aria-label="Sort by"
-            className="h-11! shrink-0 gap-1.5 rounded-full border-dash-edge bg-dash-card px-3.5 text-sm text-dash-ink md:h-9! dark:bg-dash-card"
-          >
-            <SelectValue>{SORT_LABELS[sort]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent align="end">
-            {SORTS.map((s) => (
-              <SelectItem key={s} value={s}>
-                {SORT_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {filters.day ? (
@@ -362,63 +364,98 @@ function Toolbar({
         </div>
       ) : null}
 
-      {showLabels ? (
-        <div role="group" aria-label="Need or want" className="flex gap-2">
-          {([null, "need", "want"] as const).map((l) => {
-            const active = spendLabel === l;
-            return (
-              <button
-                key={l ?? "any"}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  if (active) return;
-                  update({ label: l }, () => setSpendLabel(l));
-                }}
-                className={cn(
-                  "h-11 shrink-0 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-8",
-                  active
-                    ? "bg-dash-ink text-dash-card"
-                    : "bg-dash-well text-dash-ink hover:bg-dash-edge",
-                )}
-              >
-                {l ? SPEND_LABEL_NAMES[l].plural : "Any"}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {categories.length > 1 || category ? (
-        <div
-          role="group"
-          aria-label="Category"
-          className="dash-fade-x no-scrollbar -mx-4 flex gap-2 overflow-x-auto overscroll-x-contain px-4 sm:-mx-5 sm:px-5 md:-mx-6 md:px-6"
+      <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        {showLabels
+          ? ([null, "need", "want"] as const).map((l) => {
+              const active = spendLabel === l;
+              return (
+                <button
+                  key={l ?? "any"}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    if (active) return;
+                    update({ label: l }, () => setSpendLabel(l));
+                  }}
+                  className={cn(chipClass, active ? chipOn : chipOff)}
+                >
+                  {active ? <Check aria-hidden className="size-3.5" strokeWidth={2.5} /> : null}
+                  {l ? SPEND_LABEL_NAMES[l].plural : "All"}
+                </button>
+              );
+            })
+          : null}
+        {kind === "investment" && (categories.length > 1 || category)
+          ? [null, ...categories].map((c) => {
+              const active = category === c;
+              return (
+                <button
+                  key={c ?? "all"}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => {
+                    if (active) return;
+                    update({ cat: c }, () => setCategory(c));
+                  }}
+                  className={cn(chipClass, active ? chipOn : chipOff)}
+                >
+                  {active ? <Check aria-hidden className="size-3.5" strokeWidth={2.5} /> : null}
+                  {c ?? "All types"}
+                </button>
+              );
+            })
+          : null}
+        {kind !== "investment" && (categories.length > 1 || category) ? (
+          <Select
+            value={category ?? ALL_CATEGORIES}
+            onValueChange={(v) => {
+              const next = v === ALL_CATEGORIES ? null : v;
+              update({ cat: next }, () => setCategory(next));
+            }}
+          >
+            <SelectTrigger
+              aria-label="Category"
+              className={cn(
+                "h-11! shrink-0 gap-1.5 rounded-full px-3.5 text-[13px] font-medium md:h-9!",
+                category
+                  ? "border-dash-ink bg-dash-well text-dash-ink"
+                  : "border-dash-edge bg-dash-card text-dash-ink dark:bg-dash-card",
+              )}
+            >
+              <SelectValue>{category ?? "Category"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_CATEGORIES}>{anyLabel}</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
+        <Select
+          value={sort}
+          onValueChange={(v) => {
+            const next = v as EntrySort;
+            update({ sort: next === "newest" ? null : next }, () => setSort(next));
+          }}
         >
-          {[null, ...categories].map((c) => {
-            const active = category === c;
-            return (
-              <button
-                key={c ?? "all"}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  if (active) return;
-                  update({ cat: c }, () => setCategory(c));
-                }}
-                className={cn(
-                  "h-11 shrink-0 rounded-full px-3.5 text-[13px] font-medium whitespace-nowrap outline-none transition-[transform,background-color,color] duration-150 ease-snap focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-8",
-                  active
-                    ? "bg-dash-ink text-dash-card"
-                    : "bg-dash-well text-dash-ink hover:bg-dash-edge",
-                )}
-              >
-                {c ?? anyLabel}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+          <SelectTrigger
+            aria-label="Sort by"
+            className="h-11! shrink-0 gap-1.5 rounded-full border-dash-edge bg-dash-card px-3.5 text-[13px] font-medium text-dash-ink md:h-9! dark:bg-dash-card"
+          >
+            <SelectValue>{SORT_LABELS[sort]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent align="end">
+            {SORTS.map((s) => (
+              <SelectItem key={s} value={s}>
+                {SORT_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <div aria-live="polite" className="min-h-0 text-[13px] text-dash-ink-soft empty:hidden">
         {result ? (
@@ -505,14 +542,9 @@ function EntryList({
             transition={ROW_MOTION}
             className="overflow-hidden"
           >
-            <div className="flex items-baseline justify-between gap-3 pt-4 pb-1 md:pr-12">
-              <h4 className="text-[13px] font-medium text-dash-ink-soft">
-                {formatDayHeading(group.date, today, fmt.locale)}
-              </h4>
-              <span className="figures text-xs text-dash-ink-soft">
-                {formatMoney(group.totalMinor, fmt.currency, fmt.locale)}
-              </span>
-            </div>
+            <h4 className="pt-4 pb-1 text-[13px] font-semibold text-dash-ink">
+              {formatRowDay(group.date, today, fmt.locale)}
+            </h4>
             <ul>
               <AnimatePresence initial={false}>
                 {group.entries.map((e) => row(e, false))}
@@ -576,7 +608,7 @@ function EntryRow({
       </span>
 
       <div className="pointer-events-none min-w-0 flex-1">
-        <p data-entry-title className="truncate text-sm font-medium">
+        <p data-entry-title className="truncate text-[15px] font-medium md:text-sm">
           {entry.title}
         </p>
         <p className="flex items-center gap-1.5 text-[13px] text-dash-ink-soft">
@@ -588,32 +620,29 @@ function EntryRow({
             </>
           ) : null}
         </p>
+        {state ? (
+          <span className="mt-1 flex">
+            <EmiStatusPill state={state} />
+          </span>
+        ) : null}
       </div>
 
-      <div className="pointer-events-none flex shrink-0 flex-col items-end gap-1">
-        <span className="figures text-sm font-medium">
-          {formatAmount(entry.amountMinor, fmt.currency, fmt.locale)}
+      <div className="flex shrink-0 flex-col items-end gap-1.5">
+        <span className="pointer-events-none font-mono text-sm font-medium tabular-nums">
+          {money(entry.amountMinor, fmt)}
         </span>
-        {state ? <EmiStatusPill state={state} /> : null}
+        {unpaid ? (
+          <button
+            type="button"
+            aria-label={`Mark paid: ${entry.title}`}
+            onClick={() => onMarkPaid(entry)}
+            className="relative inline-flex h-9 items-center gap-1 rounded-full bg-dash-ink px-3 text-[12px] font-semibold text-dash-card outline-none transition-[transform,background-color] duration-150 ease-snap hover:bg-dash-ink/85 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] md:h-8"
+          >
+            <Check aria-hidden className="size-3.5" strokeWidth={2.5} />
+            Mark paid
+          </button>
+        ) : null}
       </div>
-
-      {/* EMIs keep a fixed slot for "Mark paid", so every amount lines up in one column. */}
-      {state ? (
-        <div className="hidden w-28 shrink-0 justify-end md:flex">
-          {unpaid ? (
-            <DashButton
-              variant="secondary"
-              size="sm"
-              className="relative"
-              aria-label={`Mark paid: ${entry.title}`}
-              onClick={() => onMarkPaid(entry)}
-            >
-              <CheckCircle2 />
-              Mark paid
-            </DashButton>
-          ) : null}
-        </div>
-      ) : null}
 
       <RowMenu
         entry={entry}
@@ -666,8 +695,8 @@ function RowMenu({
 const PILL: Record<EmiState, { label: string; icon: typeof Clock; tone: string }> = {
   paid: { label: "Paid", icon: CheckCircle2, tone: "bg-dash-good-bg text-dash-good" },
   overdue: { label: "Overdue", icon: AlertTriangle, tone: "bg-dash-bad-bg text-dash-bad" },
-  delayed: { label: "Delayed", icon: AlertTriangle, tone: "bg-dash-bad-bg text-dash-bad" },
-  scheduled: { label: "Scheduled", icon: Clock, tone: "bg-dash-well text-dash-ink-soft" },
+  delayed: { label: "Delayed", icon: AlertTriangle, tone: "bg-dash-warn-bg text-dash-warn" },
+  scheduled: { label: "Scheduled", icon: Clock, tone: "bg-dash-well text-dash-ink" },
 };
 
 /** Icon and word, never colour alone (docs/design.md §6). */
@@ -676,7 +705,7 @@ function EmiStatusPill({ state }: { state: EmiState }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+        "inline-flex h-5 items-center gap-1 rounded-full px-2 text-[11px] font-semibold",
         tone,
       )}
     >
@@ -692,6 +721,7 @@ function EmptyState({
   dayOnly,
   periodLabel,
   onAdd,
+  onClearDay,
 }: {
   kind: EntryKind;
   filtered: boolean;
@@ -699,25 +729,31 @@ function EmptyState({
   dayOnly: string | null;
   periodLabel: string;
   onAdd: () => void;
+  onClearDay: () => void;
 }) {
   const label = KIND_LABELS[kind];
   if (dayOnly) {
+    const spending = kind === "expense";
     return (
-      <div className="flex flex-col items-center px-4 py-12 text-center">
+      <div className="flex flex-col items-center px-4 py-10 text-center">
         <span
           aria-hidden
-          className="mb-4 grid size-12 place-items-center rounded-full bg-dash-well text-dash-good"
+          className="mb-4 grid size-12 place-items-center rounded-full bg-dash-well text-dash-ink"
         >
-          <CategoryIcon kind={kind} category="" className="size-5" strokeWidth={1.75} />
+          <Leaf className="size-5" strokeWidth={1.75} />
         </span>
-        <p className="font-medium text-balance">
-          No {label.plural} on {dayOnly}
+        <p className="font-display text-xl font-semibold text-balance">
+          {spending ? "No-spend day." : `Nothing on ${dayOnly}.`}
         </p>
         <p className="mt-1 max-w-xs text-sm text-pretty text-dash-ink-soft">
-          {kind === "expense"
-            ? "A no-spend day. Tap the date above to see the whole month."
-            : "Tap the date above to see the whole month."}
+          {spending ? "Nothing went out. Nicely done." : `No ${label.plural} that day.`}
         </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <DashButton variant="secondary" onClick={onClearDay}>
+            See all of {periodLabel.split(" ")[0]}
+          </DashButton>
+          <DashButton onClick={onAdd}>Log for this day</DashButton>
+        </div>
       </div>
     );
   }

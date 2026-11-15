@@ -331,3 +331,20 @@ export async function emiStatusTotals(
     .groupBy(financeEntries.status);
   return rows.flatMap((r) => (r.status ? [{ ...r, status: r.status }] : []));
 }
+
+/** EMIs not yet paid that fall due between two days (the Tasks overview's week grid). */
+export function emisDueBetween(userId: string, from: string, to: string): Promise<FinanceEntry[]> {
+  return db
+    .select()
+    .from(financeEntries)
+    .where(
+      and(
+        live(userId),
+        eq(financeEntries.kind, "emi"),
+        sql`${financeEntries.status} <> 'paid'`,
+        gte(financeEntries.entryDate, from),
+        lte(financeEntries.entryDate, to),
+      ),
+    )
+    .orderBy(asc(financeEntries.entryDate));
+}

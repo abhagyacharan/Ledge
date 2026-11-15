@@ -1,15 +1,9 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { addMonthsIso, addDaysIso } from "@/lib/dates";
 import {
@@ -41,33 +35,85 @@ const END_PRESETS: { value: string; label: string; from: (start: string) => stri
   { value: "3months", label: "After 3 months", from: (s) => addMonthsIso(s, 3) },
 ];
 const ENDS_NEVER = "never";
-const ENDS_DATE = "date";
 
-const FREQS: { value: Freq; label: string; unit: [string, string] }[] = [
-  { value: "daily", label: "Every day", unit: ["day", "days"] },
-  { value: "weekly", label: "Every week", unit: ["week", "weeks"] },
-  { value: "monthly", label: "Every month", unit: ["month", "months"] },
-  { value: "yearly", label: "Every year", unit: ["year", "years"] },
+const FREQS: { value: Freq; unit: [string, string] }[] = [
+  { value: "daily", unit: ["day", "days"] },
+  { value: "weekly", unit: ["week", "weeks"] },
+  { value: "monthly", unit: ["month", "months"] },
+  { value: "yearly", unit: ["year", "years"] },
 ];
+const WORKDAYS: Weekday[] = ["MO", "TU", "WE", "TH", "FR"];
 const WEEKDAY_LABELS: Record<Weekday, [string, string]> = {
-  MO: ["Mon", "Monday"],
-  TU: ["Tue", "Tuesday"],
-  WE: ["Wed", "Wednesday"],
-  TH: ["Thu", "Thursday"],
-  FR: ["Fri", "Friday"],
-  SA: ["Sat", "Saturday"],
-  SU: ["Sun", "Sunday"],
+  MO: ["M", "Monday"],
+  TU: ["T", "Tuesday"],
+  WE: ["W", "Wednesday"],
+  TH: ["T", "Thursday"],
+  FR: ["F", "Friday"],
+  SA: ["S", "Saturday"],
+  SU: ["S", "Sunday"],
 };
-const MODE_LABELS: Record<RecurrenceMode, string> = {
-  fixed: "Follows the schedule",
-  after_completion: "Counts from when I finish it",
-};
-const NONE = "none";
+
+type Preset = "daily" | "weekdays" | "weekly" | "monthly" | "yearly" | "custom";
+const PRESETS: { value: Preset; label: string }[] = [
+  { value: "daily", label: "Daily" },
+  { value: "weekdays", label: "Weekdays" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "yearly", label: "Yearly" },
+  { value: "custom", label: "Every N…" },
+];
+
+/** Which chip a stored rule matches. */
+function presetOf(rule: Rule | null): Preset | null {
+  if (!rule) return null;
+  if (rule.interval > 1) return "custom";
+  if (
+    rule.freq === "weekly" &&
+    rule.byDay.length === WORKDAYS.length &&
+    WORKDAYS.every((d) => rule.byDay.includes(d))
+  )
+    return "weekdays";
+  return rule.freq;
+}
+
+const chip =
+  "inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-[14px] font-medium whitespace-nowrap outline-none transition-[background-color,color,transform] duration-150 ease-snap focus-visible:shadow-[0_0_0_2px_var(--dash-card),0_0_0_4px_var(--dash-ink)] active:scale-[0.97] md:h-9 md:text-[13px]";
+
+function Chip({
+  on,
+  onClick,
+  children,
+}: {
+  on: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      onClick={onClick}
+      className={cn(
+        chip,
+        on
+          ? "bg-dash-ink font-semibold text-dash-card"
+          : "bg-dash-well text-dash-ink hover:bg-dash-edge",
+      )}
+    >
+      {on ? <Check aria-hidden className="size-3.5" strokeWidth={2.5} /> : null}
+      {children}
+    </button>
+  );
+}
+
+const sub = "text-[12px] font-medium text-dash-ink-soft";
 
 /**
- * The Repeat controls in the task drawer (CLAUDE.md §6.2). Choose how often, optionally every N
- * days, weeks, months or years and on which weekdays, and whether the next date follows the
- * schedule or counts from the day the task is finished. Every change saves at once.
+ * The Repeat editor (docs/new_design.md screen 2f, CLAUDE.md §6.2): a sentence that restates the
+ * rule, then chips for how often (tap the chosen one again to stop repeating), the weekdays,
+ * whether the next date follows the schedule or counts from when you finish it, and when it ends.
+ * "Every N…" swaps in a number and a days/weeks/months choice. Every change saves at once.
  */
 export function RepeatField({
   rule: stored,
@@ -76,6 +122,7 @@ export function RepeatField({
   dueDate,
   today,
   onChange,
+  locale = "en-IN",
 }: {
   rule: string | null;
   mode: RecurrenceMode;
@@ -84,23 +131,30 @@ export function RepeatField({
   dueDate: string | null;
   today: string;
   onChange: (change: RepeatChange) => void;
+  locale?: string;
 }) {
   const rule = stored ? parseRule(stored) : null;
+  const preset = presetOf(rule);
   const base = dueDate ?? today;
-  const [interval, setInterval_] = useState(String(rule?.interval ?? 1));
-  const [seen, setSeen] = useState(rule?.interval ?? 1);
-  if ((rule?.interval ?? 1) !== seen) {
-    setSeen(rule?.interval ?? 1);
-    setInterval_(String(rule?.interval ?? 1));
+  const [interval, setInterval_] = useState(String(rule?.interval ?? 2));
+  const [seen, setSeen] = useState(rule?.interval ?? 2);
+  if ((rule?.interval ?? 2) !== seen) {
+    setSeen(rule?.interval ?? 2);
+    setInterval_(String(rule?.interval ?? 2));
   }
 
   function apply(next: Rule, extra: RepeatChange = {}) {
     onChange({ recurrenceRule: formatRule(next), ...(dueDate ? {} : { dueDate: base }), ...extra });
   }
 
-  function chooseFreq(value: string) {
-    if (value === NONE) return onChange({ recurrenceRule: null });
-    apply(ruleFor(value as Freq, base, rule?.interval ?? 1));
+  function choose(value: Preset) {
+    // Tapping the chosen chip again stops the repeat (docs/new_design.md §4).
+    if (value === preset) return onChange({ recurrenceRule: null });
+    if (value === "custom") {
+      return apply(ruleFor(rule?.freq ?? "daily", base, Math.max(2, rule?.interval ?? 2)));
+    }
+    if (value === "weekdays") return apply({ ...ruleFor("weekly", base, 1), byDay: WORKDAYS });
+    apply(ruleFor(value, base, 1));
   }
 
   function commitInterval() {
@@ -121,115 +175,144 @@ export function RepeatField({
     apply({ ...rule, byDay: WEEKDAYS.filter((d) => next.includes(d)) });
   }
 
-  const unit = FREQS.find((f) => f.value === rule?.freq)?.unit ?? ["day", "days"];
+  const endPreset = until ? END_PRESETS.find((p) => p.from(base) === until)?.value : ENDS_NEVER;
+  const untilLabel = until
+    ? new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(
+        new Date(`${until}T00:00:00Z`),
+      )
+    : null;
 
   return (
-    <div className="flex flex-col gap-3">
-      <Select value={rule?.freq ?? NONE} onValueChange={chooseFreq}>
-        <SelectTrigger id="task-repeat" className="h-11 w-full md:h-8">
-          <SelectValue>
-            {rule ? FREQS.find((f) => f.value === rule.freq)?.label : "Does not repeat"}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={NONE}>Does not repeat</SelectItem>
-          {FREQS.map((f) => (
-            <SelectItem key={f.value} value={f.value}>
-              {f.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="flex flex-col gap-4">
+      <p className="text-[13px] text-dash-ink-soft" aria-live="polite">
+        {rule
+          ? `${describeRule(rule, mode)}${untilLabel ? ` until ${untilLabel}` : ""}`
+          : "Does not repeat. Pick how often."}
+      </p>
+
+      <div role="radiogroup" aria-label="How often" className="flex flex-wrap gap-2">
+        {PRESETS.map((p) => (
+          <Chip key={p.value} on={preset === p.value} onClick={() => choose(p.value)}>
+            {p.label}
+          </Chip>
+        ))}
+      </div>
+
+      {rule && preset === "custom" ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor="task-repeat-interval" className="text-[13px]">
+            Every
+          </Label>
+          <Input
+            id="task-repeat-interval"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_INTERVAL}
+            value={interval}
+            onChange={(e) => setInterval_(e.target.value)}
+            onBlur={commitInterval}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            className="h-11 w-20 rounded-xl bg-dash-well md:h-9"
+          />
+          <div role="radiogroup" aria-label="Unit" className="flex flex-wrap gap-1.5">
+            {FREQS.filter((f) => f.value !== "yearly").map((f) => (
+              <Chip
+                key={f.value}
+                on={rule.freq === f.value}
+                onClick={() => apply(ruleFor(f.value, base, rule.interval))}
+              >
+                {rule.interval === 1 ? f.unit[0] : f.unit[1]}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {rule && rule.freq === "weekly" ? (
+        <div className="flex flex-col gap-2">
+          <p className={sub}>On</p>
+          <div role="group" aria-label="Repeat on" className="flex flex-wrap gap-1.5">
+            {WEEKDAYS.map((day) => {
+              const on = (rule.byDay.length > 0 ? rule.byDay : [WEEKDAYS[0]]).includes(day);
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={WEEKDAY_LABELS[day][1]}
+                  onClick={() => toggleDay(day)}
+                  className={cn(
+                    "grid size-11 place-items-center rounded-full text-[13px] font-semibold outline-none transition-colors duration-150 focus-visible:shadow-[0_0_0_2px_var(--dash-card),0_0_0_4px_var(--dash-ink)] md:size-10",
+                    on ? "bg-dash-ink text-dash-card" : "border border-dash-edge text-dash-ink",
+                  )}
+                >
+                  {WEEKDAY_LABELS[day][0]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {rule ? (
-        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Label htmlFor="task-repeat-interval">Repeat every</Label>
-            <Input
-              id="task-repeat-interval"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={MAX_INTERVAL}
-              value={interval}
-              onChange={(e) => setInterval_(e.target.value)}
-              onBlur={commitInterval}
-              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-              className="h-11 w-20 md:h-8"
-            />
-            <span>{rule.interval === 1 ? unit[0] : unit[1]}</span>
-          </div>
-
-          {rule.freq === "weekly" ? (
-            <div role="group" aria-label="Repeat on" className="flex flex-wrap gap-1">
-              {WEEKDAYS.map((day) => {
-                const on = (rule.byDay.length > 0 ? rule.byDay : [WEEKDAYS[0]]).includes(day);
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    aria-pressed={on}
-                    title={WEEKDAY_LABELS[day][1]}
-                    onClick={() => toggleDay(day)}
-                    className={cn(
-                      "h-11 w-11 rounded-md border text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:w-11",
-                      on
-                        ? "border-transparent bg-primary text-primary-foreground"
-                        : "bg-background hover:bg-accent",
-                    )}
-                  >
-                    {WEEKDAY_LABELS[day][0]}
-                  </button>
-                );
-              })}
+        <>
+          <div className="flex flex-col gap-2">
+            <p className={sub}>Next one counts from</p>
+            <div
+              role="radiogroup"
+              aria-label="Next one counts from"
+              className="grid grid-cols-2 gap-1 rounded-full bg-dash-well p-1"
+            >
+              {(
+                [
+                  ["fixed", "Fixed schedule"],
+                  ["after_completion", "When I complete it"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === value}
+                  onClick={() => onChange({ recurrenceMode: value })}
+                  className={cn(
+                    "inline-flex h-10 items-center justify-center gap-1.5 rounded-full text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8",
+                    mode === value
+                      ? "bg-dash-raised font-semibold text-dash-ink shadow-(--dash-lift)"
+                      : "text-dash-ink-soft",
+                  )}
+                >
+                  {mode === value ? <Check aria-hidden className="size-3.5" /> : null}
+                  {label}
+                </button>
+              ))}
             </div>
-          ) : null}
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="task-repeat-mode">Next date</Label>
-            <Select
-              value={mode}
-              onValueChange={(v) => onChange({ recurrenceMode: v as RecurrenceMode })}
-            >
-              <SelectTrigger id="task-repeat-mode" className="h-11 w-full md:h-8">
-                <SelectValue>{MODE_LABELS[mode]}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(MODE_LABELS) as RecurrenceMode[]).map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {MODE_LABELS[m]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="task-repeat-ends">Ends</Label>
-            <Select
-              value={until ? ENDS_DATE : ENDS_NEVER}
-              onValueChange={(v) => {
-                if (v === ENDS_NEVER) return onChange({ recurrenceUntil: null });
-                if (v === ENDS_DATE)
-                  return onChange({ recurrenceUntil: until ?? addMonthsIso(base, 1) });
-                const preset = END_PRESETS.find((p) => p.value === v);
-                if (preset) onChange({ recurrenceUntil: preset.from(base) });
-              }}
-            >
-              <SelectTrigger id="task-repeat-ends" className="h-11 w-full md:h-8">
-                <SelectValue>{until ? "On a date" : "Never"}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ENDS_NEVER}>Never</SelectItem>
-                {END_PRESETS.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    {p.label}
-                  </SelectItem>
-                ))}
-                <SelectItem value={ENDS_DATE}>On a date</SelectItem>
-              </SelectContent>
-            </Select>
-            {until ? (
+            <p className={sub}>Ends</p>
+            <div role="radiogroup" aria-label="Ends" className="flex flex-wrap gap-2">
+              <Chip on={!until} onClick={() => onChange({ recurrenceUntil: null })}>
+                Never
+              </Chip>
+              {END_PRESETS.map((p) => (
+                <Chip
+                  key={p.value}
+                  on={endPreset === p.value}
+                  onClick={() => onChange({ recurrenceUntil: p.from(base) })}
+                >
+                  {p.value === "week" ? p.label : p.label.replace("After ", "")}
+                </Chip>
+              ))}
+              <Chip
+                on={Boolean(until) && endPreset === undefined}
+                onClick={() => onChange({ recurrenceUntil: until ?? addMonthsIso(base, 2) })}
+              >
+                {until && endPreset === undefined ? `On ${untilLabel}` : "On a date"}
+              </Chip>
+            </div>
+            {until && endPreset === undefined ? (
               <Input
                 id="task-repeat-until"
                 type="date"
@@ -240,17 +323,11 @@ export function RepeatField({
                   const next = e.target.value;
                   if (next && next >= base) onChange({ recurrenceUntil: next });
                 }}
-                className="h-11 md:h-8"
+                className="h-11 w-fit rounded-xl bg-dash-well md:h-9"
               />
             ) : null}
           </div>
-
-          <p className="text-xs text-muted-foreground" aria-live="polite">
-            {describeRule(rule, mode)}
-            {until ? ` until ${until}` : ""}. When you tick it, a finished copy goes to Completed
-            and the due date moves on.
-          </p>
-        </div>
+        </>
       ) : null}
     </div>
   );

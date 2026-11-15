@@ -40,7 +40,7 @@ export function InlineAdd({
   }
 
   function openFullForm() {
-    const detail: QuickAddPrefill = { title, listId, dueDate };
+    const detail: QuickAddPrefill = { title, listId, dueDate, expanded: true };
     window.dispatchEvent(new CustomEvent(QUICK_ADD_EVENT, { detail }));
     setTitle("");
   }
@@ -51,9 +51,7 @@ export function InlineAdd({
       className="group/add -mx-2 mt-1 flex items-center gap-0.5 rounded-xl px-1 transition-colors duration-150 focus-within:bg-dash-well/70"
     >
       <span className="grid size-11 shrink-0 place-items-center text-dash-ink-soft md:size-9">
-        <span className="grid size-5 place-items-center rounded-full border-[1.5px] border-dashed border-dash-ink-soft/60">
-          <Plus className="size-3" aria-hidden strokeWidth={2.5} />
-        </span>
+        <Plus className="size-4" aria-hidden strokeWidth={2} />
       </span>
       <input
         ref={inputRef}

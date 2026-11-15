@@ -10,6 +10,8 @@ export type QuickAddPrefill = {
   title?: string;
   listId?: string;
   dueDate?: string | null;
+  /** Show every field at once (the inline field's "More options"). */
+  expanded?: boolean;
 };
 
 /** Opens the global quick-add form. Used as the action in empty states. */

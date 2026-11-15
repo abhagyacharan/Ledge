@@ -18,12 +18,15 @@ import {
 import { getUserSettings } from "@/server/data/settings";
 import {
   createTask,
+  duplicateTask,
+  restoreTaskVisibly,
   getListTasks,
   getTask,
   getTaskDetail,
   moveTaskToList,
   restoreTask,
   setTaskDone,
+  trashListKeepingTasks,
   trashTask,
   updateTask,
 } from "@/server/data/tasks";
@@ -314,5 +317,82 @@ describe("task detail", () => {
         .from(tasks)
         .where(and(eq(tasks.parentId, parent.id), eq(tasks.userId, a.id))),
     ).toHaveLength(3);
+  });
+});
+
+describe("duplicating a task", () => {
+  it("copies its fields and subtasks into the same list, all open", async () => {
+    const list = await newList("Work");
+    const parent = await newTask(list.id, "Write report", {
+      notes: "Draft first",
+      priority: 2,
+      dueDate: "2026-11-20",
+    });
+    const sub = await newTask(list.id, "Outline", { parentId: parent.id });
+    await setTaskDone(a.id, sub.id, true);
+
+    const copy = await duplicateTask(a.id, parent.id);
+    expect(copy).toMatchObject({
+      title: "Write report (copy)",
+      notes: "Draft first",
+      priority: 2,
+      dueDate: "2026-11-20",
+      listId: list.id,
+      status: "open",
+    });
+    const detail = await getTaskDetail(a.id, copy?.id ?? "");
+    expect(detail?.subtasks.map((t) => [t.title, t.status])).toEqual([["Outline", "open"]]);
+  });
+
+  it("does nothing for someone else's task", async () => {
+    const b = await createUser("b@example.com", "B");
+    const task = await newTask((await newList()).id);
+    expect(await duplicateTask(b.id, task.id)).toBeNull();
+  });
+});
+
+describe("deleting a list but keeping its tasks", () => {
+  it("moves every task, with its subtasks, to General, then trashes the list", async () => {
+    const list = await newList("Home");
+    const inbox = await getInbox(a.id);
+    const parent = await newTask(list.id, "Fix tap");
+    await newTask(list.id, "Buy washer", { parentId: parent.id });
+    await newTask(list.id, "Paint door");
+
+    expect(await trashListKeepingTasks(a.id, list.id, inbox.id)).toBe(true);
+    expect(await getList(a.id, list.id)).toBeNull();
+    const moved = await getListTasks(a.id, inbox.id);
+    expect(moved.map((t) => t.title).sort()).toEqual(["Buy washer", "Fix tap", "Paint door"]);
+    const child = moved.find((t) => t.title === "Buy washer");
+    expect(child?.parentId).toBe(parent.id);
+  });
+
+  it("refuses General, and someone else's list", async () => {
+    const inbox = await getInbox(a.id);
+    const list = await newList();
+    expect(await trashListKeepingTasks(a.id, inbox.id, list.id)).toBe(false);
+    const b = await createUser("b@example.com", "B");
+    expect(await trashListKeepingTasks(b.id, list.id, inbox.id)).toBe(false);
+  });
+});
+
+describe("restoring a task from Trash", () => {
+  it("puts it back in its list, or in General when that list is in Trash too", async () => {
+    const list = await newList("Health");
+    const inbox = await getInbox(a.id);
+    const kept = await newTask(list.id, "Stretch");
+    await trashTask(a.id, kept.id);
+    expect(await restoreTaskVisibly(a.id, kept.id)).toMatchObject({
+      listId: list.id,
+      listName: "Health",
+      movedToGeneral: false,
+    });
+
+    const orphan = await newTask(list.id, "Run");
+    await trashTask(a.id, orphan.id);
+    await trashList(a.id, list.id);
+    const result = await restoreTaskVisibly(a.id, orphan.id);
+    expect(result).toMatchObject({ listId: inbox.id, movedToGeneral: true });
+    expect((await getTask(a.id, orphan.id))?.listId).toBe(inbox.id);
   });
 });

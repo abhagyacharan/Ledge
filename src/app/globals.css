@@ -57,6 +57,8 @@
   --color-dash-good-bg: var(--dash-good-bg);
   --color-dash-bad: var(--dash-bad);
   --color-dash-bad-bg: var(--dash-bad-bg);
+  --color-dash-warn: var(--dash-warn);
+  --color-dash-warn-bg: var(--dash-warn-bg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -186,6 +188,9 @@
   --dash-good-bg: #dcfce7;
   --dash-bad: #b42318;
   --dash-bad-bg: #fee4e2;
+  /* Delayed and medium priority (docs/new_design.md §2). */
+  --dash-warn: #92400e;
+  --dash-warn-bg: #fef3c7;
 }
 .dark,
 .dark .dash {
@@ -204,6 +209,8 @@
   --dash-good-bg: #14532d;
   --dash-bad: #fca5a5;
   --dash-bad-bg: #7f1d1d;
+  --dash-warn: #fcd34d;
+  --dash-warn-bg: #713f12;
 }
 
 @layer base {

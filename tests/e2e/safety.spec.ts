@@ -12,7 +12,12 @@ async function quickAdd(page: Page, title: string) {
   await page.keyboard.press("q");
   await page.getByLabel("Task", { exact: true }).fill(title);
   await page.keyboard.press("Enter");
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /^Added / })
+      .first(),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
 }
 
@@ -74,7 +79,7 @@ test("a deleted task can be undone, then restored or erased from the Trash scree
   await page.goto("/all");
   await quickAdd(page, "Trash me");
   await page.getByRole("link", { name: /^Trash me/ }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Move to Trash" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete", exact: true }).click();
 
   // Undo straight away: it comes back.
   await expect(toast(page)).toContainText("Task moved to Trash");
@@ -83,10 +88,10 @@ test("a deleted task can be undone, then restored or erased from the Trash scree
 
   // Delete it again and find it on the Trash screen.
   await page.getByRole("link", { name: /^Trash me/ }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Move to Trash" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete", exact: true }).click();
   await page.goto("/trash");
   await expect(page.getByText("Trash me")).toBeVisible();
-  await expect(page.getByText("Erased for good in 30 days.").first()).toBeVisible();
+  await expect(page.getByText(/^Removed for good/).first()).toBeVisible();
 
   // Restore it, then delete it for good (with a confirmation).
   await page.getByRole("button", { name: "Restore Trash me" }).click();
@@ -95,7 +100,7 @@ test("a deleted task can be undone, then restored or erased from the Trash scree
   await expect(page.getByRole("link", { name: /^Trash me/ })).toBeVisible();
 
   await page.getByRole("link", { name: /^Trash me/ }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Move to Trash" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete", exact: true }).click();
   await page.goto("/trash");
   await page.getByRole("button", { name: "Delete forever: Trash me" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete forever" }).click();
@@ -197,7 +202,8 @@ test("quick add understands a sentence: date, time, list and priority", async ({
   await input.press("Enter");
   await expect(
     page
-      .locator("[data-sonner-toast]", { hasText: "Added to Home, due tomorrow, 5:00 pm" })
+      .getByRole("status")
+      .filter({ hasText: /to Home, due tomorrow, 5:00 pm/ })
       .first(),
   ).toBeVisible();
   await page.keyboard.press("Escape");
@@ -215,17 +221,25 @@ test("quick add has every task field: date, priority, notes and repeat", async (
   await page.keyboard.press("q");
   const dialog = page.getByRole("dialog", { name: "Add a task" });
   await dialog.getByLabel("Task", { exact: true }).fill("Full form task");
+  await dialog.getByRole("button", { name: "More options" }).click();
 
   await dialog.getByRole("button", { name: /^Due date:/ }).click();
-  await page.getByRole("button", { name: "Tomorrow", exact: true }).click();
-  await page.keyboard.press("Escape"); // close the date popover, keep the dialog
+  // A quick choice closes the date picker straight away (docs/new_design.md screen 2e).
+  await page.getByRole("button", { name: /^Tomorrow/ }).click();
   await dialog.getByRole("radio", { name: "High" }).check();
   await dialog.getByLabel("Notes").fill("Written in quick add");
-  await dialog.locator("#task-repeat").click();
-  await page.getByRole("option", { name: "Every week" }).click();
+  await dialog
+    .getByRole("radiogroup", { name: "How often" })
+    .getByRole("radio", { name: "Weekly" })
+    .click();
   await expect(dialog.getByText(/^Every week on /)).toBeVisible();
   await dialog.getByRole("button", { name: "Add task" }).click();
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /^Added / })
+      .first(),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Everything arrived on the task.
@@ -233,7 +247,7 @@ test("quick add has every task field: date, priority, notes and repeat", async (
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByLabel("Priority")).toContainText("High");
   await expect(drawer.getByLabel("Notes")).toHaveValue("Written in quick add");
-  await expect(drawer.getByRole("button", { name: /^Due date: Tomorrow/ })).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Due date. Change." })).toContainText("Tomorrow");
   await expect(drawer.getByText(/^Every week on /)).toBeVisible();
 });
 

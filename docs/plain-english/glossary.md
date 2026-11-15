@@ -234,7 +234,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Tag.** A label you could stick on tasks, such as "bills". Removed on 2026-11-11; lists and priorities do the grouping now.
 
-**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Tasks, Expenses, Journal, Search, More), like a native app. In Ledge it is a floating, rounded pill.
+**Tab bar (bottom).** The bar along the bottom of a phone screen with the app's main parts (Home, Tasks, Expenses, Journal), like a native app. In Ledge it is a floating, rounded pill with the round + button beside it.
 
 **Tailwind CSS.** The styling system used for colours, spacing and text sizes.
 

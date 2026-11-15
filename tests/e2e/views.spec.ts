@@ -87,15 +87,13 @@ test("create a list, then drag-reorder its tasks with the keyboard", async ({ pa
 test("a list remembers how it is sorted", async ({ page }) => {
   await page.goto("/tasks");
   await page.getByRole("link", { name: "Home", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 2, name: "Home" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
 
-  await page.getByRole("button", { name: /^View/ }).click();
-  await page.getByLabel("Sort by").click();
+  await page.getByRole("button", { name: /^Sort by:/ }).click();
   // Saving is a server action (a POST to the page). Wait for it so the reload below sees it.
   const saved = page.waitForResponse((r) => r.request().method() === "POST" && r.ok());
-  await page.getByRole("option", { name: "Due date" }).click();
+  await page.getByRole("menuitemradio", { name: "Due date" }).click();
   await saved;
-  await page.keyboard.press("Escape");
 
   // Sorted by due date: the overdue "Pay rent" comes before "Fix the leaking tap".
   await expect.poll(() => visibleTitles(page)).toContain("Pay rent");
@@ -106,5 +104,5 @@ test("a list remembers how it is sorted", async ({ page }) => {
   await page.reload();
   await expect(page.getByText("Dragging works in manual order")).toBeVisible();
   await expect(page.getByRole("button", { name: /^Reorder/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^View/ })).toContainText("1");
+  await expect(page.getByRole("button", { name: "Sort by: Due date" })).toBeVisible();
 });

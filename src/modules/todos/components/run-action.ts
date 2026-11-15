@@ -18,7 +18,8 @@ export async function run<T>(
 }
 
 /** How long an Undo toast stays on screen (CLAUDE.md §6.2: about 5 seconds). */
-export const UNDO_MS = 5000;
+/** The undo window (docs/new_design.md §1: 6 seconds, paused on hover or focus). */
+export const UNDO_MS = 6000;
 
 /** Shows a toast with an Undo button that runs `undo`. */
 export function undoToast(message: string, undo: () => void) {

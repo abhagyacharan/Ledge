@@ -11,7 +11,12 @@ async function addTask(page: Page, title: string) {
   await page.keyboard.press("q");
   await page.getByLabel("Task", { exact: true }).fill(title);
   await page.keyboard.press("Enter");
-  await expect(page.locator("[data-sonner-toast]", { hasText: "Added to" }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: /^Added / })
+      .first(),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }

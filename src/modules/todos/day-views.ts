@@ -16,7 +16,7 @@ type DatedTask = {
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 /** Earlier time first (tasks with no time after timed ones), then higher priority, then manual order. */
-function byTimeThenPriority<T extends DatedTask>(a: T, b: T): number {
+export function byTimeThenPriority<T extends DatedTask>(a: T, b: T): number {
   return (
     compareTime(a.dueTime, b.dueTime) || b.priority - a.priority || byString(a.position, b.position)
   );
@@ -65,7 +65,13 @@ export function groupUpcoming<T extends DatedTask>(
     .map(([date, list]) => ({ date, tasks: list.sort(byTimeThenPriority) }));
 }
 
-export type Preview = { taskId: string; title: string; repeatText: string };
+export type Preview = {
+  taskId: string;
+  title: string;
+  repeatText: string;
+  dueTime?: string | null;
+  listName?: string;
+};
 
 /**
  * The days of Upcoming: real tasks plus the later dates of repeating tasks, merged by day and
