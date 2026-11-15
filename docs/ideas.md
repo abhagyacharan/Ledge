@@ -2,6 +2,10 @@
 
 Anything not in CLAUDE.md §1 or §6 goes here instead of being built. Add a line with the date and a short note. O decides what graduates into the spec.
 
+## Voice capture (specced 2026-11-15)
+
+Hold the + button and speak tasks and expenses; Groq Whisper plus a Groq language model; always reviewed before saving. Full spec and phase plan: `docs/voice-spec.md`. Waiting for O's go-ahead. Its "later" list (voice for existing tasks, new EMIs, journal dictation, spoken questions, auto-save, Hinglish, local Whisper) stays parked here until then.
+
 ## Roadmap after deployment (O's plan, 2026-11-13)
 
 Nothing here is built or scheduled yet. This is the order O wants once the app is running on the home server, so that each big change can be tried on his own phone while it is being built. Each item needs its own spec and O's go-ahead before work starts. The remaining Phase 10 items (export, bulk actions) are not placed in this order; O decides where they go.

@@ -595,3 +595,28 @@ Append-only log. Newest at the bottom. Format: date, decision, reason. See CLAUD
 - **Back links** follow where you came from: an Expense area narrowed to a day from the Journal says "‹ Journal, 10 Nov", and "Log for this day" starts the entry on that day.
 - **Command palette** follows screen 1f, with a "Search everything" row for the typed words.
 - **Skeletons** for task pages, Summary, entry areas and the Journal redrawn to the new layouts.
+
+## 2026-11-15: A little orange throughout (about 5%)
+
+O asked for the orange to show up across the app, tastefully. It goes only where it marks something, never as text on white (contrast), and the screen's one highlighted tile stays the only large orange area:
+
+- **The round + button** is filled orange from tablet width up, with `--dash-on-accent` for its icon: white in light, near-black in dark, so the icon passes 3:1. On phones it matches the tab bar beside it instead (card surface, edge, shadow, ink plus), at O's request the same day.
+- **Where you are:** the current page's icon in the sidebar is orange; the raised row and the label still say it without colour. On the phone tab bar the current tab instead swaps its line icon for a filled one (no orange; O, the same day): `src/components/shell/tab-icons.tsx` draws filled twins of Lucide's House, ListChecks, Wallet and NotebookPen on the same 24px grid, with inner details cut out by an SVG mask so they work in both themes. A module added later without a filled twin keeps its line icon.
+- **Done ticks** are orange (the small reward for finishing); priority rings keep red and amber.
+- **Focus rings** (`--ring`) are the deep orange `#cc420b` in light (4.8:1 on white) and `#f58445` in dark; the **text caret** in every field and **selected text** use the orange too.
+- **Underlined links** get an orange underline; the text stays ink.
+- **Undo in toasts** is orange text, which passes on the ink pill: `--dash-accent-on-ink` is `#f58445` on the dark pill (light theme) and `#a63409` on the light pill (dark theme).
+- **The Summary's bottom-line double rule** is orange, echoing the logo's rule.
+- **Smaller touches:** the highlighted row's icon in the command palette, and the icon circle on Home's module cards on hover.
+
+## 2026-11-15: Expense sheet rows on phones
+
+O's mockup for the expense sheet: after "N more" opens the categories, a **Show less** chip after the last one (Miscellaneous) folds them back. **Paid with** (was "Payment method") is one sideways-scrolling row of chips instead of wrapping lines. **Need or want** is a two-part bar with no heading (screen readers still get "Need or want"; tapping the chosen half again clears it) and shares one line with a **date pill** ("Today, 13 Nov", "Yesterday, 12 Nov", else "Wed 11 Nov") that opens the system date picker. The Today and Yesterday chips are gone from the expense sheet; Income, EMIs and Investments keep the date field as before.
+
+## 2026-11-15: Groq for voice capture (spec only)
+
+O chose **Groq** as the AI provider for voice capture: Groq's hosted Whisper (`whisper-large-v3-turbo`) for speech to text, and a Groq-hosted language model with strict structured outputs (`openai/gpt-oss-120b`, or `-20b` if the eval allows) to turn the transcript into actions. The full spec and a phase plan are in `docs/voice-spec.md`. Key choices: always review before saving, the server checks every field against the user's data, calls go through Ledge's server so the key never reaches the browser, no new dependency (plain `fetch` + Zod), audio and transcripts are not stored. This lifts the "AI features until O picks a provider" non-goal (CLAUDE.md §1) for voice capture only, and only once O approves the spec; nothing is built yet.
+
+## 2026-11-15: Quick add footer
+
+The Add a task sheet ends with the same pair of buttons as the transaction sheet: **Save task** (adds the task and closes the sheet; the confirmation and its Undo move to a toast) and **Save and add another** (adds it and keeps the sheet open, confirming inside it with Undo, as before). Enter in the task field still adds and keeps the sheet open (CLAUDE.md §6.2). The old "Stays open for the next task" line and the single "Add task" button are gone.

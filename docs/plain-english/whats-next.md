@@ -134,3 +134,17 @@ It is also a cheap way to test your bigger Odyssey idea: if you read the briefin
 - Glass by the skill you found, or by our own rules.
 - Whether the phone app stops at the installable website.
 - The licence.
+
+## Voice capture (planned 2026-11-15, not built)
+
+The idea: hold the round + button on your phone, say something like "spent 500 on petrol today" or "make a list called Photography with two tasks", let go, and the app fills everything in for you to check.
+
+How it would work, in plain words:
+
+- Your phone records your voice and sends it to Ledge's own server.
+- Ledge passes it to **Groq**, a company that runs AI models fast. First a speech-recognition model called **Whisper** turns the sound into words (a "transcript"). Then a **language model** (an AI that understands sentences) turns the words into a list of things to add: a task here, an expense there, with the category, payment method and date filled in where it can tell.
+- Ledge checks every detail against your real lists and EMIs, then shows you cards to look over. Nothing is saved until you tap **Add all**, and Undo works as usual.
+- Your recording and the words are not kept anywhere in Ledge. Groq's own rules decide what Groq keeps, so read those before switching it on.
+- It costs very little: speech-to-text is about a hundredth of a rupee per command, and the language model a similar tiny amount.
+
+The full plan, with every screen, rule and step, is in `docs/voice-spec.md`. It would be built as Phase 12 in about four to five days of work, but only after you approve the plan and create a Groq account and key.

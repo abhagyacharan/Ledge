@@ -213,3 +213,30 @@ I went through every screen on a phone, a tablet and a computer, in light and da
 - **Loading placeholders** now have the same shapes as the new screens, so nothing jumps when a page arrives.
 
 Checked: type checks, lint, formatting and all 486 unit and database tests (one new one for restoring into General, which found the bug above). **Not checked:** the browser tests did not run (pnpm is blocked on this computer); I updated them for the new sheet, palette and messages without running them.
+
+## A little orange (2026-11-15)
+
+The app was almost all black, white and grey. Now the orange from the logo shows up in a few small places, about a twentieth of what you see, so it feels like Ledge without getting loud:
+
+- The round **+** button is orange on a computer or tablet. On a phone it stays white (dark in dark mode), like the bar of tabs beside it.
+- On a computer, the icon of the page you are on is orange in the sidebar. On a phone, the bottom bar does not use orange: the tab you are on shows a solid (filled-in) version of its icon, and the others show outlines.
+- Ticking a task fills its circle orange.
+- The blinking text cursor, highlighted text and the outline that shows where the keyboard is (the "focus ring") are orange.
+- Underlined links have an orange underline.
+- **Undo** in the messages at the bottom is orange.
+- On the Expense Tracker summary, the double line above Net savings is orange, like the line under the L in the logo.
+- In Ctrl K the highlighted row's icon is orange, and on Home a section's round icon turns orange when you point at it.
+
+Orange is never used for text on a white background, because it is too pale to read there. Checked: type checks, lint, formatting and all 486 unit and database tests; looked at on a phone and a computer, light and dark. **Not checked:** the browser tests (pnpm is blocked on this computer).
+
+## The expense sheet, tidied (2026-11-15)
+
+- After you tap "6 more" to see every category, a **Show less** button at the end folds the list back.
+- The ways you paid (UPI, cash, cards and so on) sit in **one row you swipe sideways**, under the heading "Paid with".
+- **Need or want** and the **day** now sit side by side on one line. The day shows as "Today, 13 Nov"; tap it to pick another day from your phone's calendar. Tap Need or Want again to clear it, since it is optional.
+
+Only the expense sheet changed; income, EMIs and investments keep their date box with the Today and Yesterday buttons. Checked on a phone in light and dark. The browser tests were updated for the new "Paid with" heading but not run (pnpm is blocked on this computer).
+
+## Adding a task: two buttons (2026-11-15)
+
+The Add a task sheet now ends like the expense sheet, with two buttons. **Save task** adds it and closes the sheet; a message at the bottom says where it went, with Undo. **Save and add another** adds it and leaves the sheet open for the next one. Pressing Enter in the box still works like Save and add another.
