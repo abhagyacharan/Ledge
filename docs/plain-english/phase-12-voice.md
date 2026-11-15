@@ -1,6 +1,6 @@
 # Phase 12: Voice capture, in plain English
 
-_Built on 2026-11-15. Not yet tried with a real Groq key or on a real phone microphone; see "What is not checked yet" at the end._
+_Built on 2026-11-15. Tried with the real Groq key on 2026-11-16 (it works); not yet tried with a real phone microphone; see "What is not checked yet" at the end._
 
 ## What it is
 
@@ -22,6 +22,8 @@ When you do not say something, the usual default is used: tasks go to General wi
 
 ## Switching it on
 
+The key goes in `.env` (the private settings file), **never** in `.env.example` or `.env.production.example`: those two are templates that are saved in git and shared, so a key there would be published.
+
 Voice needs a **Groq API key** (a password-like code from your Groq account, at console.groq.com). It goes in the server's settings file (`.env`) as `GROQ_API_KEY`. Without a key, voice is simply off: the + button only taps, and no microphone buttons appear.
 
 Once the key is there, **Settings > Preferences** has a **Voice capture** switch, so you can turn it off for yourself at any time.
@@ -37,6 +39,7 @@ The microphone only works over HTTPS (the padlock in the address bar), which you
 ## Limits and costs
 
 - One recording can be up to a minute long.
+- On Groq's **free plan**, each AI model can take 8,000 "tokens" (pieces of words) a minute. One command uses about 1,900, so about four commands a minute fit. Used one at a time that is plenty; if you speak many in a row you may see "Voice is busy right now" for up to a minute. A paid Groq plan raises the limit.
 - Each person can make 20 voice requests a minute and 300 a day (the daily number can be changed with `VOICE_DAILY_LIMIT`). This stops a stuck button or a mistake from running up a bill.
 - One command can hold up to 10 things. More than that, and it asks you to say the rest in a second go.
 - Cost: speech-to-text is about $0.04 per hour of audio, with each request billed as at least 10 seconds, so roughly a hundredth of a rupee per command. The language model adds a similarly tiny amount.
@@ -47,7 +50,7 @@ For testing there is a **fake mode**: `VOICE_FAKE=1` in the settings makes Ledge
 
 ## What is not checked yet
 
-- **Real Groq calls.** There is no Groq key on this computer yet, so the real speech-to-text and the real language model have not been tried. Everything around them has been tested with the fake mode. Once you add your key, the first few real commands are the real test.
+- **Real Groq calls: now checked (2026-11-16).** With your key, Whisper wrote down a test recording word for word, and the language model got your example sentences right. A short 60-sentence accuracy test from the plan is still to do.
 - **A real microphone.** The browser used for checking blocks the microphone, so recording itself has not been tried; holding +, the "needs the microphone" message, typing instead, the review cards, saving and Undo were all checked. Please try holding + on your phone once it is deployed.
 - **The browser tests** for voice were written but not run (pnpm is blocked on this computer).
 - The test set of 60 or more real sentences from the plan (to measure how often the AI gets it right) needs the Groq key, so it is still to do.

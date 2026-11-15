@@ -22,19 +22,49 @@ export class GroqError extends Error {
   }
 }
 
+/** Groq's "try again in N" for a rate limit: retry-after (seconds) or x-ratelimit-reset-tokens ("1.5s", "577ms"). */
+function waitFor(response: Response): number | null {
+  const after = Number(response.headers.get("retry-after"));
+  if (Number.isFinite(after) && after > 0) return after * 1000;
+  const reset = response.headers.get("x-ratelimit-reset-tokens") ?? "";
+  const match = /^(?:(\d+)m)?(?:([\d.]+)s)?(?:([\d.]+)ms)?$/.exec(reset);
+  if (!match || !reset) return null;
+  return Number(match[1] ?? 0) * 60_000 + Number(match[2] ?? 0) * 1000 + Number(match[3] ?? 0);
+}
+
+/** A rate-limit wait up to this long is sat out once instead of failing. */
+const MAX_WAIT_MS = 10_000;
+
 async function call(config: VoiceConfig, path: string, init: RequestInit): Promise<unknown> {
   if (!config.apiKey) throw new GroqError("unavailable", "No Groq API key");
-  let response: Response;
-  try {
-    response = await fetch(`${BASE}${path}`, {
-      ...init,
-      headers: { Authorization: `Bearer ${config.apiKey}`, ...init.headers },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      cache: "no-store",
-    });
-  } catch {
-    throw new GroqError("unavailable", "Groq did not answer");
+  let response: Response | null = null;
+  // Two tries: a dropped first connection, or a short rate-limit wait, gets one more go.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      response = await fetch(`${BASE}${path}`, {
+        ...init,
+        headers: { Authorization: `Bearer ${config.apiKey}`, ...init.headers },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        cache: "no-store",
+      });
+    } catch (error) {
+      // Only the error's name and code go in the log (never the request, which holds the key).
+      const cause = error instanceof Error ? error.cause : undefined;
+      const code =
+        cause && typeof cause === "object" && "code" in cause ? String(cause.code) : undefined;
+      const name = error instanceof Error ? error.name : "unknown";
+      if (attempt === 0 && name !== "TimeoutError") continue;
+      throw new GroqError(
+        "unavailable",
+        `Groq did not answer (${[name, code].filter(Boolean).join(" ")})`,
+      );
+    }
+    if (response.status !== 429 || attempt === 1) break;
+    const wait = waitFor(response);
+    if (wait === null || wait > MAX_WAIT_MS) break;
+    await new Promise((resolve) => setTimeout(resolve, wait + 250));
   }
+  if (!response) throw new GroqError("unavailable", "Groq did not answer");
   if (response.status === 429) throw new GroqError("rate_limited", "Groq rate limit");
   if (!response.ok) {
     // The body can echo the request; keep only the status in logs.
@@ -71,6 +101,7 @@ export async function transcribe(
 }
 
 const completion = z.object({
+  usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).optional(),
   choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })).min(1),
 });
 
@@ -88,6 +119,9 @@ export async function completeJson(
   const body = {
     model: config.parseModel,
     temperature: 0,
+    // The gpt-oss models think before answering; short commands need little, and every thinking
+    // token counts against the free plan's 8,000 tokens a minute.
+    reasoning_effort: "low",
     messages: [
       { role: "system", content: system },
       { role: "user", content: user },
@@ -104,6 +138,10 @@ export async function completeJson(
       body: JSON.stringify(body),
     }),
   );
+  if (parsed.success && parsed.data.usage && process.env.NODE_ENV !== "production") {
+    const { prompt_tokens: input, completion_tokens: output } = parsed.data.usage;
+    console.info(`Voice: ${input} + ${output} tokens`);
+  }
   const content = parsed.success ? parsed.data.choices[0]?.message.content : null;
   if (!content) throw new GroqError("bad_response", "Empty completion");
   try {

@@ -644,3 +644,13 @@ Built from `docs/voice-spec.md` after O said "start building". Choices made whil
 - **Rate limit in memory** (20 a minute, 300 a day per user): Ledge is one process; a restart resets the counts.
 - **§13 open questions** use the spec's recommendations until O answers: always review, `language: "en"`, unknown list names become new lists in the plan, 300 a day, `v`.
 - **Desktop mic button** in the Add a task and Log a transaction sheet headers (closes that sheet, then listens), plus "Speak to add" in Ctrl K.
+
+## 2026-11-16: Voice with the real Groq key
+
+First runs with O's key. Whisper (`whisper-large-v3-turbo`) transcribed a test clip exactly in about 0.5 s. The language model got O's examples right (category, UPI from "GPay", dates, a new list with its tasks, salary as income; it correctly asked to pick an EMI when none matched). Changes:
+
+- **Free plan limit:** Groq's free plan allows 8,000 tokens a minute per model. A command first used about 3,000 tokens, so three in a row hit the limit. Now the context is sent as compact JSON and `reasoning_effort: "low"` is set for the gpt-oss model, bringing a command to about 1,900 tokens and under a second; that is about four commands a minute on the free plan, plenty one at a time. A paid Groq plan raises the limit.
+- **One retry:** a dropped first connection, or a rate-limit wait of 10 seconds or less (Groq's `retry-after` or `x-ratelimit-reset-tokens`), is retried once before showing an error.
+- The log line for a failed connection now names the error (never the request), and development logs show each command's token count.
+- The model sometimes left Need or Want empty; the prompt now asks it to always pick one for an expense. New list names get a capital first letter.
+- **The key must go in `.env`**, never in `.env.example` or `.env.production.example`, which are committed. It had been put in the examples; it was moved to `.env` before anything was pushed, and the unpushed commit was rewritten so the key is in no commit.

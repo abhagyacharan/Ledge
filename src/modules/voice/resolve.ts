@@ -89,7 +89,9 @@ export function resolvePlan(reply: ModelReply, context: ResolveContext): PlanIte
     const known = newListByName.get(folded);
     if (known) return known;
     const key = nextKey();
-    items.push({ type: "list", key, name: name.trim().slice(0, 100) });
+    const clean = name.trim().slice(0, 100);
+    // "photography" becomes "Photography", like lists made by hand.
+    items.push({ type: "list", key, name: clean.charAt(0).toUpperCase() + clean.slice(1) });
     newListByName.set(folded, key);
     return key;
   };

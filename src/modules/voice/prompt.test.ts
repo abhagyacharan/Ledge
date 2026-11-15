@@ -53,9 +53,9 @@ describe("prompt", () => {
       },
       "paid the bike loan",
     );
-    expect(message).toContain('"today": "2026-11-15"');
+    expect(message).toContain('"today":"2026-11-15"');
     expect(message).toContain('"Work"');
-    expect(message).toContain('"ref": "E1"');
+    expect(message).toContain('"ref":"E1"');
     expect(message).toContain("Food & Groceries");
     expect(message).toContain('"""paid the bike loan"""');
   });

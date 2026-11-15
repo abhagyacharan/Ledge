@@ -46,7 +46,7 @@ Money (log_entry)
 - title: what it was for, short ("Petrol", "Red Bull cans", "Swiggy dinner", "Salary").
 - category: exactly one name from the matching list in the context. categoryGuessed is false only when they named the category themselves.
 - paymentMethod: one of the listed methods only when they said how they paid. GPay, Google Pay, PhonePe, Paytm, BHIM and "UPay" mean UPI. Plain "card" is null. Otherwise null.
-- spendLabel (expenses only, else null): need for essentials (groceries, rent, bills, medicine, fuel, transport to work, school fees); want for treats, eating out, entertainment, gadgets, shopping for fun. spendLabelGuessed is false only when they said need or want themselves.
+- spendLabel (expenses only, else null): always pick one for an expense. need for essentials (groceries, rent, bills, medicine, fuel, transport to work, school fees); want for treats, eating out, entertainment, gadgets, shopping for fun. spendLabelGuessed is false only when they said need or want themselves.
 - date: the day it happened, worked out from today; null when not said.
 
 EMIs (mark_emi_paid)
@@ -69,7 +69,8 @@ export function buildUserMessage(context: PromptContext, transcript: string): st
     investmentTypes: INVESTMENT_TYPES,
     paymentMethods: PAYMENT_METHODS,
   };
-  return `Context:\n${JSON.stringify(data, null, 1)}\n\nWhat they said:\n"""${transcript}"""`;
+  // Compact JSON: every token counts against the free plan's per-minute limit.
+  return `Context:\n${JSON.stringify(data)}\n\nWhat they said:\n"""${transcript}"""`;
 }
 
 /**
