@@ -233,7 +233,7 @@ test("quick add has every task field: date, priority, notes and repeat", async (
     .getByRole("radio", { name: "Weekly" })
     .click();
   await expect(dialog.getByText(/^Every week on /)).toBeVisible();
-  await dialog.getByRole("button", { name: "Add task" }).click();
+  await dialog.getByRole("button", { name: "Save and add another" }).click();
   await expect(
     page
       .getByRole("status")

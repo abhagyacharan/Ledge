@@ -42,7 +42,7 @@ import { DueDateField } from "./due-date-field";
 import { QUICK_ADD_EVENT, type QuickAddPrefill } from "./quick-add-button";
 import { RepeatField, type RepeatChange } from "./repeat-field";
 import { ListGlyph } from "../list-icons";
-import { run } from "./run-action";
+import { run, undoToast } from "./run-action";
 import { useTodos } from "./todos-provider";
 import { PRIORITY_LABELS, type DateContext } from "./types";
 
@@ -250,8 +250,16 @@ function QuickAddForm({
     inputRef.current?.focus();
   }
 
+  // Which footer button was pressed: Save task closes the sheet, Save and add another keeps it.
+  const another = useRef(true);
+
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    save(another.current);
+    another.current = true;
+  }
+
+  function save(keepOpen: boolean) {
     const value = parsed.title;
     if (!value) return;
     startTransition(async () => {
@@ -274,10 +282,20 @@ function QuickAddForm({
       if (result.ok) {
         const date = parsed.tokens.find((t) => t.kind === "date");
         const where = lists.find((l) => l.id === effectiveListId)?.name ?? "list";
-        setLastAdded({
-          id: result.data.id,
-          message: `Added "${value}" to ${where}${date ? `, due ${date.label.toLowerCase()}` : ""}`,
-        });
+        const message = `Added "${value}" to ${where}${date ? `, due ${date.label.toLowerCase()}` : ""}`;
+        if (!keepOpen) {
+          // The sheet closes, so the confirmation and its Undo move to a toast.
+          const { id } = result.data;
+          onClose();
+          undoToast(message, () => {
+            void (async () => {
+              const trashed = await run(trashTaskAction({ id }));
+              if (trashed.ok) await run(deleteTaskForeverAction({ id }));
+            })();
+          });
+          return;
+        }
+        setLastAdded({ id: result.data.id, message });
         update("", new Set());
         setManualDue(null);
         setManualPriority(null);
@@ -363,6 +381,13 @@ function QuickAddForm({
               maxLength={500}
               disabled={pending}
               enterKeyHint="done"
+              // Enter adds the task and keeps the sheet open for the next one (CLAUDE.md §6.2).
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  save(true);
+                }
+              }}
               placeholder="pay rent tomorrow 5pm #home p1"
               className="h-14 w-full rounded-2xl bg-dash-well px-4 text-lg text-dash-ink caret-dash-accent outline-none transition-shadow duration-150 placeholder:text-dash-ink-soft/70 focus-visible:ring-3 focus-visible:ring-ring/40"
             />
@@ -520,16 +545,25 @@ function QuickAddForm({
         </div>
       </SheetBody>
       <SheetFooter>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-dash-ink-soft">Stays open for the next task.</p>
-          <DashButton
-            type="submit"
-            className="h-12! shrink-0 px-6! text-[15px] font-semibold md:h-10!"
-            disabled={pending || !parsed.title}
-          >
-            Add task
-          </DashButton>
-        </div>
+        {/* The same pair as the transaction sheet (O, 2026-11-15). */}
+        <div className="hidden flex-1 md:block" />
+        <DashButton
+          type="submit"
+          onClick={() => (another.current = false)}
+          className="h-12! font-semibold max-md:flex-1 md:h-10!"
+          disabled={pending || !parsed.title}
+        >
+          {pending ? "Saving…" : "Save task"}
+        </DashButton>
+        <DashButton
+          type="submit"
+          variant="secondary"
+          onClick={() => (another.current = true)}
+          className="h-12! max-md:flex-1 md:h-10!"
+          disabled={pending || !parsed.title}
+        >
+          Save and add another
+        </DashButton>
       </SheetFooter>
     </form>
   );
