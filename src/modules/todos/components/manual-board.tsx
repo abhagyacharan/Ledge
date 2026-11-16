@@ -20,6 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { sortByPosition } from "@/lib/ordering";
 import type { TaskRow as TaskRowData } from "@/server/data/tasks";
@@ -103,12 +104,14 @@ export function ManualBoard({ listId, tasks, subtasksOf, ctx }: Props) {
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <ul>
-          {rows.map((task) => (
-            <SortableRow key={task.id} task={task} subtasks={subtasksOf(task.id)} ctx={ctx} />
-          ))}
-          {done.map((task) => (
-            <TaskRow key={task.id} task={task} subtasks={subtasksOf(task.id)} ctx={ctx} />
-          ))}
+          <AnimatePresence initial={false}>
+            {rows.map((task) => (
+              <SortableRow key={task.id} task={task} subtasks={subtasksOf(task.id)} ctx={ctx} />
+            ))}
+            {done.map((task) => (
+              <TaskRow key={task.id} task={task} subtasks={subtasksOf(task.id)} ctx={ctx} />
+            ))}
+          </AnimatePresence>
         </ul>
       </SortableContext>
     </DndContext>

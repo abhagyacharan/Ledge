@@ -694,3 +694,9 @@ On O's phone, any movement of the finger while holding + ended the recording (th
 ## 2026-11-16: Hold time is half a second, and the ring follows it
 
 Two seconds felt too long to O, so `HOLD_MS` is 500. The ring around the button used a fixed two-second animation, which would still have looked slow; it now takes exactly `HOLD_MS` (the hook sets a `--hold-ms` variable on the button). To try other lengths, change `HOLD_MS` in `src/modules/voice/components/voice-events.ts` (milliseconds) and redeploy; a value under about 400 risks starting by accident on a slow tap.
+
+## 2026-11-16: A ticked task folds away instead of vanishing
+
+Ticking a task used to remove its row at once: the page refreshed with the server's data a moment later and the done task was no longer in the list. O picked option 2 from an interactive preview ("Tick, then fold"): the tick fills and the title is struck through (the line draws left to right in 0.2 s), the row stays for 0.48 s so the tick registers, then fades (0.16 s) and folds shut (0.24 s) while the rows below glide up. Any other row that leaves a list (deleted, moved, filtered out) folds away in 0.2 s without the pause.
+
+How: the task lists wrap their rows in Motion's `AnimatePresence` (task lists, the list view, the manual board) and `TaskRow` is a `motion.li` with an exit; the row stays on screen until the exit has played. `useToggleDone` keeps the row ticked after the page refresh (`kept`), because the optimistic value falls back to the old props once the action ends, and a leaving row must not untick. A leaving row carries `data-leaving`, which keyboard navigation skips. With reduced motion the row keeps the pause and then disappears, with nothing sliding. The All tasks table on desktop has its own rows and still removes them at once; it can get the same treatment if wanted.

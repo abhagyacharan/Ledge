@@ -1,3 +1,4 @@
+import { AnimatePresence } from "motion/react";
 import type { ViewTask } from "@/server/data/views";
 import type { TaskGroup as Group } from "../view-logic";
 import { TaskGroup } from "./task-panel";
@@ -58,20 +59,27 @@ export function TaskList({
 }) {
   return (
     <ul>
-      {tasks.map((task) => (
-        <TaskRow
-          key={task.id}
-          task={task}
-          subtasks={allTasks.filter((t) => t.parentId === task.id)}
-          ctx={ctx}
-          timeOnly={timeOnly}
-          context={
-            showList
-              ? { listName: task.listName, listIcon: task.listIcon, parentTitle: task.parentTitle }
-              : undefined
-          }
-        />
-      ))}
+      {/* A row that leaves (ticked, deleted, moved) stays until its exit has played. */}
+      <AnimatePresence initial={false}>
+        {tasks.map((task) => (
+          <TaskRow
+            key={task.id}
+            task={task}
+            subtasks={allTasks.filter((t) => t.parentId === task.id)}
+            ctx={ctx}
+            timeOnly={timeOnly}
+            context={
+              showList
+                ? {
+                    listName: task.listName,
+                    listIcon: task.listIcon,
+                    parentTitle: task.parentTitle,
+                  }
+                : undefined
+            }
+          />
+        ))}
+      </AnimatePresence>
     </ul>
   );
 }

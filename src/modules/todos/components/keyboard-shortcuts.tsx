@@ -13,7 +13,7 @@ function isTyping(target: EventTarget | null): boolean {
   );
 }
 
-const ROW = "[data-task-row]";
+const ROW = "[data-task-row]:not([data-leaving])";
 const LINK = "[data-task-link]";
 
 function taskLinks(): HTMLElement[] {

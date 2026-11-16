@@ -3,7 +3,15 @@
 import { CalendarDays, Check, Flag, Folder, ListChecks, Repeat, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useOptimistic, useTransition, type CSSProperties, type ReactNode, type Ref } from "react";
+import { motion, useIsPresent, useReducedMotion, type TargetAndTransition } from "motion/react";
+import {
+  useOptimistic,
+  useState,
+  useTransition,
+  type CSSProperties,
+  type ReactNode,
+  type Ref,
+} from "react";
 import {
   addDaysIso,
   daysBetween,
@@ -31,14 +39,25 @@ export const PRIORITY_STYLE = ["", "text-dash-ink-soft", "text-dash-warn", "text
  */
 export function useToggleDone(taskId: string, title: string, serverDone: boolean) {
   const [, startTransition] = useTransition();
-  const [done, setDone] = useOptimistic(serverDone);
+  const [optimisticDone, setDone] = useOptimistic(serverDone);
   const { timeZone, locale } = useTodos();
+  // The row stays ticked while it plays its exit (see TaskRow): once the page refreshes, the
+  // optimistic value falls back to the old props, and a row that is leaving must not untick.
+  const [kept, setKept] = useState(false);
+  const [seen, setSeen] = useState(serverDone);
+  if (serverDone !== seen) {
+    setSeen(serverDone);
+    setKept(false);
+  }
+  const done = optimisticDone || kept;
 
   function toggle() {
     startTransition(async () => {
       const next = !done;
       setDone(next);
+      setKept(next);
       const result = await run(setTaskDoneAction({ id: taskId, done: next }));
+      if (!result.ok) setKept(false);
       if (!result.ok || !next) return;
       const repeat = result.data.recurring;
       if (repeat) {
@@ -195,6 +214,36 @@ export type RowContext = {
  * subtask progress and, in views that mix lists, which list it is in. The whole text opens the
  * task. Rows have no lines between them; a soft grey shows under the pointer.
  */
+/**
+ * How a row leaves a list (O, 2026-11-16, option 2 of the preview): a ticked task keeps its
+ * filled tick and struck-through title for half a second so the tick registers, then fades
+ * (0.16 s) and folds shut (0.24 s) while the rows below glide up. Any other row that leaves
+ * (deleted, moved, filtered out) just folds away quickly.
+ */
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+const EXIT_AFTER_TICK: TargetAndTransition = {
+  opacity: 0,
+  height: 0,
+  overflow: "hidden",
+  transition: {
+    opacity: { delay: 0.48, duration: 0.16, ease: "easeOut" },
+    height: { delay: 0.64, duration: 0.24, ease: EASE_OUT },
+  },
+};
+const EXIT_QUICK: TargetAndTransition = {
+  opacity: 0,
+  height: 0,
+  overflow: "hidden",
+  transition: { duration: 0.2, ease: EASE_OUT },
+};
+/** With reduced motion: the same pause, then gone, with nothing sliding. */
+const exitWithoutMotion = (afterTick: boolean): TargetAndTransition => ({
+  opacity: 0,
+  height: 0,
+  overflow: "hidden",
+  transition: { duration: 0, delay: afterTick ? 0.48 : 0 },
+});
+
 export function TaskRow({
   task,
   subtasks,
@@ -226,12 +275,17 @@ export function TaskRow({
   // The open task's row stays marked while its detail is docked beside the list (screen 6b).
   const selected = useSearchParams().get("task") === task.id;
   const repeatText = describeStored(task.recurrenceRule, task.recurrenceMode, task.recurrenceUntil);
+  const present = useIsPresent();
+  const reduceMotion = useReducedMotion();
+  const exit = reduceMotion ? exitWithoutMotion(done) : done ? EXIT_AFTER_TICK : EXIT_QUICK;
 
   return (
-    <li
+    <motion.li
       ref={liRef}
       data-task-row
       data-task-id={task.id}
+      data-leaving={present ? undefined : ""}
+      exit={exit}
       style={liStyle}
       className={cn(
         "group/row relative -mx-2 flex items-start gap-0.5 rounded-xl px-1 transition-colors duration-150 hover:bg-dash-well/70",
@@ -251,10 +305,19 @@ export function TaskRow({
         <span
           className={cn(
             "block text-[15px] leading-snug break-words transition-colors duration-150 md:text-sm",
-            done && "text-dash-ink-soft line-through decoration-dash-ink-soft/60",
+            done && "text-dash-ink-soft",
           )}
         >
-          {task.title}
+          {/* The strike-through draws left to right as the tick fills; a gradient line, so it
+              follows the text over every line of a long title. */}
+          <span
+            className={cn(
+              "bg-[linear-gradient(var(--dash-ink-soft),var(--dash-ink-soft))] bg-[position:0_58%] bg-no-repeat [box-decoration-break:clone] transition-[background-size] duration-200 ease-out",
+              done ? "bg-[length:100%_1.5px]" : "bg-[length:0%_1.5px]",
+            )}
+          >
+            {task.title}
+          </span>
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs empty:hidden">
           <DueLabel task={task} ctx={ctx} done={done} timeOnly={timeOnly} />
@@ -296,6 +359,6 @@ export function TaskRow({
           ) : null}
         </span>
       </Link>
-    </li>
+    </motion.li>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { ListTodo } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { EmptyState } from "@/components/shell/empty-state";
 import type { List } from "@/server/db/schema";
@@ -129,16 +130,20 @@ export function ListView({ list, tasks, ctx, settings: saved }: Props) {
                   tone={group.key === "Overdue" ? "bad" : undefined}
                 >
                   <ul>
-                    {group.tasks.map((t) => (
-                      <TaskRow key={t.id} task={t} subtasks={subtasksOf(t.id)} ctx={ctx} />
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {group.tasks.map((t) => (
+                        <TaskRow key={t.id} task={t} subtasks={subtasksOf(t.id)} ctx={ctx} />
+                      ))}
+                    </AnimatePresence>
                   </ul>
                 </TaskGroup>
               ) : (
                 <ul key={group.key}>
-                  {group.tasks.map((t) => (
-                    <TaskRow key={t.id} task={t} subtasks={subtasksOf(t.id)} ctx={ctx} />
-                  ))}
+                  <AnimatePresence initial={false}>
+                    {group.tasks.map((t) => (
+                      <TaskRow key={t.id} task={t} subtasks={subtasksOf(t.id)} ctx={ctx} />
+                    ))}
+                  </AnimatePresence>
                 </ul>
               ),
             )}

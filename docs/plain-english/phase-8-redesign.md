@@ -250,3 +250,9 @@ Ledge now tells the phone about proper icons through a small file called a web a
 Two other things changed with it. Ledge now opens from the home screen like an app, without the browser's address bar, and its start-up screen is black. And the app lets the phone fetch the icons without signing in first, which it has to, because a phone looks for them before you have a session.
 
 An icon you already added keeps the old picture. Remove the shortcut and add it again to get the black one. iPhones already used a black icon, so they should not have shown the off-white one. If your icon was on an iPhone, tell me, because then the cause is something different.
+
+## Ticking off a task, smoothly (2026-11-16)
+
+Before, a task you ticked disappeared at once, which felt abrupt. Now it goes in four small steps, all over about a second: the circle fills in, a line is drawn through the title from left to right, the row stays put for half a second so you can see what you did, and then it fades and folds shut while the tasks below slide up to fill the gap. If you have "reduce motion" turned on in your phone or computer, nothing slides: the row keeps the half-second pause and then disappears. Undo still works from the message at the bottom. Rows that leave a list for other reasons (deleted, moved to another list) just fold away quickly, with no pause. The All tasks table on a computer still removes a ticked row at once; say if you want it to fold too.
+
+Checked: the tick stays filled while the row leaves, a leaving row is skipped by the keyboard shortcuts, and the row and the rows below end up in the right place. Not checked: the exact timing by eye (the test browser was hidden, which pauses animations), and the browser tests (pnpm is blocked).
