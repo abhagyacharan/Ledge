@@ -682,3 +682,7 @@ The PIN lock built earlier the same day was reworked to O's Claude Design screen
 ## 2026-11-16: No `# syntax=` line in the Dockerfile
 
 The `# syntax=docker/dockerfile:1` line made every build download the Dockerfile frontend from Docker Hub first. On O's server that download went over IPv6, which the server has no route for, and the build failed before it started. Current Docker (BuildKit, built in since Docker 23) understands everything the Dockerfile uses, including `RUN --mount=type=cache`, so the line is removed and builds need one less download.
+
+## 2026-11-16: Hold + for two seconds, then listening is hands-free
+
+On O's phone, any movement of the finger while holding + ended the recording (the browser took the touch for a scroll and cancelled it), and letting go stopped it. Now: hold for two seconds (`HOLD_MS` in `voice-events.ts`), with a growing ring as feedback; the phone vibrates once when listening starts; after that the finger is free (move it, lift it) and listening continues until Done or 60 seconds. The + gets `touch-action: none` so drift is not taken for a scroll, and before the two seconds are up a drift over 24 px (a real scroll) or a lifted finger just cancels the attempt, which then taps as normal. Slide-down-to-cancel is gone; closing the sheet cancels.

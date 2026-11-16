@@ -25,10 +25,10 @@ Manual entry is the main reason people stop using trackers. Voice capture lets O
 
 ### Phone
 
-1. **Hold the round + button** for 400 ms. It grows slightly, the phone vibrates briefly (Android only; iPhones do not allow it on the web) and the **voice sheet** rises: a large live level meter, "Listening…", a running timer and the hint "Let go to finish · Slide down to cancel".
+1. **Hold the round + button** for two seconds (changed 2026-11-16 from a 400 ms hold that stopped when you let go). A ring grows around it while you hold; at two seconds the phone vibrates once (Android only; iPhones do not allow it on the web) and the **voice sheet** rises: a large live level meter, "Listening…", a running timer and the hint "You can let go. Press Done when you're finished". **Listening is hands-free from then on**: lift your finger, put the phone down, and speak. It keeps going until you press **Done** (or 60 seconds pass). The button uses `touch-action: none`, so a finger drifting while you hold is not taken for a scroll.
 2. **A normal tap** on + still opens the capture sheet, exactly as today.
-3. **Let go** to stop. The sheet shows "Understanding…" with the transcript appearing first (about 0.5 s), then the cards (target: under 2.5 s from letting go for a 10-second clip).
-4. **Slide your finger down** (or off the button) before letting go to cancel; nothing is sent.
+3. **Press Done** to stop. The sheet shows "Understanding…" with the transcript appearing first (about 0.5 s), then the cards (target: under 2.5 s from letting go for a 10-second clip).
+4. **To cancel,** close the sheet (the × or swipe it down); nothing is sent. (There is no slide-to-cancel any more.)
 5. Recording stops by itself after **60 seconds**.
 
 ### Desktop and keyboard

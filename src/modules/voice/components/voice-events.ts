@@ -11,8 +11,6 @@ export const VOICE_EVENT = "ledge:voice";
 
 export type VoiceCommand =
   | "hold-start"
-  | "hold-end"
-  | "hold-cancel"
   /** Desktop: the mic button or `v` starts, and again stops. */
   | "toggle"
   | "type";
@@ -25,24 +23,27 @@ export function sendVoice(command: VoiceCommand) {
 export const VoiceAvailable = createContext(false);
 export const useVoiceAvailable = () => use(VoiceAvailable);
 
-const HOLD_MS = 400;
-const MOVE_TOLERANCE = 10;
-/** Sliding the finger this far down before letting go cancels the recording. */
-const CANCEL_DISTANCE = 60;
+/** How long to hold the + before it starts listening (O, 2026-11-16: two seconds). */
+export const HOLD_MS = 2000;
+/** A finger drifting further than this before the hold fires counts as a scroll, not a hold. */
+const MOVE_TOLERANCE = 24;
 
 /**
- * Long press for the round + button: hold for 400 ms to start recording, let go to finish, slide
- * down to cancel. A plain tap still clicks. While holding, it listens on the whole window, so
- * letting go still counts after the sheet slides up over the button.
+ * Long press for the round + button: hold for two seconds and it buzzes once and starts
+ * listening. After that you can let go and put the phone down: it keeps listening until you
+ * press Done. A plain tap still clicks. While the finger is down the button grows a ring so you
+ * can see it is working, and `touch-action: none` stops the browser turning a small drift of
+ * the finger into a scroll (which would cancel the press).
  */
 export function useHoldToTalk(available: boolean) {
   const timer = useRef<number | null>(null);
-  const holding = useRef(false);
   const swallowClick = useRef(false);
+  const element = useRef<HTMLElement | null>(null);
 
   const clear = () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
+    if (element.current) delete element.current.dataset.holding;
   };
 
   function onPointerDown(event: ReactPointerEvent<HTMLElement>) {
@@ -50,43 +51,39 @@ export function useHoldToTalk(available: boolean) {
     const startX = event.clientX;
     const startY = event.clientY;
     swallowClick.current = false;
+    element.current = event.currentTarget;
+    event.currentTarget.dataset.holding = "1";
 
+    const detach = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onEnd);
+      window.removeEventListener("pointercancel", onEnd);
+    };
+    // Only before the hold fires: too much drift, a lifted finger or a cancel ends the attempt.
+    // Once listening has started, the finger is free to move or lift.
     const onMove = (e: PointerEvent) => {
-      if (!holding.current && Math.hypot(e.clientX - startX, e.clientY - startY) > MOVE_TOLERANCE) {
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > MOVE_TOLERANCE) {
         clear();
         detach();
       }
     };
-    const onUp = (e: PointerEvent) => {
+    const onEnd = () => {
       clear();
       detach();
-      if (!holding.current) return;
-      holding.current = false;
-      sendVoice(e.clientY - startY > CANCEL_DISTANCE ? "hold-cancel" : "hold-end");
-    };
-    const onCancel = () => {
-      clear();
-      detach();
-      if (!holding.current) return;
-      holding.current = false;
-      sendVoice("hold-cancel");
-    };
-    const detach = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
     };
     window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
 
     clear();
+    element.current.dataset.holding = "1";
     timer.current = window.setTimeout(() => {
       timer.current = null;
-      holding.current = true;
       swallowClick.current = true;
-      // A short buzz where phones allow it (Android; iPhones ignore it).
-      navigator.vibrate?.(15);
+      if (element.current) delete element.current.dataset.holding;
+      detach();
+      // One short buzz where phones allow it (Android; iPhones ignore it).
+      navigator.vibrate?.(60);
       sendVoice("hold-start");
     }, HOLD_MS);
   }
@@ -98,6 +95,7 @@ export function useHoldToTalk(available: boolean) {
       onContextMenu: (event: React.MouseEvent) => {
         if (available) event.preventDefault();
       },
+      style: available ? ({ touchAction: "none" } as const) : undefined,
     },
     /** Call first in the button's onClick: true means the press was a hold, so skip the click. */
     consumeHold(): boolean {

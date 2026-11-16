@@ -406,3 +406,14 @@
     display: none;
   }
 }
+
+/* Holding the + to speak: a ring grows around it for the two seconds it takes. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-fab][data-holding] {
+    box-shadow: 0 0 0 7px color-mix(in oklab, var(--dash-accent) 40%, transparent);
+    transform: scale(1.08);
+    transition:
+      box-shadow 2s linear,
+      transform 2s ease-out;
+  }
+}

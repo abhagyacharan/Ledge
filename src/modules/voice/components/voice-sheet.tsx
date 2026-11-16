@@ -201,10 +201,6 @@ function VoiceSheet({ currency, locale }: { currency: string; locale: string }) 
       const current = phaseRef.current;
       if (command === "hold-start") {
         if (current.name !== "listening") void listen(true);
-      } else if (command === "hold-end") {
-        if (current.name === "listening") recorder.stop();
-      } else if (command === "hold-cancel") {
-        if (current.name === "listening") close();
       } else if (command === "toggle") {
         if (current.name === "listening") recorder.stop();
         else if (current.name !== "working") void listen(false);
@@ -348,7 +344,7 @@ function VoiceSheet({ currency, locale }: { currency: string; locale: string }) 
           description={
             phase.name === "listening"
               ? phase.hold
-                ? "Let go to finish · Slide down to cancel"
+                ? "You can let go. Press Done when you're finished"
                 : "Say what to add, then press Done"
               : phase.name === "review"
                 ? "Nothing is saved until you add it."

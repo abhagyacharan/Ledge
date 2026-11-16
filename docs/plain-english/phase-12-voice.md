@@ -6,7 +6,7 @@ _Built on 2026-11-15. Tried with the real Groq key on 2026-11-16 (it works); not
 
 Typing everything in is the main reason people give up on apps like this. Voice capture lets you say it instead.
 
-- **On a phone:** press and **hold** the round **+** button. After a moment a sheet slides up and listens. Say something like "spent 500 on petrol today" or "create a list called Photography with two tasks, take 5 photos of the sun and click 10 photos of the moon today". **Let go** to finish. **Slide your finger down** before letting go to cancel. A normal quick tap on + still opens the usual add sheet.
+- **On a phone:** press and **hold** the round **+** button for about **two seconds**. A ring grows around it while you hold. When the time is up the phone buzzes once (Android phones only) and a sheet slides up and starts listening. **Then you can let go**: put the phone down and talk, it keeps listening. Say something like "spent 500 on petrol today" or "create a list called Photography with two tasks, take 5 photos of the sun and click 10 photos of the moon today", then press **Done**. To cancel, close the sheet. A normal quick tap on + still opens the usual add sheet.
 - **On a computer:** press **v** (when you are not typing in a box), speak, then press **v** or **Enter** again to finish. There is also a small microphone button at the top of the Add a task and Log a transaction sheets, and "Speak to add" in the Ctrl K list.
 - **No microphone, or rather type?** Every voice sheet has **Type instead**. You write the sentence the way you would say it, and the rest works the same.
 
