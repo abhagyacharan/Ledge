@@ -3,12 +3,14 @@
 import {
   Check,
   ChevronDown,
+  ChevronRight,
   Download,
   FileJson,
   FileSpreadsheet,
   LogOut,
   TriangleAlert,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useId, useState, useTransition } from "react";
@@ -87,6 +89,7 @@ export function PreferencesCard({
   currencyLabel,
   localeLabel,
   voice,
+  journalLockOn,
 }: {
   timezone: string;
   weekStartsOn: number;
@@ -94,6 +97,8 @@ export function PreferencesCard({
   localeLabel: string;
   /** Null when the server has no Groq key: the switch is not shown at all. */
   voice: { enabled: boolean } | null;
+  /** The journal lock's state, for its row (screen 6g). */
+  journalLockOn: boolean;
 }) {
   const router = useRouter();
   const { theme = "system", setTheme } = useTheme();
@@ -220,6 +225,19 @@ export function PreferencesCard({
             </button>
           </div>
         ) : null}
+        <Link
+          href="/settings/journal-lock"
+          className={cn(
+            row,
+            "outline-none hover:bg-dash-well/60 focus-visible:ring-3 focus-visible:ring-ring/50",
+          )}
+        >
+          <span className="text-[14px]">Journal lock</span>
+          <span className="inline-flex items-center gap-1 text-[14px] font-medium">
+            {journalLockOn ? "On" : "Off"}
+            <ChevronRight aria-hidden className="size-4 text-dash-ink-soft" />
+          </span>
+        </Link>
         <div className={row}>
           <span className="text-[14px]">Currency</span>
           <span className="text-[14px] font-medium">{currencyLabel}</span>

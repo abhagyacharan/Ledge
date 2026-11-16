@@ -654,3 +654,27 @@ First runs with O's key. Whisper (`whisper-large-v3-turbo`) transcribed a test c
 - The log line for a failed connection now names the error (never the request), and development logs show each command's token count.
 - The model sometimes left Need or Want empty; the prompt now asks it to always pick one for an expense. New list names get a capital first letter.
 - **The key must go in `.env`**, never in `.env.example` or `.env.production.example`, which are committed. It had been put in the examples; it was moved to `.env` before anything was pushed, and the unpushed commit was rewritten so the key is in no commit.
+
+## 2026-11-16: Journal PIN lock
+
+O asked for a 4-digit PIN on the journal that stays unlocked while the app is in use and locks when the app or tab is hidden or closed (`docs/journal-spec.md`, "PIN lock"). Choices:
+
+- **Enforced on the server, not just hidden in the browser.** The journal page, its save action and its month-dots action check a signed unlock cookie tied to the sign-in (HMAC of the session id and an expiry, 12 hours at most). Without it the server sends only the PIN screen.
+- **Locking on `visibilitychange` (hidden) and `pagehide`**, app-wide (`JournalAutoLock` in the app layout), with `sendBeacon` to `/api/journal/lock`. A `data-journal-locked` mark on `<html>` hides journal content with CSS the instant the page is hidden and stays until the next unlock, so the phone's app switcher and the browser's back/forward cache never show it. On return, the page locks for certain (a server action) before refreshing, in case the beacon was lost.
+- **No idle timer:** O wants no repeated asking while the app is open and the screen on. Most phones and desktop browsers fire `visibilitychange` when the screen locks; a desktop left awake with the tab in front stays unlocked.
+- **Reset with the account password** (checked against Better Auth's own scrypt hash in the `account` table, so the session-freshness rule of Better Auth's `verifyPassword` endpoint does not get in the way). No "turn off": the PIN is always on once set.
+- **Five wrong PINs lock it for 5 minutes**, stored in `user_settings`.
+- **Export everything** leaves the journal out while locked; the PIN hash and counters are never exported.
+
+## 2026-11-16: Journal lock redesigned to O's mockups (7a to 7h)
+
+The PIN lock built earlier the same day was reworked to O's Claude Design screens, which change behaviour as well as looks:
+
+- **Optional**, turned on from Settings > Preferences > Journal lock or the Journal's "Lock with a PIN" (was: required on first visit).
+- **4 or 6 digits** (`journal_pin_length`, migration 0013).
+- **Change PIN and Turn off ask for the current PIN** (was: the account password); a forgotten PIN is reset with the account password, which also always unlocks ("Unlock with account password"). Password checks are limited to 5 in 15 minutes per person (in memory), since they are another way to test passwords.
+- **Escalating pause**: 5, then 15, then 60 minutes (`journal_pin_lockouts`), with a countdown screen.
+- **Lock again** choice (`journal_relock`): leaving the Journal (default, per the mockup), 1 or 5 minutes away, or closing Ledge. Timed modes hide the content while away and lock on return if the time has passed; they are decided in the browser, so for those the server-side unlock lasts until the client relocks or 12 hours pass. Closing Ledge always locks.
+- **Exports include journal pages again**, as the mockup's settings note says; the PIN hash and counters are still never exported.
+- Phone lock screen: on-screen keypad, tab bar and + hidden (a `data-pin-screen` mark and an unlayered CSS rule, so it beats the buttons' own display classes). Desktop: digit boxes typed on the keyboard, "Lock now" (Ctrl+Shift+L), a lock icon on the sidebar's Journal row, "Locked" on Home.
+- Note: O first asked for the journal to stay open while moving around the app; the mockup's default is "When I leave the Journal". "After 1 minute away" or "After 5 minutes away" gives the earlier behaviour.

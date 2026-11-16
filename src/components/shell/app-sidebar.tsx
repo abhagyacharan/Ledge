@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, House, Search, Settings, Trash2 } from "lucide-react";
+import { ChevronRight, House, Lock, Search, Settings, Trash2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
@@ -17,7 +17,14 @@ import { ThemeToggle } from "./theme-toggle";
  * your lists. Search (Ctrl K), Trash, Settings and your account sit at the bottom. Phones use the
  * bottom tab bar instead (MobileTabBar).
  */
-export function AppSidebar({ user }: { user: { name: string; email: string } }) {
+export function AppSidebar({
+  user,
+  journalLocked = false,
+}: {
+  user: { name: string; email: string };
+  /** The Journal row shows a lock icon while the journal is locked (screen 7h). */
+  journalLocked?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -33,7 +40,12 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
           Modules
         </p>
         {enabledModules().map((m) => (
-          <ModuleSection key={m.id} module={m} pathname={pathname} />
+          <ModuleSection
+            key={m.id}
+            module={m}
+            pathname={pathname}
+            locked={m.id === "journal" && journalLocked}
+          />
         ))}
       </SidebarContent>
       <SidebarFooter className="gap-1 px-2.5 pb-4">
@@ -74,13 +86,35 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
   );
 }
 
-function ModuleSection({ module: m, pathname }: { module: AppModule; pathname: string }) {
+function ModuleSection({
+  module: m,
+  pathname,
+  locked = false,
+}: {
+  module: AppModule;
+  pathname: string;
+  locked?: boolean;
+}) {
   const inside = m.owns(pathname);
   // A module with no views of its own (Journal) is one plain link.
   if (m.nav.length === 0) {
     return (
       <div className="py-1">
-        <NavRow href={m.route} label={m.label} icon={m.icon} strong current={inside} />
+        <NavRow
+          href={m.route}
+          label={m.label}
+          icon={m.icon}
+          strong
+          current={inside}
+          trailing={
+            locked ? (
+              <>
+                <Lock aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="sr-only">(locked)</span>
+              </>
+            ) : null
+          }
+        />
       </div>
     );
   }

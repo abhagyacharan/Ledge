@@ -85,6 +85,20 @@
       "when": 1794732998892,
       "tag": "0011_voice_setting",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794824919228,
+      "tag": "0012_journal_pin",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1794830404612,
+      "tag": "0013_journal_lock_options",
+      "breakpoints": true
     }
   ]
 }

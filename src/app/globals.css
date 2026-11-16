@@ -287,6 +287,11 @@
     text-decoration-thickness: 1.5px;
     text-underline-offset: 3px;
   }
+  /* The journal disappears the moment the app or tab is hidden, before the phone takes its
+     app-switcher snapshot, and stays hidden until the PIN is entered again. */
+  html[data-journal-locked] [data-journal-private] {
+    visibility: hidden;
+  }
   /* Page titles use the display face; everything else stays in the quiet body face. */
   h1 {
     font-family: var(--font-display);
@@ -371,5 +376,33 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* A wrong PIN shakes the dots, gently; not at all with reduced motion. */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[shake"] {
+    animation: none;
+  }
+}
+
+/* The journal lock screen takes the whole phone screen: no tab bar or + (screen 7b). Outside the
+   layers on purpose, so it beats the buttons' own display classes. */
+@media (max-width: 767px) {
+  html[data-pin-screen] [data-tabbar],
+  html[data-pin-screen] [data-fab] {
+    display: none;
   }
 }

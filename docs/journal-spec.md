@@ -76,3 +76,20 @@ Rules behind the wording:
 - A weekly review page
 - Posting an entry to a blog
 - Journal pages in app-wide search, and in the export
+
+## Journal lock (added 2026-11-16 at O's request; screens 7a to 7h in docs/new_design.md)
+
+Anyone who sits at an unlocked computer or picks up an unlocked phone with Ledge open should not be able to read the journal.
+
+- **Optional.** Off until turned on, from Settings > Preferences > Journal lock (screen 7f) or the Journal's "Lock with a PIN" button. Turning it on asks for a PIN twice (7a, "Step 1 of 2"); 4 digits, or 6 with "Use a 6-digit PIN". If the two don't match, it goes back to step 1 with "Those didn't match. Try again."
+- **Locked (7b, 7h).** "Journal is locked" and the PIN. Phones: dots and an on-screen keypad, with the tab bar and + hidden so the keypad sits under the thumb; a back arrow and the date at the top; "Forgot PIN?" at the bottom. Desktop: digit boxes typed on the keyboard in a card, with "Forgot PIN?" and "Use account password". It unlocks on the last correct digit, with no button. Until then the server reads and sends no journal content (the page, the mood, the day's facts, the month's dots), and saves are refused.
+- **Wrong PIN (7c).** The dots turn red, shake once and clear; "That PIN isn't right. N tries left." (never colour alone).
+- **Paused (7d).** After 5 wrong tries: "PIN entry is paused" with a countdown ("4:52 left · try again at 4:35 pm"). The pause grows each time: 5, then 15, then 60 minutes (a correct PIN or the password resets it). "Unlock with account password" always works; "Back to Home".
+- **Forgot PIN (7e).** A sheet asks for the account password ("Show" toggles it), then "Choose a new PIN" (7a). A wrong password gets the same neutral words as sign-in. Password checks are limited to 5 in 15 minutes per person.
+- **Lock again (7f).** When I leave the Journal (default), After 1 minute away, After 5 minutes away, When I close Ledge. "Away" means the app or tab hidden (another app or tab, the screen off, minimised) or another page of the app. Leaving locks at once in the first mode; in the timed modes the journal is hidden while away and locks if you were gone at least that long; closing Ledge always locks. On leaving or hiding, the content is hidden at once (before the phone's app-switcher picture) and, for "When I leave the Journal", the unlock is removed on the server (`navigator.sendBeacon` to `POST /api/journal/lock`).
+- **Lock now.** While unlocked, the Journal header has "Lock now" (Ctrl+Shift+L).
+- **Change PIN / Turn off the lock (7f)** ask for the current PIN first. A forgotten PIN is reset with the account password instead.
+- **Elsewhere.** Home's Journal row says "Locked" and only whether today's page is written (7g); the sidebar's Journal row shows a lock icon while locked (7h). Data exports still include journal pages; the PIN hash and lock counters are never exported.
+- **How the unlock is kept.** A signed, httpOnly, SameSite=Strict cookie tied to this sign-in (HMAC with `BETTER_AUTH_SECRET`), dropped when the browser closes and never valid for more than 12 hours or for another sign-in.
+- **Storage.** `user_settings`: `journal_pin_hash` (scrypt, Better Auth's password hashing), `journal_pin_length`, `journal_pin_failures`, `journal_pin_lockouts`, `journal_pin_locked_until`, `journal_relock` (migrations 0012 and 0013).
+- **Limits, honestly.** A short PIN guards against someone using an open device, not against someone with the server or the database; the pauses make guessing slow. The timed "Lock again" modes are decided in the browser (the server's unlock lasts until then); "When I leave the Journal" also removes it on the server.

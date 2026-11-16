@@ -2,6 +2,7 @@ import {
   ArrowUpRight,
   Check,
   ChevronRight,
+  Lock,
   Search,
   Settings,
   Trash2,
@@ -18,6 +19,7 @@ import { HomeActions } from "@/modules/home/home-actions";
 import { greeting, tasksHint, tasksSentence, type TaskCounts } from "@/modules/home/hints";
 import { monthlyTotals } from "@/server/data/finance";
 import { getJournalEntry } from "@/server/data/journal";
+import { journalLock } from "@/server/journal-lock";
 import { getUserSettings } from "@/server/data/settings";
 import { getCompletedTasksOn, getDueByTasks } from "@/server/data/views";
 import { requireUser } from "@/server/session";
@@ -37,11 +39,12 @@ export default async function HomePage() {
   const year = Number(today.slice(0, 4));
   const month = Number(today.slice(5, 7));
 
-  const [due, done, months, journal] = await Promise.all([
+  const [due, done, months, journal, lock] = await Promise.all([
     getDueByTasks(userId, today),
     getCompletedTasksOn(userId, today, timeZone),
     monthlyTotals(userId, year),
     getJournalEntry(userId, today),
+    journalLock(userId),
   ]);
 
   const overdueTasks = due.filter((t) => t.dueDate !== null && t.dueDate < today);
@@ -109,6 +112,9 @@ export default async function HomePage() {
     },
   };
   const homeModules = enabledModules();
+  // While the journal is locked, Home says so and shows only whether today's page is written.
+  const journalLocked = lock.state === "locked" || lock.state === "paused";
+  const badgeFor = (id: string) => (id === "journal" && journalLocked ? <LockedBadge /> : null);
 
   return (
     <>
@@ -143,7 +149,7 @@ export default async function HomePage() {
           <ul className="rounded-2xl border border-dash-edge bg-dash-card px-3 shadow-(--dash-card-shadow)">
             {homeModules.map((m, i) => (
               <li key={m.id} className={i > 0 ? "border-t border-dash-edge" : undefined}>
-                <ModuleRow module={m} hint={hints[m.id]?.line} />
+                <ModuleRow module={m} hint={hints[m.id]?.line} badge={badgeFor(m.id)} />
               </li>
             ))}
           </ul>
@@ -152,7 +158,7 @@ export default async function HomePage() {
         {/* Desktop: one card per module. */}
         <nav aria-label="Modules" className="mt-8 hidden gap-3 md:grid md:grid-cols-3">
           {homeModules.map((m) => (
-            <ModuleCard key={m.id} module={m} hint={hints[m.id]} />
+            <ModuleCard key={m.id} module={m} hint={hints[m.id]} badge={badgeFor(m.id)} />
           ))}
         </nav>
 
@@ -183,7 +189,25 @@ function IconCircle({ icon: Icon, className }: { icon: LucideIcon; className?: s
   );
 }
 
-function ModuleRow({ module: m, hint }: { module: AppModule; hint?: ReactNode }) {
+/** "Locked" beside the Journal's name on Home (screen 7g). */
+function LockedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-dash-well px-2 py-0.5 text-[11px] font-medium text-dash-ink-soft">
+      <Lock aria-hidden className="size-3" />
+      Locked
+    </span>
+  );
+}
+
+function ModuleRow({
+  module: m,
+  hint,
+  badge,
+}: {
+  module: AppModule;
+  hint?: ReactNode;
+  badge?: ReactNode;
+}) {
   return (
     <Link
       href={m.route}
@@ -191,7 +215,10 @@ function ModuleRow({ module: m, hint }: { module: AppModule; hint?: ReactNode })
     >
       <IconCircle icon={m.icon} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[15px] font-semibold text-dash-ink">{m.label}</span>
+        <span className="flex items-center gap-2 text-[15px] font-semibold text-dash-ink">
+          {m.label}
+          {badge}
+        </span>
         {hint ? (
           <span className="flex flex-wrap items-center gap-x-2 text-[13px] text-dash-ink-soft">
             {hint}
@@ -203,7 +230,15 @@ function ModuleRow({ module: m, hint }: { module: AppModule; hint?: ReactNode })
   );
 }
 
-function ModuleCard({ module: m, hint }: { module: AppModule; hint?: Hint }) {
+function ModuleCard({
+  module: m,
+  hint,
+  badge,
+}: {
+  module: AppModule;
+  hint?: Hint;
+  badge?: ReactNode;
+}) {
   return (
     <Link
       href={m.route}
@@ -220,7 +255,10 @@ function ModuleCard({ module: m, hint }: { module: AppModule; hint?: Hint }) {
           className="size-4 text-dash-ink-soft transition-[transform,color] duration-150 ease-snap group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-dash-ink"
         />
       </span>
-      <span className="mt-6 text-[13px] text-dash-ink-soft">{m.label}</span>
+      <span className="mt-6 flex items-center gap-2 text-[13px] text-dash-ink-soft">
+        {m.label}
+        {badge}
+      </span>
       {hint ? (
         <>
           <span className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-[-0.01em] text-dash-ink">

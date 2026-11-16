@@ -18,3 +18,31 @@ export const journalMonthSchema = z.object({
 });
 
 export type SaveJournalInput = z.infer<typeof saveJournalSchema>;
+
+/** The journal PIN: 4 or 6 digits (docs/journal-spec.md, "Journal lock"). */
+export const journalPin = z.string().regex(/^(\d{4}|\d{6})$/, "Use 4 or 6 digits");
+
+const matching = <T extends { pin: string; confirm: string }>(v: T) => v.pin === v.confirm;
+const mismatch = { path: ["confirm"], message: "Those didn't match. Try again." };
+
+export const turnOnSchema = z
+  .object({ pin: journalPin, confirm: z.string() })
+  .refine(matching, mismatch);
+
+export const unlockSchema = z.object({ pin: journalPin });
+
+export const passwordSchema = z.object({
+  password: z.string().min(1, "Enter your password").max(200),
+});
+
+export const resetPinSchema = z
+  .object({ password: z.string().min(1).max(200), pin: journalPin, confirm: z.string() })
+  .refine(matching, mismatch);
+
+export const changePinSchema = z
+  .object({ currentPin: journalPin, pin: journalPin, confirm: z.string() })
+  .refine(matching, mismatch);
+
+export const turnOffSchema = z.object({ currentPin: journalPin });
+
+export const relockSchema = z.object({ relock: z.enum(["leave", "1m", "5m", "close"]) });

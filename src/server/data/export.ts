@@ -34,6 +34,18 @@ export async function exportEverything(userId: string) {
       .where(eq(journalEntries.userId, userId))
       .orderBy(asc(journalEntries.entryDate)),
   ]);
+  // The PIN hash and lock counters are not data the user wrote either.
+  const shownSettings = settings[0]
+    ? (() => {
+        const rest: Partial<(typeof settings)[number]> = { ...settings[0] };
+        delete rest.journalPinHash;
+        delete rest.journalPinFailures;
+        delete rest.journalPinLockedUntil;
+        delete rest.journalPinLength;
+        delete rest.journalPinLockouts;
+        return rest;
+      })()
+    : null;
   // The internal search column is not data the user wrote.
   const cleanTasks = myTasks.map((task) => {
     const rest: Partial<typeof task> = { ...task };
@@ -44,7 +56,7 @@ export async function exportEverything(userId: string) {
     app: "Ledge",
     exportedAt: new Date().toISOString(),
     note: "Money amounts are in minor units (paise for INR). Dates are the user's local days.",
-    settings: settings[0] ?? null,
+    settings: shownSettings,
     lists: myLists,
     tasks: cleanTasks,
     moneyEntries: entries,

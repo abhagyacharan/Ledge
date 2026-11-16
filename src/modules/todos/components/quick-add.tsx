@@ -143,6 +143,7 @@ export function QuickAdd() {
             voice ? "Quick add task (shortcut: q). Hold to speak" : "Quick add task (shortcut: q)"
           }
           title={voice ? "Add a task (q) · hold to speak" : "Add a task (q)"}
+          data-fab
           {...hold.handlers}
           onClick={() => {
             if (!hold.consumeHold()) show();

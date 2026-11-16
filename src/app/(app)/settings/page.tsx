@@ -13,6 +13,7 @@ import { ArchivedLists } from "@/modules/todos/components/archived-lists";
 import { listArchivedLists } from "@/server/data/lists";
 import { getUserSettings } from "@/server/data/settings";
 import { getVoiceConfig } from "@/server/env";
+import { journalLock } from "@/server/journal-lock";
 import { requireUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -85,6 +86,7 @@ export default async function SettingsPage() {
           currencyLabel={`${currencyName} (${symbol})`}
           localeLabel={`${localeName} · ${sample}`}
           voice={getVoiceConfig().enabled ? { enabled: settings.voiceEnabled } : null}
+          journalLockOn={(await journalLock(userId)).state !== "off"}
         />
 
         <ReportsCard thisMonth={money.defaultPeriod} />

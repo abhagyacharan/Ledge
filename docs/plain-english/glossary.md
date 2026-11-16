@@ -285,3 +285,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Transcript.** The written words of what was said in a recording.
 
 **Whisper.** A speech-to-text model. Ledge uses the copy that Groq runs.
+
+**Hash.** A scrambled fingerprint of a password or PIN. The app can check a typed PIN against it, but nobody can turn the hash back into the PIN.
+
+**PIN.** A short number code. The journal uses a 4-digit one so only you can open it on a signed-in device.

@@ -99,3 +99,23 @@ The journal is the most personal thing in Ledge.
 - The money card hides on days with nothing to show; the others always show, with kind words on quiet days.
 - Need · Want is the only spending label, and it is optional.
 - Showing one day in Expenses is a filter on top of the chosen month, so the month picker and the PDF reports did not change.
+
+## The journal lock (added 2026-11-16)
+
+Once you are signed in, anyone who sat at your computer or picked up your phone could have read your journal. Now you can lock it with a **PIN** (a short number code, like a phone's).
+
+- **It's optional.** Turn it on in Settings > Preferences > Journal lock, or with the "Lock with a PIN" button on the Journal. You choose 4 digits (or 6, with "Use a 6-digit PIN") and type them twice.
+- **When it's locked**, Journal shows "Journal is locked". On a phone there is a big number keypad, and the bar of tabs and the + button step aside so the keypad sits under your thumb. On a computer you type the digits into boxes. It opens on the last correct digit; there is no button to press. Until then your server sends nothing from the journal at all, so there is nothing hidden on the page to peek at.
+- **A wrong PIN** turns the dots red, shakes them once and says how many tries are left.
+- **After 5 wrong tries** PIN entry pauses, with a countdown: 5 minutes the first time, then 15, then 60. "Unlock with account password" always works as a way in.
+- **Forgot the PIN?** Tap "Forgot PIN?", type the password you sign in with, and choose a new PIN. Your entries don't change.
+- **When it locks again** is your choice, in Settings > Journal lock: when you leave the Journal (the default), after 1 minute away, after 5 minutes away, or only when you close Ledge. "Away" means switching to another app or tab, the screen turning off, or going to another part of Ledge. While you're away the writing is hidden straight away, even from the phone's picture of open apps; closing Ledge always locks it.
+- **Lock now:** while it's open, the Journal has a "Lock now" button (Ctrl+Shift+L on a computer).
+- **Changing the PIN or turning the lock off** asks for your current PIN first.
+- **Elsewhere:** Home's Journal row says "Locked" and only whether today's page is written, not what it says. On a computer the Journal link in the side menu shows a small padlock while it's locked.
+- **Exports** ("Export everything") still include your journal pages.
+- **How it is stored:** only a scrambled version of the PIN (a **hash**) is saved, never the digits themselves.
+
+**What it does not do:** it protects against someone using your open device, not against someone who has your server or database. With the timed choices (1 or 5 minutes), the decision to lock is made by the browser.
+
+**Checked:** on a phone-sized screen, the lock screen, a wrong PIN with red dots, the pause countdown, unlocking with the password, the settings page and the "Locked" badge on Home; on a computer, the card with boxes and the padlock in the side menu; database tests for turning it on and off, 4 and 6 digits, the growing pauses, the password way in and reset, changing the PIN, the "Lock again" choice, refused saves and the export. **Not checked:** the browser tests (pnpm is blocked on this computer), typing the PIN into the desktop boxes in a visible browser window (the test browser was hidden), and a real phone's screen-off and app-switch (simulated here).

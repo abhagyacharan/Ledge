@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openJournal } from "./journal-pin";
 
 /**
  * The sidebar (docs/design.md §5e): a module's whole header row is one button that shows and
@@ -8,8 +9,7 @@ import { expect, test } from "@playwright/test";
 test("a sidebar section opens and closes with one button, and Journal is a link", async ({
   page,
 }) => {
-  await page.goto("/journal");
-  await expect(page.getByRole("heading", { level: 1, name: "Journal" })).toBeVisible();
+  await openJournal(page);
 
   const sidebar = page.locator("[data-sidebar=sidebar]");
   const header = sidebar.getByRole("button", { name: "Expense Tracker" });

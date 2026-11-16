@@ -33,6 +33,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Main"
+      data-tabbar
       // 16px from the left edge (the page gutter); the right edge stops 8px short of the 56px +
       // button, which is centred on the bar's height.
       className="fixed bottom-(--tabbar-gap) left-4 right-[5.5rem] z-30 h-16 rounded-full border border-dash-edge bg-card p-1.5 shadow-[0_12px_32px_-12px_rgb(16_24_16/0.28),0_2px_6px_-2px_rgb(16_24_16/0.08)] md:hidden dark:shadow-[0_14px_36px_-12px_rgb(0_0_0/0.7)]"

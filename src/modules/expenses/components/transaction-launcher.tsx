@@ -109,6 +109,7 @@ export function TransactionLauncher({
           type="button"
           aria-label="Log a transaction"
           title={voice ? "Log a transaction · hold to speak" : "Log a transaction"}
+          data-fab
           {...hold.handlers}
           onClick={() => {
             if (!hold.consumeHold()) open(kindForPath(pathname));
