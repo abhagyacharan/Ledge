@@ -6,17 +6,12 @@ import { getInbox, listLists } from "@/server/data/lists";
 import { db } from "@/server/db/client";
 import { financeEntries, tasks, userSettings } from "@/server/db/schema";
 import { resetVoiceLimits, takeVoiceRequest } from "@/server/voice-limit";
+import { testAuth } from "../helpers/action-session";
 import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
 
-// Server actions read the signed-in user and revalidate pages; stand both in for a test.
-const session = vi.hoisted(() => ({ userId: "" }));
-vi.mock("@/server/session", () => ({
-  requireUser: async () => ({
-    userId: session.userId,
-    user: { id: session.userId, name: "", email: "" },
-  }),
-  getSession: async () => null,
-}));
+// Server actions read the signed-in user and revalidate pages; stand both in (see the helper).
+vi.mock("@/server/session", async () => (await import("../helpers/action-session")).sessionModule);
+vi.mock("next/headers", async () => (await import("../helpers/action-session")).headersModule);
 vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 
 const { applyVoicePlanAction, undoVoicePlanAction } = await import("@/modules/voice/actions");
@@ -31,7 +26,7 @@ beforeEach(async () => {
   resetVoiceLimits();
   a = await createUser("a@example.com", "A");
   b = await createUser("b@example.com", "B");
-  session.userId = a.id;
+  testAuth.reset(a.id);
 });
 
 const emi = (userId: string, over: Partial<Parameters<typeof createEntry>[1]> = {}) =>
