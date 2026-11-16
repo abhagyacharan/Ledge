@@ -690,3 +690,7 @@ On O's phone, any movement of the finger while holding + ended the recording (th
 ## 2026-11-16: Voice task titles are only the thing to do
 
 "Finish the portfolio site today so that I can host it by tonight" came out titled "...so that I can finish hosting it by tonight". The prompt only said to leave the date, time, list and priority words out of the title, and nothing about reasons. It now says: the title is only the thing to do; no due words (today, tonight, "by Friday", "at 5pm") because those belong in the due date and time; no reason or purpose ("so that...", "because..."); the reason goes into the task's notes as a short clean sentence instead, so nothing the person said is lost. "By tonight" with no time means 20:00. Checked against the real Groq model on four sentences, including O's: that one now gives the title "Finish Ledger's portfolio site", due today at 20:00, with the note "To host it by tonight". If O would rather drop the reason entirely, change the notes line in `src/modules/voice/prompt.ts`.
+
+## 2026-11-16: Hold time is half a second, and the ring follows it
+
+Two seconds felt too long to O, so `HOLD_MS` is 500. The ring around the button used a fixed two-second animation, which would still have looked slow; it now takes exactly `HOLD_MS` (the hook sets a `--hold-ms` variable on the button). To try other lengths, change `HOLD_MS` in `src/modules/voice/components/voice-events.ts` (milliseconds) and redeploy; a value under about 400 risks starting by accident on a slow tap.

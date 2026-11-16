@@ -23,13 +23,16 @@ export function sendVoice(command: VoiceCommand) {
 export const VoiceAvailable = createContext(false);
 export const useVoiceAvailable = () => use(VoiceAvailable);
 
-/** How long to hold the + before it starts listening (O, 2026-11-16: two seconds). */
-export const HOLD_MS = 2000;
+/**
+ * How long to hold the + before it starts listening, in milliseconds (1000 is one second). The
+ * ring around the button takes the same time. O's choice, 2026-11-16: half a second.
+ */
+export const HOLD_MS = 500;
 /** A finger drifting further than this before the hold fires counts as a scroll, not a hold. */
 const MOVE_TOLERANCE = 24;
 
 /**
- * Long press for the round + button: hold for two seconds and it buzzes once and starts
+ * Long press for the round + button: hold for HOLD_MS (half a second) and it buzzes once and starts
  * listening. After that you can let go and put the phone down: it keeps listening until you
  * press Done. A plain tap still clicks. While the finger is down the button grows a ring so you
  * can see it is working, and `touch-action: none` stops the browser turning a small drift of
@@ -53,6 +56,8 @@ export function useHoldToTalk(available: boolean) {
     swallowClick.current = false;
     element.current = event.currentTarget;
     event.currentTarget.dataset.holding = "1";
+    // The ring around the button grows over exactly the hold time (see globals.css).
+    event.currentTarget.style.setProperty("--hold-ms", `${HOLD_MS}ms`);
 
     const detach = () => {
       window.removeEventListener("pointermove", onMove);
