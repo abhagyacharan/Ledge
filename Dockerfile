@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 #
 # Ledge production image (CLAUDE.md §12). Multi-stage, Next.js standalone output, non-root.
 #

@@ -678,3 +678,7 @@ The PIN lock built earlier the same day was reworked to O's Claude Design screen
 - **Exports include journal pages again**, as the mockup's settings note says; the PIN hash and counters are still never exported.
 - Phone lock screen: on-screen keypad, tab bar and + hidden (a `data-pin-screen` mark and an unlayered CSS rule, so it beats the buttons' own display classes). Desktop: digit boxes typed on the keyboard, "Lock now" (Ctrl+Shift+L), a lock icon on the sidebar's Journal row, "Locked" on Home.
 - Note: O first asked for the journal to stay open while moving around the app; the mockup's default is "When I leave the Journal". "After 1 minute away" or "After 5 minutes away" gives the earlier behaviour.
+
+## 2026-11-16: No `# syntax=` line in the Dockerfile
+
+The `# syntax=docker/dockerfile:1` line made every build download the Dockerfile frontend from Docker Hub first. On O's server that download went over IPv6, which the server has no route for, and the build failed before it started. Current Docker (BuildKit, built in since Docker 23) understands everything the Dockerfile uses, including `RUN --mount=type=cache`, so the line is removed and builds need one less download.
