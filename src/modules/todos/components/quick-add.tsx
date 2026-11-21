@@ -15,7 +15,7 @@ import { motion, useReducedMotion, type Transition } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { DashButton } from "@/components/dash/dash-button";
-import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
+import { FAB_CLASS, FAB_ICON_CLASS, FabVoiceHint } from "@/components/shell/fab";
 import { MicButton } from "@/modules/voice/components/mic-button";
 import { useHoldToTalk, useVoiceAvailable } from "@/modules/voice/components/voice-events";
 import { Sheet, SheetBody, SheetFooter, SheetHeader } from "@/components/dash/sheet";
@@ -156,6 +156,11 @@ export function QuickAdd() {
           <Plus aria-hidden className={cn(FAB_ICON_CLASS, open && "rotate-45")} />
         </button>
       )}
+      {voice &&
+      !under(pathname, "/expenses") &&
+      !PHONE_ONLY_ADD_BUTTON.some((p) => under(pathname, p)) ? (
+        <FabVoiceHint />
+      ) : null}
       {/* The same sheet as Log a transaction (O, 2026-11-12): from the right with a mouse, from
           the bottom on a phone. It stays mounted while it slides out; a new key starts it fresh. */}
       <Sheet open={open} onOpenChange={setOpen} initialFocus={titleRef}>

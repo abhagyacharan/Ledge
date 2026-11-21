@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 /**
  * The round "+" button (docs/new_design.md §3). One look and one place for the whole app: Log a
  * transaction on Expense Tracker pages, Add a task everywhere else. On a phone it is 56px and sits
@@ -10,3 +12,34 @@ export const FAB_CLASS =
 
 /** The plus inside it; turns into a cross while its menu is open. */
 export const FAB_ICON_CLASS = "size-6 transition-transform duration-200 ease-snap";
+
+/**
+ * A small note with an arrow pointing at the + from tablet width up: "Hold for voice". Shown only
+ * when voice capture is on, so newcomers learn the hold (O, 2026-11-22). Decorative: the button's
+ * own label already says "hold to speak", and clicks pass through it.
+ */
+export function FabVoiceHint({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none fixed right-[72px] bottom-[56px] z-20 hidden select-none flex-col items-end text-dash-ink-soft md:flex",
+        className,
+      )}
+    >
+      <span className="rounded-full bg-background/80 px-2 py-0.5 text-[18px] font-medium whitespace-nowrap backdrop-blur-sm">Hold for voice</span>
+      <svg
+        viewBox="0 0 40 28"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="mr-[-4px] h-[42px] w-[60px]"
+      >
+        <path d="M4 3c3 12 12 19 28 20" />
+        <path d="M27 18l5 5-6 3" />
+      </svg>
+    </div>
+  );
+}

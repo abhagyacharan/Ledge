@@ -749,6 +749,20 @@ O chose the recommended phone layout for each section (phones = up to 600px wide
 
 O could not sign out on localhost. Cause: something else holds port 3000 on this machine, so the dev server started on 3001, while `.env` has `BETTER_AUTH_URL=http://localhost:3000`. Better Auth refuses auth requests from any other origin ("Invalid origin", 403), so the Sign out button only showed "Couldn't sign out" (sign-in from 3001 would have failed the same way; O was already signed in by an older cookie). Fix: outside production, `trustedOrigins` adds `http://localhost:*` and `http://127.0.0.1:*`. Production still trusts only `BETTER_AUTH_URL`; a foreign origin still gets 403. New e2e tests sign out from the sidebar, from Settings and from Settings on a phone (`sign-out.spec.ts`, `sign-out.mobile.spec.ts`), each with a fresh session; the sign-up test in `auth.spec.ts` was brought up to date with the current Home (greeting, Add a task in place, Overview).
 
+## 2026-11-22: Public page tidy-up, voice hint by the + button, wider logo gap
+
+O's review after seeing the page.
+
+- **Hero:** two halves on a laptop (headline, pitch and buttons left; phone and its screen switch right) to cut its height; one column below 900px with the phone right after the headline. The hero now starts at the top of the window: the 12px strip above it read as a shadow over the nav.
+- **Panels:** one width for the hero and every panel (`--panel-w`, up to 1320px from 1200) and one inside padding (`--pad`, 24 to 88px) on the top, the bottom and the sides, instead of tall top and bottom padding with thin sides.
+- **Hero screen switch:** the chosen screen is a grey well with ink text, like the app's phone tab bar, not a black pill. From 900px wide the hero fills the window below the nav and centres the phone, so the space above the phone equals the space below the switch on any laptop screen (O asked for it on a 1920 x 1080 display); shorter windows fall back to 40px padding. The light orange glow is now a smaller one centred behind the phone that fades out well before every edge of the hero (it used to be cut off at the hero's bottom edge).
+- **Footer:** only "Built by Bhagya Charan Aela · © 2026" and the links in its last row (the small logo and "The everyday ledger" are gone). Taller at the top; the tagline starts above the wordmark and "tomorrow." has its own line. Centred on phones.
+- **Phones:** no floating cards around the hero phone (at 720px and below); the screen switch sits under the phone.
+- **Nav logo:** the wordmark "Ledge." with the orange full stop, the footer's big word in small, instead of the tile and word (O picked it from four options).
+- **App:** from tablet width up, a small "Hold for voice" note and arrow point at the round + whenever voice capture is on (`FabVoiceHint` in `src/components/shell/fab.tsx`). It is decorative (`aria-hidden`; the button's label already says hold to speak) and lets clicks through. The logo lockup's gap between mark and word went from 27.33 to 36 units, everywhere the lockup is used.
+- **Scroll reveals use `data-in`, not a class:** an opened FAQ item disappeared because React rewrote its class list (`faq open`) and wiped the `in` class `SiteMotion` had added. The attribute is not in React's props, so React leaves it alone. Covered by a test in `tests/e2e/site.spec.ts`.
+- **Nav links:** The problem · How it works · Capture · FAQ. "Capture" covers voice and typing (the old "Voice" link); O kept "The problem" rather than "Why Ledge" so the name is not repeated next to the wordmark.
+
 ## 2026-11-22: Repeating tasks as routines (option B), and a multilingual voice spec
 
 - **Problem (O):** with three daily tasks, Upcoming showed each one 14 times and buried one-off tasks. A daily task could be ticked again and again, jumping a day each time, until all 14 were gone. In Today, unticking a ticked repeat left a loose copy behind, so it never settled.
@@ -760,3 +774,4 @@ O could not sign out on localhost. Cause: something else holds port 3000 on this
 - **Not done:** finished copies in the Repeating card do not repeat the "Every day" words (a copy has no rule of its own); the Overview's "due today" list still includes routines.
 - **Multilingual voice:** O wants voice in about ten Indian languages and mixes of them. Written as a future idea in `docs/voice-multilingual-spec.md`. Today's voice forces Whisper to English (`language: "en"`), which is why Hindi comes out in English letters or half translated.
 - **Reason:** O's requests in chat (2026-11-22), choosing option B from three layouts.
+- **Floating nav:** below the hero, a slim solid-white bar with the wordmark, the four links, Log in (and the menu on phones) slides in on the first scroll up and away on scroll down, the usual pattern, so it never covers what you are reading. The link for the section in the middle of the screen gets a grey fill. Solid rather than frosted: over the dark panels a see-through bar showed their text. While hidden it is `inert` and `aria-hidden`, so keyboards and screen readers meet one nav. `FloatingNav` in `src/modules/site/components/site-nav.tsx`.

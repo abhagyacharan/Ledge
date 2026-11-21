@@ -11,8 +11,9 @@ export const SITE_LINKS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "#how", label: "How it works" },
-  { href: "#voice", label: "Voice" },
+  { href: "#problem", label: "The Problem" },
+  { href: "#how", label: "How It Works" },
+  { href: "#capture", label: "Capture" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 

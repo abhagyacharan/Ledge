@@ -40,20 +40,25 @@ export function LedgeMark({ className }: { className?: string }) {
 }
 
 /**
- * The full lockup (mark and wordmark). The mark's L and the word's L are the same height. Sizes keep
+ * The full lockup (mark and wordmark). The mark's L and the word's L are the same height; the gap
+ * between them was widened on 2026-11-22 (O: they sat too close). Sizes keep
  * strokes on whole pixels: md is 3px strokes, lg is 4px.
  */
 export function Brand({ className, size = "md" }: { className?: string; size?: "md" | "lg" }) {
   return (
     <svg
-      viewBox="0 -28 120 36"
+      viewBox="0 -28 128.67 36"
       fill="currentColor"
       role="img"
       aria-label={APP_NAME}
-      className={cn("shrink-0", size === "lg" ? "h-9 w-[120px]" : "h-[27px] w-[90px]", className)}
+      className={cn(
+        "shrink-0",
+        size === "lg" ? "h-9 w-[128.67px]" : "h-[27px] w-[96.5px]",
+        className,
+      )}
     >
       <MarkPaths transform="translate(-6 -28)" />
-      <path d={WORDMARK} transform="translate(27.33 0)" />
+      <path d={WORDMARK} transform="translate(36 0)" />
     </svg>
   );
 }

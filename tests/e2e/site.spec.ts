@@ -62,3 +62,39 @@ test("sign-in and sign-up point first-time visitors to the public page", async (
     );
   }
 });
+
+test("FAQ questions stay on screen after they open and close", async ({ page }) => {
+  await page.goto("/welcome");
+  const items = page.locator(".faq");
+  // Bring each question on screen so its scroll reveal plays, and wait for it to finish.
+  for (const item of await items.all()) {
+    await item.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+    await expect(item).toHaveCSS("opacity", "1");
+  }
+  for (const q of ["Who can see my data?", "Can I lock my journal?", "Who can see my data?"]) {
+    await page.getByRole("button", { name: q }).click();
+    await expect(page.getByRole("button", { name: q })).toHaveAttribute(
+      "aria-expanded",
+      /true|false/,
+    );
+    for (const item of await items.all()) await expect(item).toHaveCSS("opacity", "1");
+  }
+});
+
+test("the nav follows you down the page: hidden on the way down, back on the way up", async ({
+  page,
+}) => {
+  await page.goto("/welcome");
+  const bar = page.locator(".fnav");
+  await expect(bar).not.toHaveAttribute("data-show");
+  // Down past the hero: still hidden while scrolling down.
+  for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 300);
+  await expect(bar).not.toHaveAttribute("data-show");
+  // A small scroll up brings it back, with the section on screen marked.
+  await page.mouse.wheel(0, -120);
+  await expect(bar).toHaveAttribute("data-show", "");
+  await expect(bar.locator('a[aria-current="true"]')).toHaveCount(1);
+  // Its links work.
+  await bar.getByRole("link", { name: "FAQ" }).click();
+  await expect(page).toHaveURL(/#faq$/);
+});

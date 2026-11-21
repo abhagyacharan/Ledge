@@ -6,8 +6,10 @@ import { useEffect } from "react";
 const TARGETS = "[data-reveal], .bw-card, .step, .foot";
 
 /**
- * Turns on the scroll reveals: adds `.motion` to the page root, then `.in` to each target the first
- * time a fifth of it is on screen. Does nothing with reduced motion or without IntersectionObserver,
+ * Turns on the scroll reveals: adds `.motion` to the page root, then `data-in` to each target the
+ * first time a fifth of it is on screen. An attribute, not a class: React rewrites the class list of
+ * an element whose className changes (an FAQ item opening), which would wipe a class added here and
+ * hide the item again. Does nothing with reduced motion or without IntersectionObserver,
  * so content is never left hidden.
  */
 export function SiteMotion() {
@@ -20,7 +22,7 @@ export function SiteMotion() {
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          entry.target.classList.add("in");
+          entry.target.setAttribute("data-in", "");
           observer.unobserve(entry.target);
         }
       },

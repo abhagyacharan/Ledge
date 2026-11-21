@@ -17,14 +17,13 @@ import {
 import type * as React from "react";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { BrandTile } from "@/components/shell/brand";
 import { BeforeWith } from "./before-with";
 import { SITE_LINKS } from "../content";
 import { HeroPhone } from "./hero-phone";
 import { Fact, Moods, Overdue, PHONE_SHOTS, Saved, StatusBar, TaskRow } from "./phone-parts";
 import { SiteFaq } from "./site-faq";
 import { SiteMotion } from "./site-motion";
-import { SiteNav } from "./site-nav";
+import { FloatingNav, SiteNav } from "./site-nav";
 import { VoiceDemo } from "./voice-demo";
 
 /**
@@ -36,6 +35,7 @@ export function SitePage() {
   return (
     <div className="lg">
       <SiteMotion />
+      <FloatingNav />
       <Hero />
       <Problem />
       <HowItWorks />
@@ -79,11 +79,10 @@ function Hero() {
       <div className="wrap">
         <SiteNav />
         <div className="hero-c">
-          <h1 className="h-hero">
-            One <span className="ser">calm</span> place to run your day.
-          </h1>
-          <HeroPhone />
-          <div className="hero-foot">
+          <div className="hero-copy">
+            <h1 className="h-hero">
+              One <span className="ser">calm</span> place to run your day.
+            </h1>
             <p className="lead">
               Tasks, money and a daily journal that already know about each other. Add anything by
               typing or by voice, then see what&apos;s due, what slipped and where the money went.
@@ -97,6 +96,7 @@ function Hero() {
             </div>
             <p className="small">Email and password. Nothing to install.</p>
           </div>
+          <HeroPhone />
         </div>
       </div>
     </header>
@@ -105,7 +105,7 @@ function Hero() {
 
 function Problem() {
   return (
-    <section className="sec center" aria-labelledby="h-problem">
+    <section className="sec center" id="problem" aria-labelledby="h-problem">
       <div className="wrap">
         <span className="eyebrow" data-reveal="">
           The problem
@@ -370,7 +370,7 @@ function HowItWorks() {
 
 function SayIt() {
   return (
-    <section className="say" data-theme="dark" id="voice" aria-labelledby="h-say">
+    <section className="say" data-theme="dark" id="capture" aria-labelledby="h-say">
       <div className="wrap say-grid">
         <div>
           <span className="eyebrow" data-reveal="">
@@ -522,7 +522,8 @@ function Footer() {
           </div>
           <div className="foot-side">
             <h2 className="foot-tag">
-              Start tonight. <span className="ser">Thank yourself tomorrow.</span>
+              Start today. <span className="ser">Thank yourself</span>{" "}
+              <span className="ser ln">tomorrow.</span>
             </h2>
             <div className="foot-ctas">
               <OpenLedge label="Get started" />
@@ -533,16 +534,9 @@ function Footer() {
           </div>
         </div>
         <div className="foot-row">
-          <div className="foot-brand">
-            <a className="logo" href="#top">
-              <BrandTile />
-              Ledge
-            </a>
-            <span className="foot-sub">The everyday ledger</span>
-            <span className="foot-copy">
-              © 2026 · Built by <a href={SITE_LINKS.portfolio}>{SITE_LINKS.builtBy}</a>
-            </span>
-          </div>
+          <p className="foot-copy">
+            Built by <a href={SITE_LINKS.portfolio}>{SITE_LINKS.builtBy}</a> · © 2026
+          </p>
           <nav className="foot-links" aria-label="Footer">
             <a href="#how">How it works</a>
             <a href="#faq">FAQ</a>

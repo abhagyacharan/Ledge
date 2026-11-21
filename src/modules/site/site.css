@@ -64,7 +64,9 @@
   --mono: var(--font-plex-mono), ui-monospace, monospace;
   --gut: clamp(16px, 5vw, 88px);
   /* Width of the dark and orange panels and the hero card: a centred rectangle. */
-  --panel-w: min(1200px, calc(100% - 48px));
+  --panel-w: min(1320px, calc(100% - 32px));
+  /* One padding for every panel: the same on the top, the bottom and the sides. */
+  --pad: clamp(24px, 6vw, 88px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
@@ -137,7 +139,13 @@
     padding: 0 var(--gut);
   }
   & :is(.hero, .panel, .say, .pocket, .foot) .wrap {
-    padding-inline: clamp(16px, 4.5vw, 64px);
+    padding-inline: var(--pad);
+  }
+  & :is(.panel, .say, .pocket) {
+    padding-block: var(--pad);
+  }
+  & .panel .wrap.sec {
+    padding-block: 0;
   }
 
   /* Type */
@@ -384,6 +392,19 @@
   }
 
   /* Nav */
+  & .nav-wm {
+    font: 700 30px / 1 var(--fig);
+    letter-spacing: -0.01em;
+    font-variation-settings:
+      "opsz" 96,
+      "wdth" 80;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  & .nav-wm b {
+    color: var(--accent);
+    font-weight: 700;
+  }
   & .nav {
     position: relative;
     display: flex;
@@ -415,6 +436,65 @@
   & .navpill a:hover {
     background: var(--well);
   }
+  /* The link for the section on screen (floating nav): the same grey well as the hero switch. */
+  & .navpill a[aria-current="true"] {
+    background: var(--track);
+    font-weight: 600;
+  }
+
+  /* The nav that follows you down the page: a slim frosted bar, hidden above the screen until
+     the visitor scrolls up below the hero. */
+  & .fnav {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    z-index: 40;
+    width: min(1120px, calc(100% - 32px));
+    translate: -50% calc(-100% - 24px);
+    opacity: 0;
+    transition:
+      translate 0.4s var(--ease-out),
+      opacity 0.25s var(--ease-out);
+  }
+  & .fnav[data-show] {
+    translate: -50% 0;
+    opacity: 1;
+  }
+  & .fnav-in {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    padding: 0 8px 0 22px;
+    border-radius: 999px;
+    /* Solid white: the bar also passes over the dark panels, where any see-through frost let
+       their text show, and the current link's grey well needs a white ground to read. */
+    background: var(--card);
+    border: 1px solid var(--edge);
+    box-shadow: var(--lift);
+  }
+  & .fnav-in .nav-wm {
+    font-size: 24px;
+  }
+  /* Inside the bar the links sit plainly, without a second pill around them. */
+  & .fnav-in .navpill {
+    background: none;
+    border: 0;
+    padding: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  & .fnav-in .navpill a {
+    padding: 8px 14px;
+  }
+  & .fnav-in .login {
+    height: 44px;
+  }
+  & .fnav-in .mmenu {
+    top: 68px;
+  }
+
   & .nav-r {
     display: flex;
     gap: 8px;
@@ -466,29 +546,38 @@
   /* Hero */
   & .hero {
     width: var(--panel-w);
-    margin: 12px auto 0;
-    border-radius: 40px;
+    margin: 0 auto;
+    border-radius: 0 0 40px 40px;
     position: relative;
     overflow: hidden;
+    /* A soft orange glow behind the phone. It fades out well before every edge of the hero,
+       so it is never cut off where the next section starts. */
     background:
-      radial-gradient(55% 38% at 50% 80%, var(--accent-soft), transparent 72%),
+      radial-gradient(34% 36% at 72% 52%, var(--accent-soft), transparent),
       radial-gradient(70% 45% at 50% 0%, var(--card), transparent 75%), var(--canvas);
   }
+  /* Two halves: the pitch on the left, the phone and its switch on the right. */
   & .hero-c {
-    text-align: center;
-    padding-top: 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+    /* The hero fills the rest of the window below the nav and centres the phone in it, so the
+       space above the phone equals the space below its screen switch on any laptop screen
+       (O, 2026-11-22, on a 1920 x 1080 display). Shorter windows fall back to the padding. */
+    min-height: calc(100svh - 76px);
+    padding: 40px 0;
   }
   & .hero .h-hero {
-    margin: 0 auto;
-    max-width: 1060px;
-  }
-  /* Under the phone: the pitch and the buttons. */
-  & .hero-foot {
-    padding: 44px 0 72px;
+    margin: 0;
+    font-size: clamp(44px, 4.8vw, 72px);
   }
   & .hero .lead {
-    margin: 0 auto;
-    max-width: 620px;
+    margin: 24px 0 0;
+    max-width: 520px;
+  }
+  & .hero .ctas {
+    justify-content: flex-start;
   }
   & .ctas {
     display: flex;
@@ -506,14 +595,13 @@
 
   & .stage {
     position: relative;
-    margin-top: 36px;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 24px;
   }
   & .switch {
-    order: 2;
     display: flex;
     gap: 4px;
     padding: 5px;
@@ -546,15 +634,16 @@
     background: var(--track);
     transition: background 0.2s;
   }
+  /* The chosen screen: a grey well with ink text, like the app's own tab bar. */
   & .sw.on {
-    background: var(--ink);
-    color: var(--on-ink);
+    background: var(--well);
+    color: var(--ink);
+    font-weight: 600;
   }
   & .sw.on .dot {
     background: var(--accent);
   }
   & .phone-area {
-    order: 1;
     position: relative;
     width: 100%;
     display: flex;
@@ -565,7 +654,7 @@
   /* Phone mockup */
   & .phone {
     position: relative;
-    width: 340px;
+    width: 320px;
     border-radius: 52px;
     background: var(--cover);
     padding: 10px;
@@ -919,7 +1008,7 @@
   }
   & .fl {
     position: absolute;
-    width: 260px;
+    width: 236px;
     padding: 16px;
     border-radius: 20px;
     background: var(--card);
@@ -929,12 +1018,12 @@
     text-align: left;
   }
   & .fl.r {
-    left: calc(50% + 116px);
-    top: 110px;
+    left: calc(50% + 104px);
+    top: 96px;
   }
   & .fl.l {
-    right: calc(50% + 116px);
-    top: 390px;
+    right: calc(50% + 104px);
+    top: 430px;
   }
   & .fl.tst {
     width: auto;
@@ -1221,7 +1310,6 @@
   & .say {
     background: var(--canvas);
     color: var(--ink);
-    padding-block: 128px;
     width: var(--panel-w);
     margin: 120px auto 0;
     border-radius: 40px;
@@ -1568,7 +1656,6 @@
     width: var(--panel-w);
     margin: 120px auto 0;
     border-radius: 40px;
-    padding: 120px 0 104px;
   }
   & .pocket.deep {
     background: linear-gradient(135deg, var(--accent-deep), var(--accent-deeper));
@@ -1850,13 +1937,13 @@
     border-radius: 40px 40px 0 0;
     background: var(--canvas);
     color: var(--ink);
-    padding: 88px 0 28px;
+    padding: var(--pad) 0 28px;
     border: 1px solid var(--edge);
     border-bottom: 0;
   }
   & .foot-mark {
     display: flex;
-    align-items: stretch;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 48px;
     border-bottom: 1px solid var(--soft);
@@ -1864,6 +1951,7 @@
   /* Clip only below the baseline; nothing is cut on the top or the sides. */
   & .wm-clip {
     flex: none;
+    margin-top: 72px;
     min-width: 0;
     clip-path: inset(-50% -20% 0 -20%);
     display: flex;
@@ -1891,6 +1979,7 @@
     gap: 24px;
     width: 440px;
     flex: none;
+    align-self: stretch;
     padding-bottom: 24px;
   }
   & .foot-tag {
@@ -1900,7 +1989,8 @@
     font-variation-settings: "opsz" 96;
     text-box: trim-start cap alphabetic;
   }
-  & .foot-tag .ser {
+  & .foot-tag .ser,
+  & .foot-tag .ln {
     display: block;
     color: var(--accent);
     letter-spacing: -0.015em;
@@ -1921,20 +2011,8 @@
     flex-wrap: wrap;
     padding: 28px 0 4px;
   }
-  & .foot-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px 24px;
-    flex-wrap: wrap;
-  }
-  & .foot-brand .logo {
-    font-size: 19px;
-  }
-  & .foot-sub {
-    font: 400 15px var(--ui);
-    color: var(--soft);
-  }
   & .foot-copy {
+    margin: 0;
     font: 400 13px var(--mono);
     color: var(--soft);
   }
@@ -1979,18 +2057,17 @@
   /* ---------------------------------------------------------------- Motion */
 
   /* Hero entrance: plays once on load, no script needed. */
-  & .hero-c > .h-hero,
-  & .hero-foot > * {
+  & .hero-copy > * {
     animation: lg-up 0.7s var(--ease-out) both;
   }
-  & .hero-foot > .lead {
-    animation-delay: 0.55s;
+  & .hero-copy > .lead {
+    animation-delay: 0.2s;
   }
-  & .hero-foot > .ctas {
-    animation-delay: 0.65s;
+  & .hero-copy > .ctas {
+    animation-delay: 0.3s;
   }
-  & .hero-foot > .small {
-    animation-delay: 0.72s;
+  & .hero-copy > .small {
+    animation-delay: 0.38s;
   }
   & .h-hero .ser {
     display: inline-block;
@@ -2028,7 +2105,7 @@
   &.motion [data-reveal="scale"] {
     transform: translateY(20px) scale(0.96);
   }
-  &.motion [data-reveal].in {
+  &.motion [data-reveal][data-in] {
     opacity: 1;
     transform: none;
   }
@@ -2043,7 +2120,7 @@
       translate 0.7s var(--spring),
       rotate 0.7s var(--spring);
   }
-  &.motion .before.in .scrap {
+  &.motion .before[data-in] .scrap {
     opacity: 1;
     translate: 0 0;
     rotate: 0deg;
@@ -2065,7 +2142,7 @@
       opacity 0.5s var(--ease-out),
       translate 0.6s var(--ease-out);
   }
-  &.motion .with.in .fact {
+  &.motion .with[data-in] .fact {
     opacity: 1;
     translate: 0 0;
   }
@@ -2087,20 +2164,20 @@
       opacity 0.35s var(--ease-out),
       scale 0.45s var(--spring);
   }
-  &.motion .step.in .box .chip {
+  &.motion .step[data-in] .box .chip {
     opacity: 1;
     scale: 1;
   }
-  &.motion .step.in .box .chip:nth-child(1) {
+  &.motion .step[data-in] .box .chip:nth-child(1) {
     transition-delay: 0.35s;
   }
-  &.motion .step.in .box .chip:nth-child(2) {
+  &.motion .step[data-in] .box .chip:nth-child(2) {
     transition-delay: 0.45s;
   }
-  &.motion .step.in .box .chip:nth-child(3) {
+  &.motion .step[data-in] .box .chip:nth-child(3) {
     transition-delay: 0.55s;
   }
-  &.motion .step.in .box .chip:nth-child(4) {
+  &.motion .step[data-in] .box .chip:nth-child(4) {
     transition-delay: 0.65s;
   }
   & .box {
@@ -2115,7 +2192,7 @@
   & .amt {
     transform-origin: left bottom;
   }
-  &.motion .step.in .amt {
+  &.motion .step[data-in] .amt {
     animation: lg-pop 0.6s 0.25s var(--spring) both;
   }
 
@@ -2128,7 +2205,7 @@
     transition: transform 0.9s var(--ease-out);
     transition-delay: var(--d, 0s);
   }
-  &.motion .foot.in .wm .ch {
+  &.motion .foot[data-in] .wm .ch {
     transform: none;
   }
   & .wm b {
@@ -2137,7 +2214,7 @@
   &.motion .wm b {
     opacity: 0;
   }
-  &.motion .foot.in .wm b {
+  &.motion .foot[data-in] .wm b {
     animation: lg-drop 0.7s 0.75s var(--spring) both;
   }
 
@@ -2212,6 +2289,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    & .fnav {
+      transition: none;
+    }
     & *,
     & *::before,
     & *::after {
@@ -2236,6 +2316,10 @@
       padding-bottom: 0;
       width: auto;
       max-width: 520px;
+      align-self: auto;
+    }
+    & .wm-clip {
+      margin-top: 0;
     }
     & .wm {
       font-size: 34vw;
@@ -2248,13 +2332,18 @@
       aspect-ratio: 4 / 3;
     }
     & .fl {
-      width: 220px;
+      width: 200px;
+      padding: 14px;
     }
     & .fl.r {
-      left: calc(50% + 130px);
+      left: calc(50% + 96px);
     }
     & .fl.l {
-      right: calc(50% + 130px);
+      right: calc(50% + 96px);
+    }
+    & .fl.tst {
+      width: auto;
+      padding: 0;
     }
     & .dk-body {
       grid-template-columns: 150px minmax(0, 1fr) 220px;
@@ -2263,8 +2352,43 @@
 
   /* Tablet portrait */
   @media (max-width: 900px) {
+    & .hero {
+      background:
+        radial-gradient(60% 26% at 50% 48%, var(--accent-soft), transparent),
+        radial-gradient(70% 45% at 50% 0%, var(--card), transparent 75%), var(--canvas);
+    }
     & {
       --panel-w: calc(100% - 24px);
+    }
+    & .hero-c {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+      text-align: center;
+      min-height: 0;
+      padding: 48px 0 56px;
+    }
+    & .hero-copy {
+      display: contents;
+    }
+    & .hero .h-hero {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    & .stage {
+      order: 1;
+      margin-top: 32px;
+    }
+    & .hero .lead {
+      order: 2;
+      margin: 40px auto 0;
+      max-width: 600px;
+    }
+    & .hero .ctas {
+      order: 3;
+      justify-content: center;
+    }
+    & .hero .small {
+      order: 4;
     }
     & .say-grid {
       grid-template-columns: 1fr;
@@ -2309,30 +2433,8 @@
 
   /* Small tablets and large phones: the floating cards leave the sides. */
   @media (max-width: 720px) {
-    & .phone-area {
-      flex-direction: column;
-      align-items: center;
-    }
     & .fls {
-      position: relative;
-      inset: auto;
-      width: 100%;
-      max-width: 340px;
-      min-height: 150px;
-      margin-top: 20px;
-    }
-    & .flg {
-      inset: 0 0 auto 0;
-    }
-    & .fl.l {
       display: none;
-    }
-    & .fl.r {
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 100%;
-      animation: none;
     }
     & .bw {
       grid-template-columns: 1fr;
@@ -2345,6 +2447,14 @@
 
   /* Phones */
   @media (max-width: 600px) {
+    & .fnav {
+      top: 8px;
+      width: calc(100% - 16px);
+    }
+    & .fnav-in {
+      height: 56px;
+      padding: 0 6px 0 18px;
+    }
     & {
       --panel-w: calc(100% - 16px);
     }
@@ -2370,19 +2480,22 @@
       width: 30px;
       height: 30px;
     }
+    & .nav-wm {
+      font-size: 27px;
+    }
     & .hero {
-      margin-top: 8px;
-      border-radius: 28px;
+      border-radius: 0 0 28px 28px;
     }
     & .hero-c {
-      padding-top: 12px;
+      padding: 32px 0 44px;
     }
-    & .h-hero {
+    & .h-hero,
+    & .hero .h-hero {
       font-size: clamp(36px, 10.6vw, 48px);
       letter-spacing: -0.04em;
     }
-    & .hero-foot {
-      padding: 32px 0 48px;
+    & .hero .lead {
+      margin-top: 32px;
     }
     & .h-sec {
       font-size: clamp(36px, 10.6vw, 48px);
@@ -2403,7 +2516,6 @@
       gap: 16px;
     }
     & .switch {
-      order: 0;
       max-width: 100%;
       overflow-x: auto;
       scrollbar-width: none;
@@ -2435,12 +2547,8 @@
     & .pocket {
       border-radius: 28px;
     }
-    & .say {
-      padding-block: 72px;
-      margin-top: 80px;
-    }
+    & .say,
     & .pocket {
-      padding-block: 72px;
       margin-top: 80px;
     }
     /* How it works: a vertical timeline, one moment under the other. */
@@ -2644,12 +2752,28 @@
       border-radius: 28px 28px 0 0;
       padding-top: 56px;
     }
+    /* Everything in the footer is centred on a phone. */
+    & .foot-mark,
+    & .foot-side,
+    & .foot-row {
+      align-items: center;
+      text-align: center;
+    }
+    & .foot-mark {
+      align-items: center;
+    }
+    & .foot-side {
+      margin-inline: auto;
+    }
+    & .foot-ctas,
+    & .foot-links {
+      justify-content: center;
+    }
+    & .wm-clip {
+      justify-content: center;
+    }
     & .foot-row {
       flex-direction: column;
-      align-items: flex-start;
-    }
-    & .foot-links {
-      margin-left: -14px;
     }
     & .foot-ctas .cta,
     & .foot-ctas .cta-out {

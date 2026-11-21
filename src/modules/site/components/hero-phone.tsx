@@ -41,21 +41,6 @@ export function HeroPhone() {
       onFocusCapture={() => setHover(true)}
       onBlurCapture={() => setHover(false)}
     >
-      <div className="switch" role="group" aria-label="Screens">
-        {TAB_NAMES.map((label, i) => (
-          <button
-            key={label}
-            type="button"
-            className={`sw${on(i)}`}
-            aria-pressed={screen === i}
-            onClick={() => go(i)}
-          >
-            <span className="dot" />
-            {label}
-          </button>
-        ))}
-      </div>
-
       <div
         className="phone-area"
         onTouchStart={(e) => {
@@ -187,6 +172,20 @@ export function HeroPhone() {
             </div>
           </FloatGroup>
         </div>
+      </div>
+      <div className="switch" role="group" aria-label="Screens">
+        {TAB_NAMES.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            className={`sw${on(i)}`}
+            aria-pressed={screen === i}
+            onClick={() => go(i)}
+          >
+            <span className="dot" />
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   );

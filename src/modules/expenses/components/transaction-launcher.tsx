@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from "react";
-import { FAB_CLASS, FAB_ICON_CLASS } from "@/components/shell/fab";
+import { FAB_CLASS, FAB_ICON_CLASS, FabVoiceHint } from "@/components/shell/fab";
 import { useHoldToTalk, useVoiceAvailable } from "@/modules/voice/components/voice-events";
 import { useOpenOnArrival } from "@/hooks/use-open-on-arrival";
 import { cn } from "@/lib/utils";
@@ -119,6 +119,7 @@ export function TransactionLauncher({
           <Plus aria-hidden className={cn(FAB_ICON_CLASS, sheet.open && "rotate-45")} />
         </button>
       ) : null}
+      {button && voice ? <FabVoiceHint /> : null}
 
       <EntrySheet
         formKey={`new-${sheet.kind}-${sheet.n}`}
