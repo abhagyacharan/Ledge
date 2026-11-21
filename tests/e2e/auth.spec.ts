@@ -25,18 +25,20 @@ test("sign up, sign out, and sign in again", async ({ page }) => {
 
   await page.getByLabel("Password").fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
-  // New accounts land on the welcome page; its Tasks button opens quick add on the overview.
+  // New accounts land on Home, which greets them and opens quick add in place.
   await expect(page).toHaveURL(/:\d+\/$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Welcome back, E2E" })).toBeVisible();
-  await page.getByRole("link", { name: /Tasks/ }).filter({ hasText: "Add a task" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening), E2E/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Add a task" }).first().click();
   await expect(page.getByRole("dialog", { name: "Add a task" })).toBeVisible();
-  await expect(page).toHaveURL(/\/tasks$/);
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("heading", { level: 1, name: "Tasks" })).toBeVisible();
+  await page.goto("/tasks");
+  await expect(page.getByRole("heading", { level: 1, name: "Overview" })).toBeVisible();
 
   // The new account starts with nothing to do, and no one else's tasks.
   await expect(page.getByText("All caught up.")).toBeVisible();
-  await expect(page.getByText("Pay rent")).toHaveCount(0);
+  await expect(page.getByRole("main").getByText("Pay rent", { exact: true })).toHaveCount(0);
 
   // Sign out.
   await page.getByRole("button", { name: "Sign out" }).click();

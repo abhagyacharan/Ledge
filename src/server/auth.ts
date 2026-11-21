@@ -15,6 +15,10 @@ const isProduction = process.env.NODE_ENV === "production";
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
+  // Development only: the dev server moves to another port when 3000 is taken (3001, 3200 for the
+  // e2e copy), and Better Auth refuses sign-in and sign-out ("Invalid origin") from any address
+  // but BETTER_AUTH_URL. Production trusts only BETTER_AUTH_URL.
+  ...(isProduction ? {} : { trustedOrigins: ["http://localhost:*", "http://127.0.0.1:*"] }),
   database: drizzleAdapter(db, { provider: "pg", schema }),
   emailAndPassword: {
     enabled: true,

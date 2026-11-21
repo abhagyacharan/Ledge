@@ -1,3 +1,5 @@
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { Brand, BrandTile, Wordmark } from "@/components/shell/brand";
 import { GrainGradient, randomGradient } from "@/components/shell/grain-gradient";
 
@@ -70,7 +72,9 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="grid min-h-svh md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside className="hidden flex-col justify-between gap-12 bg-[#121514] p-10 text-[#f2f4f1] [--dash-accent:#f58445] md:flex lg:p-14">
-        <Brand size="lg" />
+        <Link href="/welcome" aria-label="Ledge: about the app" className="w-fit rounded-md">
+          <Brand size="lg" />
+        </Link>
         <div className="max-w-md">
           <p className="label-caps text-[#9fdcb9]">The everyday ledger</p>
           <p className="mt-4 font-display text-4xl leading-[1.08] font-semibold tracking-tight lg:text-5xl">
@@ -80,6 +84,13 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             Ledge comes from ledger, the book where you write things down so nothing slips. It
             starts with your tasks and your money, and more of everyday life joins it over time.
           </p>
+          <Link
+            href="/welcome"
+            className="group mt-7 inline-flex h-11 items-center gap-2 rounded-full border border-[#f2f4f1]/25 px-5 text-sm font-medium text-[#f2f4f1] transition-colors hover:bg-[#f2f4f1]/10"
+          >
+            See what Ledge does
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
         <Contents />
       </aside>
@@ -90,13 +101,29 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           {/* Phones have no cover panel, so the logo stands on its own above the card, side by side:
               the app icon tile (the same picture as the home-screen icon) at 48px, where the mark
               inside is 24px tall, then the wordmark at 1px per unit so its capitals are 24px too. */}
-          <div className="mb-7 flex items-center justify-center gap-3 md:hidden">
+          <Link
+            href="/welcome"
+            aria-label="Ledge: about the app"
+            className="mx-auto mb-7 flex w-fit items-center justify-center gap-3 rounded-xl md:hidden"
+          >
             <BrandTile className="size-12 drop-shadow-[0_10px_22px_rgb(0_0_0/0.35)]" />
             <Wordmark className="h-8 w-[92px] text-[#f2f4f1] drop-shadow-[0_1px_8px_rgb(0_0_0/0.35)]" />
-          </div>
+          </Link>
           <div className="mx-auto w-full max-w-sm rounded-3xl bg-card p-6 text-card-foreground shadow-[0_30px_80px_-24px_rgb(0_0_0/0.55)] sm:p-8">
             {children}
           </div>
+          {/* First visit? The public page explains the app (src/app/(site)/welcome). A dark frosted
+              pill keeps the text readable on any part of the random gradient. */}
+          <p className="mx-auto mt-6 flex w-fit items-center gap-1 rounded-full bg-black/45 py-0.5 pr-2 pl-4 text-sm text-[#f2f4f1] backdrop-blur-md">
+            New to Ledge?
+            <Link
+              href="/welcome"
+              className="inline-flex min-h-11 items-center gap-1 rounded-full px-2 font-semibold underline decoration-[#f2f4f1]/40 underline-offset-4 hover:decoration-[#f2f4f1]"
+            >
+              See what it does
+              <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          </p>
         </main>
       </div>
     </div>

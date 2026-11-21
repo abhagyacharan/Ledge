@@ -38,6 +38,7 @@ The work is done in thirteen steps, called phases, always in the same order. A p
 
 ## Other pages
 
+- [The public page](public-site.md): what signed-out visitors now see at Ledge's address, built from your own design (21 November 2026).
 - [How the tests work](how-tests-work.md): where test data comes from, why tests were slow, and how they were sped up.
 - [What comes next](whats-next.md): the plan for after deployment (automatic updates, a glass look, smarter search, a phone app, open source). The glass look was tried and dropped; only the floating phone bar stayed. Smarter search and the phone app are on hold (14 November 2026). It also describes a new idea, the Work page with a daily briefing, which is a written proposal only. The rest is not built yet.
 - [Glossary](glossary.md): plain meanings of technical words.

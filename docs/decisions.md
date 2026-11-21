@@ -708,3 +708,43 @@ O asked whether to make an app. Decision: no new project and no new backend. The
 **Why the worker caches only static files:** Ledge holds finances and a private journal. A cached page or API response would survive signing out and could be read from an unlocked phone offline. So the worker caches `/_next/static/*` and `/icons/*` only, and serves `/offline.html` when a navigation fails. `src/proxy.test.ts` guards this (the worker handles only navigations and static files, and has exactly one `cache.put`).
 
 **How:** the worker registers only in production (`ServiceWorkerRegister`), so dev hot reload is unaffected. `/sw.js` is sent `no-cache` so updates apply on the next launch; `skipWaiting` and `clients.claim` activate a new version at once; `CACHE_VERSION` drops old caches. The proxy matcher lets `sw.js` and `offline.html` through signed out, because the phone fetches them without cookies.
+
+## 2026-11-21: A public page about Ledge, at / for signed-out visitors
+
+O designed a showcase page in Claude Design (canvas "Ledge site", brief and tokens in `docs/site designs/`) and asked for it to be built in this codebase. That lifts the "public portfolio" non-goal for this one page only.
+
+- **Where:** `src/app/(site)/welcome`, public (the proxy lets `/welcome` through). A signed-out visit to `/` is rewritten to it, so the address stays `/`; signed-in people still get Home at `/`, and every other app page still redirects to sign-in. A stale cookie on `/` still ends at sign-in through `requireUser()`. Alternatives were a separate static site (another deploy to keep) or `/welcome` only (a bare domain would still bounce to sign-in).
+- **Look:** the design's own stylesheet, kept as `src/modules/site/site.css` and nested under `.lg` so its short class names cannot reach the app after a client navigation; keyframes are prefixed `lg-`. Tokens are the app's (`docs/new_design.md` §2) plus the site's orange set; the page follows the app's light or dark theme, and the How it works, voice and footer panels are always dark. Breakpoints use media queries (the design used container queries on its canvas).
+- **Reuse:** the app's logo (`BrandTile`), Lucide icons, and the real quick-add parser (`parseQuickAdd`) in the Type demo, so the chips read exactly as in the app ("Priority: High"). Instrument Serif (the one serif-italic headline word) loads only on this page via `next/font`.
+- **Content:** product facts only; no ratings, prices or user counts. The voice demo is pretend (no microphone, no network). Links and the "Built by" line are in `src/modules/site/content.ts`; the portfolio address there is a guess for O to confirm.
+- **Kept from the design as drawn:** the footer keeps "Start tonight. Thank yourself tomorrow." beside the big wordmark, and section 5 uses the deep orange variant (the peach variant is one class away: `pocket peach`).
+
+## 2026-11-21: The public page is light only, responsive by hand, and moves
+
+O's feedback on the first build: no dark version of the site, the responsive layout from the Claude Design canvas was poor, and the page felt static.
+
+- **Light only.** The site no longer follows the app's theme; `html:has(.lg)` keeps the page background light in dark mode too. The How it works, voice and footer panels stay dark, as designed.
+- **Responsive.** Rewritten for four widths instead of the canvas's three: up to 1080 (two-column steps at 4:3, narrower side cards), 900 (voice section stacks; the phone mockup sits over the laptop's corner instead of below it), 720 (the floating cards leave the phone's sides and one shows below it) and 600 (phones: menu, smaller type, stacked buttons, a swipeable row of steps with a hint, inset panels with 28px corners). A bug where `.sec` padding wiped the side padding of How it works is fixed (`padding-block`).
+- **Motion.** The hero enters in sequence on load and the phone and its cards float gently. Sections reveal as they scroll in (`SiteMotion` adds `.motion` and an IntersectionObserver adds `.in`): headings rise, the Before scraps drop and settle, the With Ledge facts fill in, step boxes stagger and their chips pop, the laptop and phone slide in, FAQ items stagger, and the footer wordmark rises letter by letter. Buttons, FAQ (smooth open, icon turn) and the phone menu have small transitions. With reduced motion, or without JavaScript, nothing is hidden and nothing moves.
+
+## 2026-11-21: The public page shows the real app, phone first
+
+From O's review of the public page:
+
+- **Real screenshots.** The phone and laptop mockups now show screenshots of the real app (`public/site/`), not drawings. `tests/e2e/site-shots.spec.ts` makes them: it is skipped unless `SITE_SHOTS=1`, signs in as the seeded demo user on the fresh e2e database, writes a journal page for today, and saves four phone screens (390 x 724 at 3x: Home, Today, Expense summary, Journal) and the Work list with a task open (1440 x 900 at 2x). It also records where the phone tab bar's buttons are; the hero lays invisible buttons over them, so the screenshot's own tab bar switches screens. Rerun it after a visible change to those screens. The proxy lets `/site/` through signed out (the image optimiser fetches it without cookies).
+- **Phone first.** The hero pill is gone; the headline is smaller (40 to 84px) and sits right under the nav, the phone follows, and the pitch and buttons move below the phone, so the phone is on the first screen on desktop and phone.
+- **Panels as centred rectangles.** The hero card and the How it works, voice, pocket and footer panels are `min(1200px, 100% - 48px)` wide and centred instead of edge to edge (100% - 24px on tablets, - 16px on phones).
+- **Smaller fixes.** The nav links scroll smoothly to their sections (off with reduced motion); the Undo in toasts is a centred pill; the voice demo's card changes height smoothly (it measures its content with a ResizeObserver and animates the height) and each state fades in.
+
+## 2026-11-21: The public page on phones (O's picks)
+
+O chose the recommended phone layout for each section (phones = up to 600px wide):
+
+- **Before / With Ledge:** one card at a time under a Before | With Ledge switch (`before-with.tsx`). Both cards share one grid cell and cross-fade, so both are always laid out (the scroll reveals still see them). It flips to With Ledge once, 2.6 s after the section is in view, unless the visitor has chosen; a sideways swipe flips it. Wider screens show both side by side and no switch.
+- **How it works:** a vertical timeline (an orange line with a dot per moment; time, title, one line, then the illustration) instead of the sideways swipe row.
+- **Say it, or type it:** the same live demo, compact: smaller cards and chips, no "Try saying" list (the Type tab keeps its examples).
+- **In your pocket. At your desk.:** no laptop picture; the real phone screenshot and three icon rows (Ctrl K, one thumb, sidebar and side-by-side tasks on a laptop).
+
+## 2026-11-21: Development trusts any localhost port for sign-in and sign-out
+
+O could not sign out on localhost. Cause: something else holds port 3000 on this machine, so the dev server started on 3001, while `.env` has `BETTER_AUTH_URL=http://localhost:3000`. Better Auth refuses auth requests from any other origin ("Invalid origin", 403), so the Sign out button only showed "Couldn't sign out" (sign-in from 3001 would have failed the same way; O was already signed in by an older cookie). Fix: outside production, `trustedOrigins` adds `http://localhost:*` and `http://127.0.0.1:*`. Production still trusts only `BETTER_AUTH_URL`; a foreign origin still gets 403. New e2e tests sign out from the sidebar, from Settings and from Settings on a phone (`sign-out.spec.ts`, `sign-out.mobile.spec.ts`), each with a fresh session; the sign-up test in `auth.spec.ts` was brought up to date with the current Home (greeting, Add a task in place, Overview).

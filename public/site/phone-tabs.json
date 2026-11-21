@@ -1,0 +1,36 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 724
+  },
+  "tabs": [
+    {
+      "label": "Home",
+      "x": 23,
+      "y": 655,
+      "width": 66.5,
+      "height": 50
+    },
+    {
+      "label": "Tasks",
+      "x": 91.5,
+      "y": 655,
+      "width": 66.5,
+      "height": 50
+    },
+    {
+      "label": "Expenses",
+      "x": 160,
+      "y": 655,
+      "width": 66.5,
+      "height": 50
+    },
+    {
+      "label": "Journal",
+      "x": 228.5,
+      "y": 655,
+      "width": 66.5,
+      "height": 50
+    }
+  ]
+}
