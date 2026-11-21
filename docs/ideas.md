@@ -68,6 +68,8 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 
 ### 6. Phone app sharing the same data
 
+- **Update (2026-11-21):** route 1 (installable web app) was built as Phase 13 (`docs/pwa-spec.md`). Routes 2 and 3 stay parked.
+
 - **Short answer:** the data already lives in one place, the home server. Any app is just another window onto that same server and database, so the website and the app can never drift apart. No second database. It can live in this repo.
 - **Three routes, smallest first:**
   1. **Installable web app (PWA):** add a web app manifest, icons and a small service worker. "Add to Home screen" then gives an icon, a full-screen window with no browser bars and its own entry in the app switcher, on Android and iPhone. Same code, same repo, same deploys; an update on the server is an update of the app. Needs HTTPS, which the tunnel provides. A few days of work at most. Limits: no app store listing, and offline use needs extra work.
@@ -119,5 +121,6 @@ Nothing here is built or scheduled yet. This is the order O wants once the app i
 ## Later modules mentioned in the spec
 
 - Calendar, notes, goals dashboard, public portfolio
+- 2026-11-21: **Public showcase site for Ledge** (a landing page, separate from the app). O made two drafts in Claude Design; the merged brief, design system and reference crops are in `docs/site designs/` (`claude-design-prompt.md`, `design-system.md`, `refs/`). Not built. Building it needs O's OK to lift "public profile or portfolio" from the §1 non-goals, plus decisions on where it is hosted and what the main button does while sign-up is off.
 - 2026-11-12: **Reminders** and **Health** (health data pulled from tracking devices), named by O as where Ledge is heading, with the Journal (built the same day as Phase 11). The sign-in page lists them as "Later" on its contents page; neither is specced or built.
 - 2026-11-12: **Other people using Ledge** on O's server (accounts for others, so not "self-hosted" from their point of view). O's stated direction; it touches §16 Q3, sign-up, privacy wording and backups, so it needs a decision before anything is built.

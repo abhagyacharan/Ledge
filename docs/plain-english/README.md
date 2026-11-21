@@ -17,7 +17,7 @@ Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 ## How the work is split into phases
 
-The work is done in twelve steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
+The work is done in thirteen steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
 | Phase | Name                          | Status                                                 | Read                                                         |
 | ----- | ----------------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
@@ -34,6 +34,7 @@ The work is done in twelve steps, called phases, always in the same order. A pha
 | 10    | Extra features (if time)      | In progress                                            | [phase-10-extra-features.md](phase-10-extra-features.md)     |
 | 11    | Journal                       | Built (2026-11-12), browser tests not run yet          | [phase-11-journal.md](phase-11-journal.md)                   |
 | 12    | Voice capture                 | Built (2026-11-15), not tried with a real Groq key yet | [phase-12-voice.md](phase-12-voice.md)                       |
+| 13    | Installable app (PWA)         | Built (2026-11-21), not tried on a phone yet           | [phase-13-installable-app.md](phase-13-installable-app.md)   |
 
 ## Other pages
 

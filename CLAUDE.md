@@ -96,7 +96,7 @@ Dockerfile  .dockerignore  .gitattributes    # multi-stage image: base, deps, bu
 .env.production.example                      # the server's settings template (compose reads .env)
 scripts/                                     # seed.ts, backup.sh (nightly dump), restore.sh, deploy.sh (one-command server update)
 src/
-  proxy.ts                  # optimistic cookie redirect only (not real auth)
+  proxy.ts                  # optimistic cookie redirect only (not real auth); lets sw.js, offline.html, manifest and icons through
   hooks/                    # shared React hooks (shadcn)
   app/                      # routes (App Router)
     (auth)/sign-in, sign-up
@@ -136,7 +136,7 @@ src/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
   lib/                      # shared utils: dates.ts (floating dates), money.ts (integer paise), ordering.ts (fractional index), pdf.ts (tiny PDF writer), result.ts, utils.ts
-docs/ decisions.md  ideas.md  expenses-spec.md  journal-spec.md  work-spec.md (proposal, not built)  voice-spec.md (voice capture with Groq; proposal, not built)  design.md  new_design.md (O's Claude Design spec, draft; wins over design.md)      # PRODUCT.md (root): product brief read by the impeccable design skill
+docs/ decisions.md  ideas.md  expenses-spec.md  journal-spec.md  pwa-spec.md (installable app, Phase 13)  work-spec.md (proposal, not built)  voice-spec.md (voice capture with Groq; proposal, not built)  design.md  new_design.md (O's Claude Design spec, draft; wins over design.md)      # PRODUCT.md (root): product brief read by the impeccable design skill
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
   brand/                    # logo: logo-prompt.md (brief), concepts.html (all four), logo.html (chosen B), usage.md (rules); SVGs in public/brand/, home-screen PNGs in public/icons/ (scripts/make-icons.py; src/app/manifest.ts lists them)
 .agents/skills/             # third-party agent skills from `npx skills add` (skills-lock.json; Prettier ignores them)
@@ -378,21 +378,22 @@ This is the canonical plan. It expands the original suggested build order into p
 
 **Stop line:** if it is Saturday evening and P0 is not done, drop all P1 work. If it is Sunday night, deploy what exists and freeze. After that, maintenance is capped at about 2 hours per week so the main plan is not starved. When the stop line triggers, record it in the status snapshot.
 
-| #   | Phase                           | Status                    |
-| --- | ------------------------------- | ------------------------- |
-| 0   | Scaffold                        | `[x]` done 2026-11-10     |
-| 1   | Auth                            | `[x]` done 2026-11-10     |
-| 2   | Data model                      | `[x]` done 2026-11-10     |
-| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10     |
-| 4   | Views (P0)                      | `[x]` done 2026-11-10     |
-| 5   | Safety (P0)                     | `[x]` done 2026-11-10     |
-| 6   | Polish                          | `[x]` done 2026-11-10     |
-| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11     |
-| 8   | Frontend redesign               | `[x]` done 2026-11-11     |
-| 9   | Deploy and backup               | `[~]` built; O deploys    |
-| 10  | P1 items (only if time remains) | `[~]`                     |
-| 11  | Journal                         | `[~]` built; e2e pending  |
-| 12  | Voice capture                   | `[~]` built; Groq untried |
+| #   | Phase                           | Status                     |
+| --- | ------------------------------- | -------------------------- |
+| 0   | Scaffold                        | `[x]` done 2026-11-10      |
+| 1   | Auth                            | `[x]` done 2026-11-10      |
+| 2   | Data model                      | `[x]` done 2026-11-10      |
+| 3   | Lists, tasks, tags CRUD (P0)    | `[x]` done 2026-11-10      |
+| 4   | Views (P0)                      | `[x]` done 2026-11-10      |
+| 5   | Safety (P0)                     | `[x]` done 2026-11-10      |
+| 6   | Polish                          | `[x]` done 2026-11-10      |
+| 7   | Expense tracker (§7)            | `[x]` done 2026-11-11      |
+| 8   | Frontend redesign               | `[x]` done 2026-11-11      |
+| 9   | Deploy and backup               | `[~]` built; O deploys     |
+| 10  | P1 items (only if time remains) | `[~]`                      |
+| 11  | Journal                         | `[~]` built; e2e pending   |
+| 12  | Voice capture                   | `[~]` built; Groq untried  |
+| 13  | Installable app (PWA)           | `[~]` built; phone untried |
 
 ### Phase 0: Scaffold
 
@@ -588,6 +589,18 @@ Goal: hold + (or press `v`) and speak to add tasks and money, reviewed before sa
 
 Exit: on O's phone over the tunnel, the §1 example commands go from voice to saved items correctly and Undo reverses each; the §15 definition of done holds.
 
+### Phase 13: Installable app (PWA)
+
+Goal: "Add to Home screen" gives Ledge its own icon and a full-screen window on Android and iPhone; same code, server and data (spec: `docs/pwa-spec.md`). O asked for it on 2026-11-21 ("spec the PWA and start building"). A native app stays parked.
+
+- [x] Spec written: `docs/pwa-spec.md` (2026-11-21)
+- [x] Service worker `public/sw.js` (static files only, never pages or data; offline page `public/offline.html`), `ServiceWorkerRegister` (production only), `/sw.js` no-cache header, proxy lets both through signed out (2026-11-21)
+- [x] Manifest shortcuts, orientation, categories; `appleWebApp` metadata (2026-11-21)
+- [x] `src/proxy.test.ts`: matcher and the worker's privacy rule (2026-11-21)
+- [ ] (O) Installed and tried on his phone over the tunnel; offline page seen with the network off
+
+Exit: installable over HTTPS; offline navigation shows the offline page; nothing from the database is in Cache Storage; the §15 definition of done holds for what is visible (offline page: phone width, light and dark).
+
 ### After the phases: O's roadmap (plan only, 2026-11-13)
 
 Not phases yet; do not build any of it without a spec and O's go-ahead. Order: fix small bugs, deploy by hand (Phase 9), automatic deploys on push, then one at a time and each live before the next: glass redesign (looks only), smarter search (pgvector, then RAG; needs a model provider), a phone app sharing the same data (PWA first), and last open source plus public hosting. Details, options and risks: `docs/ideas.md` ("Roadmap after deployment"). **Voice capture** (hold + to speak tasks and expenses; Groq Whisper and a Groq language model, chosen by O on 2026-11-15) is now Phase 12 above.
@@ -731,4 +744,5 @@ When any of these happens, update the listed places before finishing the task.
 | 2026-11-15 | Tasks, Expense Tracker and Journal redesigned to docs/new_design.md (screens 2a to 4e); Duplicate task and "move tasks to General, then delete" for lists; status snapshot                                                                                                                                                                                                 | O asked for the tasks, expense tracker and journal UI next                                                                       |
 | 2026-11-15 | New Home page and navigation from O's Claude Design mockups: §4 (`modules/home`, `docs/new_design.md`), §8 layout line, status snapshot                                                                                                                                                                                                                                    | O asked to overhaul the UI to the new design, starting with Home                                                                 |
 | 2026-11-14 | §4: `docs/work-spec.md` added (proposal for a Work page with daily briefings; not built, not a phase). Roadmap items 5 and 6 marked on hold in `docs/ideas.md`                                                                                                                                                                                                             | O asked for a full spec of his idea and said smarter search and the phone app can wait                                           |
+| 2026-11-21 | Phase 13 Installable app (PWA): status snapshot, §4 (proxy line, `docs/pwa-spec.md`), §14 table and Phase 13; `public/sw.js` and `offline.html` are outside `src`                                                                                                                                                                                                          | O asked whether to make a phone app; chose the PWA first and said "spec the PWA and start building"                              |
 | 2026-11-15 | Home-screen icon: web manifest (`src/app/manifest.ts`), black 192, 512 and maskable PNGs (`public/icons`, `scripts/make-icons.py`), proxy lets them through signed out; §4                                                                                                                                                                                                 | O: the phone shortcut's icon had an off-white background instead of black                                                        |

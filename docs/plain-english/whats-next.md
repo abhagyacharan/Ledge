@@ -89,6 +89,8 @@ This is the same choice that is holding back the journal's AI ideas. Until you c
 
 ## 6. A phone app
 
+**Update (21 November 2026):** the first, smallest step is built: Ledge can now be installed on a phone like an app. See [phase-13-installable-app.md](phase-13-installable-app.md). A full store app is still parked.
+
 **The good news.** Your data lives in one place: the database on your home server. The website is only a window onto it. A phone app would be a second window onto the same data. So the two can never disagree, and there is no second database to build. It can all stay in this one project.
 
 **Three ways to do it, smallest first.**

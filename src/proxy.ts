@@ -16,8 +16,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Everything except auth pages, the auth API, health check, Next.js internals/static files, and the
-  // icons and manifest a phone fetches without cookies when Ledge is added to the home screen.
+  // icons, manifest, service worker and offline page a phone fetches without cookies when Ledge is
+  // added to the home screen (docs/pwa-spec.md).
   matcher: [
-    "/((?!sign-in|sign-up|api/auth|api/health|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|icons/).*)",
+    "/((?!sign-in|sign-up|api/auth|api/health|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|icons/|sw.js|offline.html).*)",
   ],
 };

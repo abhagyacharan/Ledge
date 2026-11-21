@@ -289,3 +289,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Hash.** A scrambled fingerprint of a password or PIN. The app can check a typed PIN against it, but nobody can turn the hash back into the PIN.
 
 **PIN.** A short number code. The journal uses a 4-digit one so only you can open it on a signed-in device.
+
+**PWA (progressive web app).** A website that can be installed on a phone like an app: its own icon, full screen, no browser bars. Same code and same data as the website.
+
+**Service worker.** A small script a phone keeps running in the background for a website. Ledge's only keeps fixed files and shows an offline page; it never stores your personal data.
+
+**Manifest.** A small file that tells a phone a website's name, icon and colours when it is added to the home screen.
+
+**Cache.** A stored copy of something so it loads faster next time. Ledge only caches files that hold no personal information.
