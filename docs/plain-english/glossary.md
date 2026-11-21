@@ -190,6 +190,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Restore.** Putting a backup back, so the database matches how it was when the backup was taken. Anything saved after the backup is lost.
 
+**Routine (tasks).** A task that repeats more than once a week, such as a daily skincare task. Today and Upcoming keep routines in their own Repeating card so they do not bury one-off tasks.
+
 **Rollback.** Putting the screen back the way it was when a change that already appeared on screen could not be saved.
 
 **Route (tunnel).** One line in a Cloudflare tunnel that sends visitors of one name (such as ledge.your-domain) to one program on the server. One tunnel can have many routes.

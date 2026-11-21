@@ -3,6 +3,8 @@ import {
   countCompletedOn,
   groupCompletedByDay,
   groupUpcoming,
+  isRoutine,
+  onePerRepeat,
   splitToday,
   weekDates,
 } from "./day-views";
@@ -167,5 +169,25 @@ describe("countCompletedOn", () => {
       { date: "2026-11-09", count: 1 },
       { date: "2026-11-10", count: 1 },
     ]);
+  });
+});
+
+describe("isRoutine and onePerRepeat", () => {
+  const row = (id: string, rule: string | null, origin: string | null = null) => ({
+    id,
+    recurrenceRule: rule,
+    recurrenceOriginId: origin,
+  });
+  it("keeps frequent repeats and their finished copies in the Repeating card", () => {
+    const ids = new Set(["skin"]);
+    expect(isRoutine(row("skin", "FREQ=DAILY"), ids)).toBe(true);
+    expect(isRoutine(row("copy", null, "skin"), ids)).toBe(true);
+    expect(isRoutine(row("rent", "FREQ=MONTHLY"), ids)).toBe(false);
+    expect(isRoutine(row("copy2", null, "rent"), ids)).toBe(false);
+    expect(isRoutine(row("call", null), ids)).toBe(false);
+  });
+  it("shows a repeat once, whether as the task or its finished copy", () => {
+    const rows = [row("copy", null, "skin"), row("skin", "FREQ=DAILY"), row("call", null)];
+    expect(onePerRepeat(rows).map((r) => r.id)).toEqual(["copy", "call"]);
   });
 });

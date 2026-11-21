@@ -317,3 +317,21 @@ function formatShortDate(iso: IsoDate, locale: string): string {
     timeZone: "UTC",
   }).format(new Date(Date.UTC(y, m - 1, d)));
 }
+
+/**
+ * A repeat that comes back more than once a week: every day, every 2 to 6 days, or weekly on two
+ * or more weekdays. These are routines (skincare, steps, supplements), so Today and Upcoming keep
+ * them in their own Repeating card instead of mixing them with one-off tasks (O, 2026-11-22).
+ * Weekly, monthly and yearly repeats stay on their day like any task.
+ */
+export function isFrequentRule(rule: Rule): boolean {
+  if (rule.freq === "daily") return rule.interval < 7;
+  if (rule.freq === "weekly") return rule.interval === 1 && rule.byDay.length >= 2;
+  return false;
+}
+
+/** `isFrequentRule` for a stored rule; false when there is no rule or it is not understood. */
+export function isFrequentStored(text: string | null): boolean {
+  const rule = text ? parseRule(text) : null;
+  return rule ? isFrequentRule(rule) : false;
+}

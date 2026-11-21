@@ -7,7 +7,7 @@ import { addDaysIso, formatRowDay, formatTime, isOverdue } from "@/lib/dates";
 import { describeStored } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
 import type { ViewTask } from "@/server/data/views";
-import { CheckboxButton, PRIORITY_STYLE, useToggleDone } from "./task-row";
+import { CheckboxButton, PRIORITY_STYLE, repeatDate, useToggleDone } from "./task-row";
 import { PRIORITY_LABELS, type DateContext } from "./types";
 import { useTaskLinks } from "./use-task-links";
 
@@ -88,7 +88,12 @@ export function AllTasksTable({
 }
 
 function Row({ task, subtasks, ctx }: { task: ViewTask; subtasks: ViewTask[]; ctx: DateContext }) {
-  const { done, toggle } = useToggleDone(task.id, task.title, task.status === "done");
+  const { done, toggle, ahead } = useToggleDone(
+    task.id,
+    task.title,
+    task.status === "done",
+    repeatDate(task),
+  );
   const { hrefFor } = useTaskLinks();
   const late = !done && isOverdue(task, ctx.today, ctx.timeNow);
   const time = task.dueTime ? formatTime(task.dueTime, ctx.locale) : null;
@@ -121,6 +126,7 @@ function Row({ task, subtasks, ctx }: { task: ViewTask; subtasks: ViewTask[]; ct
             done={done}
             onToggle={toggle}
             priority={task.priority}
+            ahead={ahead}
           />
           <Link
             href={hrefFor(task.id)}

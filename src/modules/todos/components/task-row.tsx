@@ -2,6 +2,7 @@
 
 import { CalendarDays, Check, Flag, Folder, ListChecks, Repeat, TriangleAlert } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import { motion, useIsPresent, useReducedMotion, type TargetAndTransition } from "motion/react";
 import {
@@ -33,11 +34,25 @@ import { PRIORITY_LABELS, type DateContext } from "./types";
 /** Priority words (docs/new_design.md §4): High red, Medium amber, Low soft, each with a flag. */
 export const PRIORITY_STYLE = ["", "text-dash-ink-soft", "text-dash-warn", "text-dash-bad"];
 
+/** The date an open repeating task is due on, which decides whether it can be ticked yet. */
+export function repeatDate(
+  task: Pick<TaskRowData, "recurrenceRule" | "parentId" | "dueDate">,
+): string | null {
+  return task.recurrenceRule && !task.parentId ? task.dueDate : null;
+}
+
 /**
  * Ticking is optimistic: the checkbox and the row change at once, and go back (with an error
  * message) if the server says no. Completing a task shows an Undo toast for a few seconds.
+ * A repeat whose next date has not come yet cannot be ticked (O, 2026-11-22): `ahead` is true and
+ * a tap only says when it comes back. Pass `repeatsOn` (see `repeatDate`) for that.
  */
-export function useToggleDone(taskId: string, title: string, serverDone: boolean) {
+export function useToggleDone(
+  taskId: string,
+  title: string,
+  serverDone: boolean,
+  repeatsOn: string | null = null,
+) {
   const [, startTransition] = useTransition();
   const [optimisticDone, setDone] = useOptimistic(serverDone);
   const { timeZone, locale } = useTodos();
@@ -50,8 +65,16 @@ export function useToggleDone(taskId: string, title: string, serverDone: boolean
     setKept(false);
   }
   const done = optimisticDone || kept;
+  const today = todayIn(timeZone);
+  const ahead = !done && repeatsOn !== null && repeatsOn > today;
 
   function toggle() {
+    if (ahead) {
+      toast(`"${title}" comes back ${formatDueDate(repeatsOn, today, locale).toLowerCase()}.`, {
+        description: "You can tick it then.",
+      });
+      return;
+    }
     startTransition(async () => {
       const next = !done;
       setDone(next);
@@ -85,7 +108,7 @@ export function useToggleDone(taskId: string, title: string, serverDone: boolean
     });
   }
 
-  return { done, toggle };
+  return { done, toggle, ahead };
 }
 
 export function CheckboxButton({
@@ -94,6 +117,7 @@ export function CheckboxButton({
   onToggle,
   size = "md",
   priority = 0,
+  ahead = false,
 }: {
   title: string;
   done: boolean;
@@ -101,7 +125,29 @@ export function CheckboxButton({
   size?: "sm" | "md";
   /** 0 to 3: high and medium tint the ring, so urgency shows before you read the row. */
   priority?: number;
+  /** A repeat whose day has not come: a dashed ring with the repeat icon, and it cannot be ticked. */
+  ahead?: boolean;
 }) {
+  if (ahead) {
+    return (
+      <button
+        type="button"
+        aria-label={`${title}: repeats, not due yet`}
+        data-task-checkbox
+        onClick={onToggle}
+        className="flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:size-9"
+      >
+        <span
+          className={cn(
+            "flex items-center justify-center rounded-full border-[1.5px] border-dashed border-dash-ink-soft/70 text-dash-ink-soft",
+            size === "md" ? "size-5" : "size-4",
+          )}
+        >
+          <Repeat className="size-2.5" strokeWidth={2.5} aria-hidden />
+        </span>
+      </button>
+    );
+  }
   return (
     <button
       type="button"
@@ -143,16 +189,25 @@ export function TaskCheckbox({
   done: serverDone,
   size = "md",
   priority = 0,
+  repeatsOn = null,
 }: {
   taskId: string;
   title: string;
   done: boolean;
   size?: "sm" | "md";
   priority?: number;
+  repeatsOn?: string | null;
 }) {
-  const { done, toggle } = useToggleDone(taskId, title, serverDone);
+  const { done, toggle, ahead } = useToggleDone(taskId, title, serverDone, repeatsOn);
   return (
-    <CheckboxButton title={title} done={done} onToggle={toggle} size={size} priority={priority} />
+    <CheckboxButton
+      title={title}
+      done={done}
+      onToggle={toggle}
+      size={size}
+      priority={priority}
+      ahead={ahead}
+    />
   );
 }
 
@@ -269,7 +324,12 @@ export function TaskRow({
   /** The view is grouped by day already: the row shows only the time (Upcoming). */
   timeOnly?: boolean;
 }) {
-  const { done, toggle } = useToggleDone(task.id, task.title, task.status === "done");
+  const { done, toggle, ahead } = useToggleDone(
+    task.id,
+    task.title,
+    task.status === "done",
+    repeatDate(task),
+  );
   const subtasksDone = subtasks.filter((s) => s.status === "done").length;
   const { hrefFor } = useTaskLinks();
   // The open task's row stays marked while its detail is docked beside the list (screen 6b).
@@ -295,7 +355,13 @@ export function TaskRow({
       )}
     >
       {handle}
-      <CheckboxButton title={task.title} done={done} onToggle={toggle} priority={task.priority} />
+      <CheckboxButton
+        title={task.title}
+        done={done}
+        onToggle={toggle}
+        priority={task.priority}
+        ahead={ahead}
+      />
       <Link
         href={hrefFor(task.id)}
         data-task-link

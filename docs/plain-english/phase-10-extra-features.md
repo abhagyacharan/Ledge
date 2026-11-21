@@ -87,6 +87,16 @@ A task needs a due date to repeat; if it has none, turning on a repeat gives it 
 
 **Seeing the coming days (added 2026-11-13).** A repeating task is really one task that moves to its next date, so Upcoming used to show it once, or not at all if that date was more than two weeks away. Now Upcoming also lists each later day the task comes back, within the next 14 days and up to its end date. Those rows have a dashed repeat symbol and no tick box, because they are previews; tapping one opens the real task. Tasks whose repeat counts from the day you finish them show no previews, because their next dates are not known until you finish them. Today did not need a change: a repeating task due today or late is already listed there. If a task was due on a day more than two weeks ahead, it will not show in Today or Upcoming until it gets closer.
 
+**Daily routines get their own card (added 2026-11-22).** With three daily tasks (skincare, 10,000 steps, supplements), Upcoming showed each one 14 times and buried everything else. Now a task that repeats more than once a week (every day, every few days, or on two or more weekdays) counts as a **routine**:
+
+- **Today** keeps routines in a **Repeating** card under the day's other tasks. Its heading counts them, for example "Repeating · 2 of 3 done". When all are done, the card folds to one line, "All done for today. They come back tomorrow.", with a Show button.
+- **Upcoming** lists each routine **once**, in a Repeating card at the top: how often it repeats, until when (or "no end date"), and when it is next due. The days below show only your other tasks. Weekly, monthly and yearly repeats still show on their own days, because "rent on the 10th" is worth seeing in the right place.
+- **No ticking ahead.** A repeating task can be ticked on its day, or later if you missed it, but not before. Ahead of its day its circle is dashed with a small repeat symbol, and tapping it only tells you when it comes back. Before, you could tick the same daily task again and again and use up two weeks of it in a minute.
+- **Unticking now undoes it.** If you tick a repeating task by mistake and untick it, it goes back to today as if you had never ticked it. Before, unticking left a stray copy behind, so the task never settled.
+- **No more flicker.** Ticking a repeat in Today now just ticks it in place. Before, it folded away and then came back ticked.
+
+Not checked yet: your real phone.
+
 ### What happens when you tick one
 
 The task is **not finished for good**. Ledge adds a finished copy to **Completed** (so your history shows every time you did it) and moves the task to its **next date**. Its subtasks are unticked for the next round, and the copy keeps its tags. A message says "Done ... Next: tomorrow" with **Undo**, which removes the copy and puts everything back, including the subtasks' ticks.
@@ -101,7 +111,7 @@ With "follows the schedule", finishing early moves to the date after the one tha
 ### Checked, and not checked
 
 - Checked: the tests above, browser tests that set a weekly repeat, tick it, see it move, undo, and set a custom every-2-weeks repeat that survives a reload; the accessibility inspector on the drawer of a monthly and a weekly task in light and dark; the phone-size rule.
-- Not built: "every weekday" style presets, an end date or a count ("repeat 5 times"), and typing "every day" into quick add.
+- Not built: "every weekday" style presets, a count ("repeat 5 times"), and typing "every day" into quick add. (An end date was added on 13 November.)
 
 ## The full form in quick add (done 2026-11-11)
 

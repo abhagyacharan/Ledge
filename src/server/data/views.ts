@@ -112,6 +112,20 @@ export function getRepeatingTasks(userId: string, to: string): Promise<ViewTask[
   );
 }
 
+/** Every open repeating task with a date, in either mode (the Repeating cards in Today and Upcoming). */
+export function getOpenRepeatingTasks(userId: string): Promise<ViewTask[]> {
+  return fetchViewTasks(
+    userId,
+    and(
+      eq(tasks.status, "open"),
+      isNull(tasks.parentId),
+      isNotNull(tasks.recurrenceRule),
+      isNotNull(tasks.dueDate),
+    ),
+    { order: sql`${tasks.dueDate}, ${tasks.dueTime} nulls last, ${tasks.title}` },
+  );
+}
+
 /** Every task (open and done), subtasks included, so parents can show progress. */
 export function getAllTasks(userId: string): Promise<ViewTask[]> {
   return fetchViewTasks(userId, undefined);

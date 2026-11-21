@@ -333,6 +333,36 @@ export async function undoRecurringCompletion(
   });
 }
 
+/**
+ * Unticking the finished copy of a repeating task (O, 2026-11-22): it undoes that round instead of
+ * leaving a loose copy behind. The copy is removed and, if the task had moved past the copy's
+ * date, it goes back to that date. Returns false when `copyId` is not this user's finished copy
+ * of a repeating task that still exists (the caller then reopens it like any other task).
+ */
+export async function reopenRecurringCopy(userId: string, copyId: string): Promise<boolean> {
+  const copy = await getTask(userId, copyId);
+  if (!copy || copy.status !== "done" || !copy.recurrenceOriginId) return false;
+  const origin = await getTask(userId, copy.recurrenceOriginId);
+  if (!origin || !origin.recurrenceRule) return false;
+
+  return db.transaction(async (tx) => {
+    await tx.delete(tasks).where(and(eq(tasks.userId, userId), eq(tasks.id, copy.id)));
+    const set: Partial<typeof tasks.$inferInsert> = {};
+    // A repeat that had run its course was finished for good on its last tick: open it again.
+    if (origin.status === "done") Object.assign(set, { status: "open", completedAt: null });
+    if (copy.dueDate && (!origin.dueDate || origin.dueDate > copy.dueDate)) {
+      Object.assign(set, { dueDate: copy.dueDate, dueTime: copy.dueTime });
+    }
+    if (Object.keys(set).length > 0) {
+      await tx
+        .update(tasks)
+        .set(set)
+        .where(and(eq(tasks.userId, userId), eq(tasks.id, origin.id)));
+    }
+    return true;
+  });
+}
+
 /** Completes or reopens a task. Completing sets `completed_at`; it never touches the parent. */
 export async function setTaskDone(
   userId: string,

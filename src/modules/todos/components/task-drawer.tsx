@@ -54,7 +54,7 @@ import { RepeatField } from "./repeat-field";
 import { InlineAdd } from "./inline-add";
 import { ListGlyph } from "../list-icons";
 import { run, undoToast } from "./run-action";
-import { TaskCheckbox } from "./task-row";
+import { repeatDate, TaskCheckbox } from "./task-row";
 import { useTodos } from "./todos-provider";
 import { DOCK_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useTaskLinks } from "./use-task-links";
@@ -311,6 +311,7 @@ function DrawerBody({
               title={task.title}
               done={done}
               priority={view.priority}
+              repeatsOn={repeatDate(view)}
             />
           </div>
           <div className="min-w-0 flex-1">

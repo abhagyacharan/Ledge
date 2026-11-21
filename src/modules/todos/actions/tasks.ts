@@ -1,6 +1,6 @@
 "use server";
 
-import { todayIn } from "@/lib/dates";
+import { formatDueDate, todayIn } from "@/lib/dates";
 import { fail, ok } from "@/lib/result";
 import { getUserSettings } from "@/server/data/settings";
 import {
@@ -9,6 +9,7 @@ import {
   duplicateTask,
   getTask,
   moveTaskToList,
+  reopenRecurringCopy,
   reorderTask,
   restoreTaskVisibly,
   setTaskDone,
@@ -79,10 +80,28 @@ export async function updateTaskAction(input: unknown) {
 
 export async function setTaskDoneAction(input: unknown) {
   return guarded(setTaskDoneSchema, input, async ({ id, done }, userId) => {
+    if (!done && (await reopenRecurringCopy(userId, id))) {
+      // The finished copy of a repeat: unticking it undoes that round.
+      refresh();
+      return ok<DoneResult>({ recurring: null });
+    }
     if (done) {
+      const { timezone, locale } = await getUserSettings(userId);
+      const today = todayIn(timezone);
+      // A repeat can be ticked on its day or once it is late, never ahead (O, 2026-11-22).
+      const current = await getTask(userId, id);
+      if (
+        current?.recurrenceRule &&
+        current.status === "open" &&
+        !current.parentId &&
+        current.dueDate &&
+        current.dueDate > today
+      ) {
+        const when = formatDueDate(current.dueDate, today, locale).toLowerCase();
+        return fail(`This repeat comes back ${when}. You can tick it then.`);
+      }
       // A repeating task is not finished for good: a copy goes to Completed and it moves on.
-      const { timezone } = await getUserSettings(userId);
-      const recurring = await completeRecurringTask(userId, id, todayIn(timezone));
+      const recurring = await completeRecurringTask(userId, id, today);
       if (recurring) {
         refresh();
         return ok<DoneResult>({ recurring });

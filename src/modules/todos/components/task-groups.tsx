@@ -63,7 +63,9 @@ export function TaskList({
       <AnimatePresence initial={false}>
         {tasks.map((task) => (
           <TaskRow
-            key={task.id}
+            // A repeat's finished copy keeps its task's key: ticking a repeat in Today swaps the
+            // row in place instead of folding it away and bringing a struck-through copy back.
+            key={task.recurrenceOriginId ?? task.id}
             task={task}
             subtasks={allTasks.filter((t) => t.parentId === task.id)}
             ctx={ctx}

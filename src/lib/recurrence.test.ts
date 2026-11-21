@@ -3,6 +3,8 @@ import {
   describeRule,
   describeStored,
   formatRule,
+  isFrequentRule,
+  isFrequentStored,
   nextDueDate,
   parseRule,
   ruleFor,
@@ -250,5 +252,32 @@ describe("describeStored with an end date", () => {
   it("adds 'until' only when there is an end", () => {
     expect(describeStored("FREQ=DAILY", "fixed")).toBe("Every day");
     expect(describeStored("FREQ=DAILY", "fixed", "2026-12-13")).toBe("Every day until 13 Dec");
+  });
+});
+
+describe("isFrequentRule", () => {
+  const rule = (text: string) => {
+    const r = parseRule(text);
+    if (!r) throw new Error(text);
+    return r;
+  };
+  it("counts every day and every few days as frequent", () => {
+    expect(isFrequentRule(rule("FREQ=DAILY"))).toBe(true);
+    expect(isFrequentRule(rule("FREQ=DAILY;INTERVAL=3"))).toBe(true);
+    expect(isFrequentRule(rule("FREQ=DAILY;INTERVAL=7"))).toBe(false);
+  });
+  it("counts weekly on two or more days as frequent, once a week as not", () => {
+    expect(isFrequentRule(rule("FREQ=WEEKLY;BYDAY=MO,WE,FR"))).toBe(true);
+    expect(isFrequentRule(rule("FREQ=WEEKLY;BYDAY=MO"))).toBe(false);
+    expect(isFrequentRule(rule("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH"))).toBe(false);
+  });
+  it("never counts monthly or yearly", () => {
+    expect(isFrequentRule(rule("FREQ=MONTHLY"))).toBe(false);
+    expect(isFrequentRule(rule("FREQ=YEARLY"))).toBe(false);
+  });
+  it("reads stored rules safely", () => {
+    expect(isFrequentStored("FREQ=DAILY")).toBe(true);
+    expect(isFrequentStored(null)).toBe(false);
+    expect(isFrequentStored("nonsense")).toBe(false);
   });
 });

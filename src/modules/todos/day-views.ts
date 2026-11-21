@@ -1,4 +1,5 @@
 import { addDaysIso, isOverdue, todayIn, type IsoDate } from "@/lib/dates";
+import { isFrequentStored } from "@/lib/recurrence";
 import { compareTime, type DateInfo } from "./view-logic";
 
 /**
@@ -132,4 +133,32 @@ export function countCompletedOn<T extends { completedAt: Date | null }>(
     if (counts.has(day)) counts.set(day, (counts.get(day) ?? 0) + 1);
   }
   return dates.map((date) => ({ date, count: counts.get(date) ?? 0 }));
+}
+
+/**
+ * Whether a row belongs in the Repeating card (O, 2026-11-22): a frequent repeat itself (see
+ * `isFrequentRule`), or the finished copy of one (its task's id is in `routineIds`).
+ */
+export function isRoutine(
+  task: { recurrenceRule: string | null; recurrenceOriginId: string | null },
+  routineIds: ReadonlySet<string>,
+): boolean {
+  if (task.recurrenceOriginId) return routineIds.has(task.recurrenceOriginId);
+  return isFrequentStored(task.recurrenceRule);
+}
+
+/**
+ * Keeps one row per repeat: a finished copy and its task never both show (they share a row key),
+ * and the first one wins. Rows that are not repeats pass through.
+ */
+export function onePerRepeat<T extends { id: string; recurrenceOriginId: string | null }>(
+  rows: T[],
+): T[] {
+  const seen = new Set<string>();
+  return rows.filter((t) => {
+    const key = t.recurrenceOriginId ?? t.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
