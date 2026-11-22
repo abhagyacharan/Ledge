@@ -155,7 +155,7 @@ src/app/api/voice/understand/route.ts   # POST transcript -> resolved plan
 
 - **No new dependency.** Groq's API is OpenAI-compatible and small; `fetch` plus Zod covers it (CLAUDE.md §2 item 5). `MediaRecorder` and `navigator.vibrate` are browser built-ins.
 - **Two routes, not one**, so the transcript appears before the cards and Try again / Type instead reuse `understand` without audio.
-- Both routes: `requireUser()`, the Settings switch, Zod on input, a **per-user rate limit** (20 requests per minute, 300 per day, configurable), body limit (audio 2 MB, text 2,000 characters), a 15-second timeout to Groq, and typed errors (`{ ok: false, error }`) instead of throws. They never log audio, transcripts or request bodies.
+- Both routes: `requireUser()`, the Settings switch, Zod on input, a **per-user rate limit** (20 requests per minute, 30 per day since 2026-11-23, configurable), body limit (audio 2 MB, text 2,000 characters), a 15-second timeout to Groq, and typed errors (`{ ok: false, error }`) instead of throws. They never log audio, transcripts or request bodies.
 - **Saving** is a server action, `applyVoicePlanAction`, which re-validates the plan, re-checks ownership of every list and EMI, writes everything in **one transaction** (all or nothing), and returns the ids it created and the EMIs it marked, for Undo. Undo uses the existing trash and un-mark logic.
 - The FAB gains a long-press handler (pointer events: `pointerdown` starts a 400 ms timer; `pointerup` before it fires = tap; movement over 10 px or `pointercancel` = cancel), shared by phone and mouse.
 
@@ -166,7 +166,7 @@ src/app/api/voice/understand/route.ts   # POST transcript -> resolved plan
   - `GROQ_API_KEY`: no key means voice is off everywhere and the mic buttons are hidden.
   - `GROQ_TRANSCRIBE_MODEL` (default `whisper-large-v3-turbo`)
   - `GROQ_PARSE_MODEL` (default `openai/gpt-oss-120b`)
-  - `VOICE_DAILY_LIMIT` (default 300)
+  - `VOICE_DAILY_LIMIT` (default 30 since 2026-11-23; was 300)
 
 ### Security headers
 

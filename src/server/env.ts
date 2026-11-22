@@ -34,6 +34,13 @@ export type VoiceConfig = {
   dailyLimit: number;
 };
 
+/**
+ * Voice and planner requests per person per day. Each spoken command is two requests (hearing it,
+ * then understanding it), so 30 is about 15 commands or planner runs a day. Kept low because sign-up
+ * is open and every request is paid for on the owner's Groq key (O, 2026-11-23).
+ */
+export const DEFAULT_VOICE_DAILY_LIMIT = 30;
+
 export function getVoiceConfig(): VoiceConfig {
   const apiKey = process.env.GROQ_API_KEY?.trim() || null;
   const fake = process.env.VOICE_FAKE === "1";
@@ -44,7 +51,7 @@ export function getVoiceConfig(): VoiceConfig {
     apiKey,
     transcribeModel: process.env.GROQ_TRANSCRIBE_MODEL?.trim() || "whisper-large-v3-turbo",
     parseModel: process.env.GROQ_PARSE_MODEL?.trim() || "openai/gpt-oss-120b",
-    dailyLimit: Number.isFinite(limit) && limit > 0 ? limit : 300,
+    dailyLimit: Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_VOICE_DAILY_LIMIT,
   };
 }
 

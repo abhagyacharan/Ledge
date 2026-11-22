@@ -775,3 +775,9 @@ O's review after seeing the page.
 - **Multilingual voice:** O wants voice in about ten Indian languages and mixes of them. Written as a future idea in `docs/voice-multilingual-spec.md`. Today's voice forces Whisper to English (`language: "en"`), which is why Hindi comes out in English letters or half translated.
 - **Reason:** O's requests in chat (2026-11-22), choosing option B from three layouts.
 - **Floating nav:** below the hero, a slim solid-white bar with the wordmark, the four links, Log in (and the menu on phones) slides in on the first scroll up and away on scroll down, the usual pattern, so it never covers what you are reading. The link for the section in the middle of the screen gets a grey fill. Solid rather than frosted: over the dark panels a see-through bar showed their text. While hidden it is `inert` and `aria-hidden`, so keyboards and screen readers meet one nav. `FloatingNav` in `src/modules/site/components/site-nav.tsx`.
+
+## 2026-11-23: Daily voice limit lowered for open sign-up
+
+- **Decision:** the default `VOICE_DAILY_LIMIT` drops from 300 to 30 requests per person per day (`DEFAULT_VOICE_DAILY_LIMIT` in `src/server/env.ts`). A spoken command is two requests (transcribe, then understand), so this is about 15 commands a day; the goal planner shares the same count.
+- **Why:** O is posting Ledge on X with sign-up left open (no shared demo account), and every voice or planner request is paid for on O's Groq key. O asked for 10 to 15 uses per account.
+- **Trade-off:** one limit for everyone, O included; O can raise it for the whole server with `VOICE_DAILY_LIMIT`. The count is kept in memory, so a restart resets it (unchanged).

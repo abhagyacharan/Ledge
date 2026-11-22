@@ -40,7 +40,7 @@ The microphone only works over HTTPS (the padlock in the address bar), which you
 
 - One recording can be up to a minute long.
 - On Groq's **free plan**, each AI model can take 8,000 "tokens" (pieces of words) a minute. One command uses about 1,900, so about four commands a minute fit. Used one at a time that is plenty; if you speak many in a row you may see "Voice is busy right now" for up to a minute. A paid Groq plan raises the limit.
-- Each person can make 20 voice requests a minute and 300 a day (the daily number can be changed with `VOICE_DAILY_LIMIT`). This stops a stuck button or a mistake from running up a bill.
+- Each person can make 20 voice requests a minute and 30 a day (the daily number can be changed with `VOICE_DAILY_LIMIT`). Every spoken command is two requests, one to hear the words and one to understand them, so 30 is about 15 commands a day; the goal planner counts against the same 30. It was 300 until 23 November 2026, when sign-up was left open for people trying Ledge from a post on X: every request is paid for on your Groq key, so strangers should not be able to run up a bill. This also stops a stuck button or a mistake from doing it. The limit applies to your own account too; raise it on the server with `VOICE_DAILY_LIMIT` if 15 a day is too few for you.
 - One command can hold up to 10 things. More than that, and it asks you to say the rest in a second go.
 - Cost: speech-to-text is about $0.04 per hour of audio, with each request billed as at least 10 seconds, so roughly a hundredth of a rupee per command. The language model adds a similarly tiny amount.
 
