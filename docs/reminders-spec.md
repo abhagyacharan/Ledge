@@ -70,11 +70,11 @@ Optional, off by default: a start and end time in O's timezone (for example 23:0
 
 Options considered (the app runs as one `app` container in Docker Compose on O's home server):
 
-| Option                                                                                          | For                                                                               | Against                                                                                                                         |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **A. In-app timer** (Next.js `instrumentation.ts` `register()`, Node runtime only, every 30 s) | No new container, no secret route, same code and env as the app; restarts with it | Sends nothing while the app is down (true of every option); two app copies would both run it (handled by the claim below)      |
-| B. Sidecar container running a small script                                                     | Separate from web traffic                                                         | A second image or entrypoint, duplicate env, more to deploy and keep in step                                                    |
-| C. Cron (e.g. the backup container) calling a protected `/api/reminders/run`                    | Simple to trigger                                                                 | A shared secret to manage, a public route to protect, 1-minute granularity at best                                              |
+| Option                                                                                         | For                                                                               | Against                                                                                                                   |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **A. In-app timer** (Next.js `instrumentation.ts` `register()`, Node runtime only, every 30 s) | No new container, no secret route, same code and env as the app; restarts with it | Sends nothing while the app is down (true of every option); two app copies would both run it (handled by the claim below) |
+| B. Sidecar container running a small script                                                    | Separate from web traffic                                                         | A second image or entrypoint, duplicate env, more to deploy and keep in step                                              |
+| C. Cron (e.g. the backup container) calling a protected `/api/reminders/run`                   | Simple to trigger                                                                 | A shared secret to manage, a public route to protect, 1-minute granularity at best                                        |
 
 **Chosen: A.**
 

@@ -1,5 +1,5 @@
 import "server-only";
-import webpush from "web-push";
+import { sendNotification } from "web-push";
 import { eq, sql } from "drizzle-orm";
 import { getPushConfig } from "@/server/env";
 import { listLiveSubscriptions } from "@/server/data/reminders";
@@ -43,7 +43,7 @@ export async function sendPush(subscription: Target, payload: PushPayload): Prom
   const config = getPushConfig();
   if (!config) return "failed";
   try {
-    await webpush.sendNotification(
+    await sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: { p256dh: subscription.p256dh, auth: subscription.auth },

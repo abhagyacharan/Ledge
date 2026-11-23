@@ -2,7 +2,7 @@ import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sendNotification = vi.hoisted(() => vi.fn());
-vi.mock("web-push", () => ({ default: { sendNotification }, sendNotification }));
+vi.mock("web-push", () => ({ sendNotification }));
 
 import {
   clearTaskReminder,
