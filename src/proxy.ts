@@ -23,8 +23,9 @@ export function proxy(request: NextRequest) {
 export const config = {
   // Everything except the public page and its images (site/), auth pages (incl. forgot and reset password), the auth API, health check, Next.js internals/static
   // files, and the icons, manifest, service worker and offline page a phone fetches without cookies
-  // when Ledge is added to the home screen (docs/pwa-spec.md).
+  // when Ledge is added to the home screen (docs/pwa-spec.md). The reminder routes the service worker
+  // calls (api/reminders/) check the session themselves and answer 401 JSON, never a redirect.
   matcher: [
-    "/((?!welcome|site/|sign-in|sign-up|forgot-password|reset-password|api/auth|api/health|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|icons/|sw.js|offline.html).*)",
+    "/((?!welcome|site/|sign-in|sign-up|forgot-password|reset-password|api/auth|api/health|api/reminders/|_next/static|_next/image|favicon.ico|icon.svg|apple-icon.png|manifest.webmanifest|icons/|sw.js|offline.html).*)",
   ],
 };

@@ -19,6 +19,7 @@ describe("proxy matcher", () => {
     "/reset-password",
     "/welcome",
     "/site/phone-home.png",
+    "/api/reminders/00000000-0000-4000-8000-000000000000/done",
   ])("lets %s through signed out", (path) => {
     expect(protectedPath.test(path)).toBe(false);
   });

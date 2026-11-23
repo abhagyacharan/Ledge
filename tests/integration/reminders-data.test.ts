@@ -1,8 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const sendNotification = vi.hoisted(() => vi.fn());
-vi.mock("web-push", () => ({ sendNotification }));
+vi.mock("web-push", async () => (await import("../helpers/web-push-mock")).webPushModule);
 
 import {
   clearTaskReminder,
@@ -20,6 +19,7 @@ import { pushSubscriptions, session, taskReminders, userSettings } from "@/serve
 import { sendToUser } from "@/server/push";
 import { makeList, makeTask } from "../helpers/data";
 import { createUser, resetAuthData, type TestUser } from "../helpers/fast-users";
+import { sendNotification } from "../helpers/web-push-mock";
 
 /**
  * Reminder data and the push sender (docs/reminders-spec.md). User B must not read, set or clear
