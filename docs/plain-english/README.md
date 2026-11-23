@@ -37,6 +37,7 @@ The work is done in thirteen steps, called phases, always in the same order. A p
 | 13    | Installable app (PWA)         | Built (2026-11-21), not tried on a phone yet           | [phase-13-installable-app.md](phase-13-installable-app.md)             |
 | 14    | Goal planner, more languages  | Built (2026-11-22), other languages not spoken yet     | [phase-14-planner-and-languages.md](phase-14-planner-and-languages.md) |
 | 15    | Plans                         | Built (2026-11-23), phone polish to come               | [phase-15-plans.md](phase-15-plans.md)                                 |
+| 16    | Task reminders                | Built (2026-11-24), not tried on a phone yet           | [phase-16-reminders.md](phase-16-reminders.md)                         |
 
 ## Other pages
 

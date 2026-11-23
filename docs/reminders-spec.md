@@ -86,7 +86,9 @@ Options considered (the app runs as one `app` container in Docker Compose on O's
 4. **Claims** it with `UPDATE task_reminders SET sent_key = $key … WHERE … AND sent_key IS DISTINCT FROM $key RETURNING` (for a default reminder, which has no row yet, an `INSERT … ON CONFLICT DO UPDATE … WHERE` of the same shape), so a second process, a restart or an overlapping tick never sends twice.
 5. Sends to each of the user's live subscriptions in parallel (with a timeout), then deletes dead ones.
 
-**Snooze** sets `snoozed_until` (now + 10 minutes); the tick sends any reminder whose `snoozed_until` has passed and clears it with the same kind of claim.
+**Snooze** sets `snoozed_until` (now + 10 minutes) and remembers the round it was for (`snoozed_key`); the tick sends it once it is due and clears it with the same kind of claim, but drops it without sending if the round has changed since (the task was ticked, moved, or finished). A snooze that lands in quiet hours waits for them to end. (Added after the review, 2026-11-24.)
+
+**The service worker's routes** (`/api/reminders/<id>/done`, `/snooze`, `/subscription`) sit outside the proxy, so a signed-out call gets 401 JSON. They refuse anything not from Ledge itself (`Sec-Fetch-Site: same-origin`, or an Origin equal to `BETTER_AUTH_URL`) with 403. A notification carries its round (`round`, the due date); Done or Snooze for a round that has moved on gets 409 and opens the app. Two Done presses at once finish one round only (the due date moves only if it is still the old one). `pushsubscriptionchange` saves a browser's new address through `/subscription`.
 
 **Late sends:** a moment up to **6 hours** late is still sent, marked "Overdue since …"; an older one is marked sent without a notification. A moment that was already past when the reminder or the task was last changed (for example "10 minutes before" set on a task due in 5 minutes) is sent at once, since O just asked for it, unless it is more than 6 hours old. Push messages get a **TTL** of one hour and urgency high, so a phone that is off does not get a pile of stale reminders when it comes back.
 
@@ -98,8 +100,9 @@ Due dates and times are floating (CLAUDE.md §6.3). Because the moment is worked
 
 ## 11. Data
 
+- Push endpoints are accepted only on the real push services (`fcm.googleapis.com`, `*.push.apple.com`, `updates.push.services.mozilla.com`, `*.notify.windows.com`; https, default port, no IP address), so an account cannot make the server call other addresses. The device list sends the page ids and names only, never endpoints.
 - `push_subscriptions`: `id`, `user_id` (FK cascade), `session_id` (FK to `session`, cascade), `endpoint` (unique), `p256dh`, `auth`, `device_label`, `failures` (int, default 0), `last_success_at`, `created_at`, `updated_at`.
-- `task_reminders`: `id`, `user_id`, `task_id` (unique; composite FK `(task_id, user_id)` to `tasks (id, user_id)`, cascade), `kind` (`none` | `at_due` | `before` | `custom`), `offset_minutes` (only with `before`; one of 5, 10, 15, 30, 60, 120, 1440), `custom_date` and `custom_time` (only with `custom`), `sent_key` (text, null), `snoozed_until` (timestamptz, null), `created_at`, `updated_at`; CHECK constraints for each kind's columns.
+- `task_reminders`: `id`, `user_id`, `task_id` (unique; composite FK `(task_id, user_id)` to `tasks (id, user_id)`, cascade), `kind` (`none` | `at_due` | `before` | `custom`), `offset_minutes` (only with `before`; one of 5, 10, 15, 30, 60, 120, 1440), `custom_date` and `custom_time` (only with `custom`), `sent_key` (text, null), `snoozed_until` (timestamptz, null), `snoozed_key` (text, null; migration 0019), `created_at`, `updated_at`; CHECK constraints for each kind's columns.
 - `user_settings` gains `reminder_default` (text: `none`, `at_due` or `before:<minutes>`; default `none`), `reminder_default_since` (timestamptz), `reminder_morning_time` (time, default `09:00`), `quiet_start` and `quiet_end` (time, both null or both set).
 - Env: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (a `mailto:` or `https:` contact for the push services). Without them reminders are off and their settings are hidden. The public key reaches the browser from the server at run time, not through `NEXT_PUBLIC_*`, so one Docker image works with any keys. `push:keys` prints a fresh pair.
 

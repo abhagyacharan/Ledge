@@ -56,6 +56,8 @@ Copy `.env.example` to `.env` and fill it in.
 | `VOICE_FAKE` (optional)                             | `1` answers voice requests from built-in examples, without Groq (testing)            |
 | `GROQ_TRANSCRIBE_MODEL`, `GROQ_PARSE_MODEL` (opt.)  | Groq model ids; defaults `whisper-large-v3-turbo`, `openai/gpt-oss-120b`             |
 | `VOICE_DAILY_LIMIT` (optional)                      | Voice and planner requests per person per day (default 30, about 15 spoken commands) |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (optional)  | Task reminders as push notifications (docs/reminders-spec.md). `pnpm push:keys`      |
+| `VAPID_SUBJECT` (optional)                          | `mailto:` or `https:` contact for the push services. All three VAPID vars or none    |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                    |
 | `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server)   |
 

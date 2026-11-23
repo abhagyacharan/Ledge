@@ -7,12 +7,12 @@
 _Updated by Claude per §17. If this block disagrees with the repo (git log, file tree, `package.json`), the repo wins: fix this block and tell O._
 
 - **Last updated:** 2026-11-24
-- **Current phase:** **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, O began deploying by hand on 2026-11-12 (Ledge route added to his existing Cloudflare tunnel; HTTPS check, account creation and step 9 backups still to do); Phase 11 Journal built, its e2e run still pending (pnpm runs again as of 2026-11-24); Phase 12 Voice capture built 2026-11-15; Phase 14 goal planner and multilingual voice built 2026-11-22, planner tried with the real Groq key, other languages not yet spoken; Phase 15 Plans module built 2026-11-23 from O's Claude Design screens, tried end to end with the real Groq key on desktop, phone polish to come; Settings redesign (screens 9a to 9p) built 2026-11-23)
+- **Current phase:** **Phase 10: P1 items** (Phases 0 to 8 done; Phase 9 built and verified locally, O began deploying by hand on 2026-11-12 (Ledge route added to his existing Cloudflare tunnel; HTTPS check, account creation and step 9 backups still to do); Phase 11 Journal built, its e2e run still pending (pnpm runs again as of 2026-11-24); Phase 12 Voice capture built 2026-11-15; Phase 14 goal planner and multilingual voice built 2026-11-22, planner tried with the real Groq key, other languages not yet spoken; Phase 15 Plans module built 2026-11-23 from O's Claude Design screens, tried end to end with the real Groq key on desktop, phone polish to come; Settings redesign (screens 9a to 9p) built 2026-11-23; Phase 16 task reminders built 2026-11-24 on `feat/reminders`, not yet tried on a phone)
 - **Start date:** 2026-11-10 (Phase 0 began; the §14 stop line is relative to it)
 - **Versions in use:** see §3
-- **Last verified test run:** 2026-11-23 (GitHub cleanup: CI workflow, README, design exports left out of Prettier): `typecheck`, `lint` and `format:check` clean, all 779 Vitest tests pass (run with `node`), and the same checks pass in GitHub Actions CI on `main`. Older runs: `docs/reference/test-runs.md`.
+- **Last verified test run:** 2026-11-24 (Phase 16 task reminders, branch `feat/reminders`): `typecheck` and `lint` clean, Prettier clean on every changed file, all 892 Vitest tests pass (run with `node`). Tried on localhost in the in-app browser with a throwaway account and local VAPID keys: Settings › Notifications at desktop and phone width in dark (the browser refuses notification permission, so its blocked state showed), the dev service worker registered, quick add and drawer reminders incl. Custom with Set, the bell, Done, Snooze and another user's task (404) through the worker's routes. A real notification, Android buttons and an installed iPhone not tried; e2e not written. Older runs: `docs/reference/test-runs.md`.
 - **Open blockers:** none
-- **Enabled modules:** expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists); journal ("Journal": one page per day with the day's facts, mood, day picker; optional PIN lock); voice capture (app-wide, hold + to speak, eleven languages; needs `GROQ_API_KEY`); plans ("Plans": saved plans with history, new-plan flow, card review, plan pages; needs `GROQ_API_KEY`); AI usage card in Settings; Settings in sections (account with optional photo, sign-in and devices, appearance, voice and AI, journal lock, tasks, reports and export, delete account); Google sign-in (needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) and forgot password (needs `RESEND_API_KEY` in production)
+- **Enabled modules:** expenses ("Expense Tracker": summary, income, EMIs and loans, expenses, investments); todos ("Tasks": overview, today, upcoming, all, completed, lists); journal ("Journal": one page per day with the day's facts, mood, day picker; optional PIN lock); voice capture (app-wide, hold + to speak, eleven languages; needs `GROQ_API_KEY`); plans ("Plans": saved plans with history, new-plan flow, card review, plan pages; needs `GROQ_API_KEY`); AI usage card in Settings; Settings in sections (account with optional photo, sign-in and devices, appearance, voice and AI, journal lock, tasks, reports and export, delete account); task reminders (Web Push; Settings › Notifications, a Reminder row on tasks; needs the three `VAPID_*` keys); Google sign-in (needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) and forgot password (needs `RESEND_API_KEY` in production)
 
 **Reference files** (moved out of this file to keep it short; read the one that matches your task):
 
@@ -37,7 +37,7 @@ A self-hosted personal life-management app that the owner (O) will use daily for
 
 ### Non-goals for v0.1 (do not build, even if tempting)
 
-Social features, blogs (posting journal entries publicly is parked in `docs/ideas.md`), public profile or portfolio (the one public page about Ledge itself, `/welcome`, was built at O's request on 2026-11-21), calendar sync, push or email notifications, native mobile app, real-time collaboration, AI features beyond voice capture and the goal planner (O chose Groq for voice on 2026-11-15, `docs/voice-spec.md`, and asked for the planner and multilingual voice on 2026-11-22, `docs/planner-spec.md`; the journal's AI ideas stay parked), file attachments, i18n, rich-text editor, team or shared workspaces, billing.
+Social features, blogs (posting journal entries publicly is parked in `docs/ideas.md`), public profile or portfolio (the one public page about Ledge itself, `/welcome`, was built at O's request on 2026-11-21), calendar sync, email notifications, push notifications other than task reminders (O asked for reminders on his phone on 2026-11-23, `docs/reminders-spec.md`), native mobile app, real-time collaboration, AI features beyond voice capture and the goal planner (O chose Groq for voice on 2026-11-15, `docs/voice-spec.md`, and asked for the planner and multilingual voice on 2026-11-22, `docs/planner-spec.md`; the journal's AI ideas stay parked), file attachments, i18n, rich-text editor, team or shared workspaces, billing.
 
 Park any new idea in `docs/ideas.md` instead of building it.
 
@@ -112,12 +112,13 @@ src/
       inbox                 # redirects to /tasks (Inbox became the General list)
       expenses/             # layout (tabs + period picker), page (summary), income, emis, spending, investments (§7); loading.tsx skeleton in each
       journal/              # one page per day (?d=), loading.tsx skeleton; see docs/journal-spec.md
-      settings/               # layout (settings column), page (phone home / desktop Account), account, security, appearance, voice, journal-lock, tasks, export, delete, about; loading.tsx skeletons (screens 9a to 9p)
+      settings/               # layout (settings column), page (phone home / desktop Account), account, security, appearance, voice, journal-lock, tasks, notifications, export, delete, about; loading.tsx skeletons (screens 9a to 9p)
       plan/                   # redirects to /plans/new (the old one-page planner)
       plans/                  # Plans module (docs/plans-module-spec.md): home, new/, [id] (plan page), [id]/setup (draft steps and review), [id]/more (Add more tasks); loading.tsx skeletons
     api/journal/lock        # removes the journal unlock (sendBeacon when the page is hidden)
     api/voice/transcribe, api/voice/understand  # voice capture: audio to words, words to a plan (docs/voice-spec.md)
     api/avatar              # your own profile photo (bytes from user_avatars)
+    api/reminders/[taskId]/done, snooze, api/reminders/subscription   # the service worker's calls (session, origin and ownership checked; outside the proxy so they answer 401, not a redirect)
     api/health, api/export  # health check; export/expense-breakdown and export/cash-flow (PDF reports); export/everything (JSON) and export/tasks (CSV)
   modules/
     auth/                   # sign-in/up, forgot and reset forms, Google button, oauth-errors.ts, reset-email.ts (pure, tested), Zod schemas (client side of auth)
@@ -128,6 +129,7 @@ src/
     account/                # Settings: actions.ts (preferences, name, photo, devices, Google, delete, set password), schema.ts, sections.ts, avatar.ts and devices.ts (pure, tested), settings-data.ts, account-content.tsx, ai-usage-card.tsx, components/ (ui.tsx building blocks, settings nav and phone home, one file per section, crop sheet, password fields, skeleton)
     planner/                # Plans module (docs/plans-module-spec.md): schema.ts, json-schema.ts, prompt.ts, resolve.ts, fake.ts, estimate.ts, resources.ts, reschedule.ts, phase-label.ts, plan-view.ts (pure, tested), actions.ts (drafts, questions, follow-ups, make, review, add all or nothing, undo, more tasks, rename, status, reschedule, delete, resources), components/ (plans/: home and plan page, flow/: new-plan steps, review/: cards and list)
     voice/                  # voice capture: schema.ts (Zod), json-schema.ts (Groq strict schema), prompt.ts, resolve.ts, fake.ts, languages.ts (pure, tested), actions.ts (save and Undo), components/ (voice sheet, review cards, recorder, hold-to-talk, mic button)
+    reminders/              # task reminders (docs/reminders-spec.md): schema.ts (Zod, push-host allowlist), reminder-time.ts (moments, quiet hours, round keys; pure, tested), push-support.ts (browser checks; pure, tested), notification-actions.ts (subscribe, devices, test, settings), components/ (this-device switch, device list)
     journal/                # components/ (day control, journal day: facts, mood, autosaving page; journal-lock: lock screens and auto-lock; pin-pad; journal-lock-settings), actions.ts, lock-actions.ts (turn on or off, unlock by PIN or password, reset, change, lock again), schema.ts (Zod), limits.ts, day-facts.ts and calendar.ts (pure, tested); see docs/journal-spec.md
   server/
     db/ (client, schema/, migrations)   # schema/auth.ts is generated by the Better Auth CLI
@@ -141,8 +143,10 @@ src/
     groq.ts, voice.ts, voice-limit.ts   # Groq client (fetch + Zod), voice service (context, fake mode), per-user voice rate limit
     planner.ts              # planner service: key and rate limit (shared with voice), context, Groq or fake, resolve, usage recorded
     ai-prices.ts            # Groq prices (checked 2026-11-23) over src/lib/ai-cost.ts; usage rows in data/ai-usage.ts
+    push.ts                 # Web Push sender over `web-push` (VAPID, TTL 1 h, prunes dead subscriptions)
+    reminders.ts, reminder-route.ts   # the 30-second reminder tick (claims so nothing sends twice, late and quiet rules, snooze), started from src/instrumentation.ts; shared checks for the reminder routes
     action-guard.ts         # guarded(): requireUser + Zod + typed result + revalidate, shared by todo and expense actions
-    data/                   # data functions (lists, tasks, views, settings, finance, journal, trash, sign-in-methods, avatars, devices): every one takes userId
+    data/                   # data functions (lists, tasks, views, settings, finance, journal, trash, sign-in-methods, avatars, devices, reminders): every one takes userId
   components/
     ui/                     # shadcn primitives
     shell/                  # app sidebar, page header, empty state, theme toggle, sign out, phone tab bar and its filled icons (tab-icons.tsx)
@@ -151,7 +155,7 @@ src/
     app.ts                  # app name, defaults
     modules.ts              # module registry (nav items, routes, icons)
   lib/                      # shared utils: dates.ts (floating dates), money.ts (integer paise), ordering.ts (fractional index), pdf.ts (tiny PDF writer), result.ts, utils.ts
-docs/ decisions.md  ideas.md  agentic-workflow.md (how to build big features with agents)  reference/ (history moved out of this file)  auth-google-reset-spec.md  expenses-spec.md  journal-spec.md  pwa-spec.md (installable app, Phase 13)  work-spec.md (proposal, not built)  voice-spec.md (voice capture with Groq; proposal, not built)  voice-multilingual-spec.md (eleven languages and mixes; first stage built, Phase 14)  planner-spec.md (first planner, Phase 14; replaced)  plans-module-spec.md (Plans module, Phase 15)  plans-design-prompt.md and plans designs/ (O's Claude Design screens 8a to 8n)  settings-design-prompt.md (Settings screens 9a to 9p, built)  design.md  new_design.md (O's Claude Design spec, draft; wins over design.md)      # PRODUCT.md (root): product brief read by the impeccable design skill
+docs/ decisions.md  ideas.md  agentic-workflow.md (how to build big features with agents)  reference/ (history moved out of this file)  auth-google-reset-spec.md  expenses-spec.md  journal-spec.md  reminders-spec.md (task reminders as push notifications, Phase 16)  pwa-spec.md (installable app, Phase 13)  work-spec.md (proposal, not built)  voice-spec.md (voice capture with Groq; proposal, not built)  voice-multilingual-spec.md (eleven languages and mixes; first stage built, Phase 14)  planner-spec.md (first planner, Phase 14; replaced)  plans-module-spec.md (Plans module, Phase 15)  plans-design-prompt.md and plans designs/ (O's Claude Design screens 8a to 8n)  settings-design-prompt.md (Settings screens 9a to 9p, built)  design.md  new_design.md (O's Claude Design spec, draft; wins over design.md)      # PRODUCT.md (root): product brief read by the impeccable design skill
   plain-english/            # layman write-up per phase + glossary (kept in step with the project, §2 item 13)
   brand/                    # logo: logo-prompt.md (brief), concepts.html (all four), logo.html (chosen B), usage.md (rules); SVGs in public/brand/, home-screen PNGs in public/icons/ (scripts/make-icons.py; src/app/manifest.ts lists them)
 .agents/skills/             # third-party agent skills from `npx skills add` (skills-lock.json; Prettier ignores them)
@@ -237,7 +241,7 @@ The reference points are Todoist, Things, TickTick, and Notion tasks: fast captu
 - P0: Date picker with quick options (Today, Tomorrow, Next week, No date) and a typed-date field.
 - P0: Overdue tasks are visually distinct (color and label, never color alone).
 - P1: **Recurring tasks**: daily, weekly (choose weekdays), monthly, yearly, "every N days/weeks/months". Two modes: `fixed` (next date follows the schedule) and `after_completion` (next date counts from completion). On completing a recurring task: insert a completed snapshot (`status=done`, `recurrence_origin_id` points to the original) and advance the original's due date. A repeat can have an optional end date (`recurrence_until`, added 2026-11-13 at O's request: Never, After 1 week, 1 month or 3 months, or a date): once the next date would pass it, ticking the task finishes it like a normal task. Frequent repeats (every day, every 2 to 6 days, or weekly on two or more days) are routines (O, 2026-11-22): Today keeps them in a Repeating card under the day's tasks ("2 of 3 done", folding to one line when all are done), and Upcoming lists each once in a Repeating card at the top instead of on every day. Weekly, monthly and yearly repeats stay on their day, with each later date of a `fixed` one as a read-only preview. A repeat can be ticked only on its day or once it is late, never ahead; unticking its finished copy undoes that round.
-- P2: Reminders and notifications. Do not build.
+- P1: **Reminders** (O, 2026-11-23; `docs/reminders-spec.md`, Phase 16): one per task (at due time, 5 min to 1 day before, or a custom time), sent as Web Push notifications to every device where reminders are on, even with Ledge closed. Date-only tasks remind at a morning time (09:00). A Settings default applies to new tasks with a time; repeating tasks remind every round; optional quiet hours hold them. Notifications open the task; Done and Snooze 10 min on Android and desktop. iPhone needs Ledge on the Home Screen (iOS 16.4+). Needs the VAPID keys.
 
 **Safety and ergonomics**
 
@@ -351,6 +355,9 @@ EMAIL_FROM=
 GROQ_API_KEY=                   # optional: turns voice capture on (docs/voice-spec.md)
 VOICE_FAKE=                     # optional: 1 = answer voice from built-in rules, no Groq (tests, trials)
 # GROQ_TRANSCRIBE_MODEL, GROQ_PARSE_MODEL, VOICE_DAILY_LIMIT (default 30 a day): optional overrides
+VAPID_PUBLIC_KEY=               # optional, all three or none: task reminders as push notifications (docs/reminders-spec.md); `pnpm push:keys` makes a pair
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=                  # mailto: or https: contact for the push services
 ```
 
 The server uses `.env.production.example` (adds `TUNNEL_TOKEN`, `BACKUP_UID`, `BACKUP_GID`, optional `BACKUP_AT`, `APP_PORT`); compose builds `DATABASE_URL` itself.
@@ -421,6 +428,7 @@ This is the canonical plan. It expands the original suggested build order into p
 | 13  | Installable app (PWA)           | `[~]` built; phone untried   |
 | 14  | Planner and multilingual voice  | `[~]` built; speech untried  |
 | 15  | Plans module                    | `[~]` built; phone to polish |
+| 16  | Task reminders                  | `[~]` built; phone untried   |
 
 **Phases 0 to 8** (scaffold, auth, data model, CRUD, views, safety, polish, expense tracker, frontend redesign) are done; their deliverables and exit criteria are in `docs/reference/completed-phases.md`. Read it when you need what a finished phase promised or how it was checked.
 
@@ -521,6 +529,19 @@ Goal: plans become a module with history (spec: `docs/plans-module-spec.md`, bui
 - [ ] Phone polish (O: after the web version is done) and the e2e run (`planner.spec.ts`)
 
 Exit: a goal becomes a saved plan whose page, tasks and history stay; Undo, delete and restore work; the §15 definition of done holds on desktop, then on a phone.
+
+### Phase 16: Task reminders
+
+Goal: a task's reminder arrives on O's phone as a notification at the set time, even with Ledge closed (spec: `docs/reminders-spec.md`, build plan in its §13). O asked on 2026-11-23 and accepted every proposal on 2026-11-24; built with the build-feature workflow (four packages, an Opus review, two fix packages).
+
+- [x] 16.A Data and push: `push_subscriptions`, `task_reminders`, reminder settings (migrations 0018, 0019), VAPID env, `web-push` sender, export (2026-11-24)
+- [x] 16.B Scheduler: 30-second tick in `instrumentation.ts`, moments worked out each tick from the floating due date and timezone, claims, late and quiet rules, snooze, Done and Snooze routes with session, origin and round checks (2026-11-24)
+- [x] 16.C Settings › Notifications and the service worker's push, click, Done, Snooze and subscription-change handling (2026-11-24)
+- [x] 16.D Reminder row in the task drawer and quick add, bell on rows (2026-11-24)
+- [ ] (O) Tried on his phone over the tunnel: a real notification on Android (Done, Snooze) and on an installed iPhone; the server's `.env` needs the three VAPID keys
+- [ ] e2e spec
+
+Exit: a task with a reminder makes a notification arrive on time on a phone with Ledge closed; Done and Snooze work on Android; a signed-out device gets nothing; another user cannot touch the reminders; the §15 definition of done holds.
 
 ### After the phases: O's roadmap (plan only, 2026-11-13)
 

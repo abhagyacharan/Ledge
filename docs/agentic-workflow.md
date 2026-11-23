@@ -102,3 +102,5 @@ high for the orchestrator; normal for implementers.
 ## Lessons
 
 _Add a line after each run: what went well, what to change in the skill or agents._
+
+- 2026-11-24, reminders (Phase 16): four packages, three in parallel worktrees, then two fix packages after the review. Worked: freezing shared contracts (payload, routes, helper names) in the plan let parallel packages fit together with no merge conflicts. Change: (1) worktrees start from `main`, not the feature branch, so every brief must say to `git reset --hard <feature branch>` first; (2) a mocked dependency hid a crash (web-push 4 has no default export) — tell implementers to import a new package once for real (`node -e "import('pkg')"`) as well as mocking it; (3) the reviewer found three real must-fixes (a snooze swallowing the next round, a half-typed Custom reminder ringing, an open endpoint letting any account make the server call home-network addresses), so keep the Opus review; (4) `guarded()` turns Zod refusals into a generic message, so a UI that matches an error text needs the action to return that text itself.

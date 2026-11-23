@@ -842,3 +842,19 @@ O drew the new Settings in Claude Design (`docs/settings-design-prompt.md`, the 
 - **Delete account** now asks for proof besides the phrase: the password, or for an account with only Google a fresh Google sign-in ("Confirm with Google", accepted for 10 minutes after it). A sign-out failure no longer stops the delete.
 - **Saving**: every row autosaves and shows "Saved" for 2 seconds; a failure puts the old value back with "Couldn't save" and Try again. Sheets are the only places with a button to save.
 - The canvas showed each section's address in mono above the title on desktop; that was left out, as a note to the reader rather than part of the screen.
+
+## 2026-11-24: Task reminders as push notifications (Phase 16)
+
+O asked for task reminders on his phone (2026-11-23) and accepted every proposal in `docs/reminders-spec.md` §12 (2026-11-24). This lifts "push notifications" from the non-goals and reminders from P2 for tasks only (O's request counts as OK, CLAUDE.md §17.3). Choices:
+
+- **Web Push through the existing service worker**, no native app. iPhone needs the app on the Home Screen (iOS 16.4+); its notifications have no buttons.
+- **`web-push` 4.0.0** for the VAPID signature and the RFC 8291 encryption: hand-written crypto fails silently when wrong. Version 4 is ESM with named exports only (`import { sendNotification }`); a default import crashes at run time, which a mocked test hid.
+- **Scheduler inside the app** (`src/instrumentation.ts`, every 30 s, Node runtime only, not in tests or builds), over a sidecar container or a cron hitting a secret route: no new service or shared secret. Rows are **claimed** with a conditional update (`sent_key IS DISTINCT FROM` the round key), so two processes or overlapping ticks never send twice.
+- **The moment is worked out on every tick**, not stored: the row keeps the choice; the tick reads the floating due date, the user's timezone, quiet hours and the offset. Moving a date, a repeat's next round, voice, planner, restore or a timezone change all re-arm the reminder with no hook in any write path.
+- **The default** applies only to tasks with a time created after the default last changed (`reminder_default_since`), so turning it on does not make every old task ring; a `none` row turns it off for one task.
+- **Subscriptions belong to the sign-in session** (foreign key, cascade): signing a device out stops its notifications.
+- **Push hosts allowlisted** (Google FCM, Apple, Mozilla, Microsoft): with open sign-up, an arbitrary https endpoint would let any account make the server probe the home network.
+- **Service-worker routes** (`/api/reminders/...`) are outside the proxy so a signed-out call gets 401 JSON, not a redirect the worker would mistake for success; they check the session, `Sec-Fetch-Site: same-origin` (or the Origin), ownership, and the round the notification was for (409 when stale), so a sibling site on the same domain or an old notification cannot tick a task.
+- A snooze remembers its round and is dropped if the round changed; it also waits for quiet hours.
+- Saving a subscription moves an existing endpoint to the caller. Endpoints are unguessable and a push without the device's own secret cannot be read, so the worst case is a device dropping off its owner's list; accepted. The device list no longer sends endpoints to the page.
+- Built with the build-feature workflow: four packages (data, scheduler, Settings and worker, task UI), an Opus review that found three must-fixes (a snooze swallowing the next round, Custom saving and ringing before the time was typed, the open endpoint), fixed in two follow-up packages.

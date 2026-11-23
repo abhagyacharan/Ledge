@@ -324,3 +324,13 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 - **User agent**: a short line every browser sends with each request, naming itself and the system it runs on ("Chrome on Windows"). Settings uses it to name your signed-in devices.
 - **Crop**: cutting a picture down to the part you want. The crop sheet in Settings cuts a square from your photo before it is saved.
+
+**Push notification.** A message a website or app sends to your phone or computer that pops up even when the app is closed. Ledge uses them for task reminders. The message travels through the phone maker's push service (Google, Apple or Mozilla), encrypted so that service cannot read it.
+
+**Push subscription.** The private address a browser gives Ledge when you turn on reminders on that device. Ledge sends notifications to it. Each browser on each device has its own.
+
+**VAPID keys.** A pair of keys (one public, one secret) that prove a push notification really comes from your Ledge server. You make them once with `pnpm push:keys` and put them in the server's settings.
+
+**Quiet hours.** A time window (for example 11 pm to 7 am) when reminders wait instead of ringing; they arrive when the window ends.
+
+**Snooze.** Asking a reminder to come back later. In Ledge it comes back after 10 minutes.
