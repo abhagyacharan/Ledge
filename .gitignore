@@ -44,3 +44,6 @@ Thumbs.db
 .next-auth-check/
 tests/e2e/.auth/
 .vitest/
+
+# agent worktrees (docs/agentic-workflow.md)
+.claude/worktrees/

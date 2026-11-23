@@ -6,6 +6,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Accessible.** Usable by everyone, including people who use only a keyboard or a screen reader, or who have trouble seeing low-contrast text.
 
+**Agent (subagent).** A helper copy of Claude that a Claude session starts for one piece of work. It begins with an empty memory, knows only the project notes (CLAUDE.md) and the written brief it is given, does the piece, and reports back. Ledge has two: the implementer, which writes code, and the reviewer, which checks it (docs/agentic-workflow.md).
+
 **API.** A doorway that programs use to talk to each other. A web address that returns data instead of a page.
 
 **App Router.** The way Next.js decides which page to show for which web address, based on how folders are arranged.
@@ -28,7 +30,7 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Check constraint.** A rule built into a database table that rejects bad values, for example a priority above 3.
 
-**CI/CD.** Short for "continuous integration and continuous delivery". Automatic checks run on every change you save to GitHub, and, if they pass, the change is put on the server without you typing anything. Planned for after the first deployment; not set up yet.
+**CI/CD.** Short for "continuous integration and continuous delivery". Automatic checks run on every change you save to GitHub, and, if they pass, the change is put on the server without you typing anything. The checking half is set up (2026-11-23): GitHub runs the type check, lint, format check and all tests on every change and pull request. Putting changes on the server automatically is not set up yet.
 
 **Cloudflare Tunnel.** A way to reach your home server from the internet without opening any door on your router. Your server connects out to Cloudflare, and Cloudflare passes visitors down that connection, with HTTPS included.
 
@@ -116,6 +118,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **General.** The list every account has from the start. New tasks land here unless you choose another list. It cannot be deleted.
 
+**Orchestrator.** The Claude session that runs the agentic workflow: it plans a feature, splits it into work packages, hands them to agents, checks what they send back, and writes the documents and the pull request.
+
 **Overview (Tasks).** The first Tasks page: how many tasks are due today, late, coming up and done this week, plus today's tasks, what is coming, and each list's progress.
 
 **Index (database).** A shortcut the database keeps so it can find records quickly, like an index at the back of a book.
@@ -173,6 +177,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Prettier.** A tool that tidies the layout of code so it is consistent.
 
 **Proxy.** The quick doorman at the front of the app. In Ledge it only checks that a login wristband exists.
+
+**Pull request.** A proposed change on GitHub, kept on its own branch until someone accepts ("merges") it into main. The automatic checks run on it first, so problems show before the change goes in.
 
 **Purge (clean-up).** Erasing items that have been in the Trash longer than 30 days.
 
@@ -282,7 +288,11 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Web app manifest.** A small file that tells a phone what to call an app, which icons to use and how to open it when it is added to the home screen.
 
+**Work package.** One piece of a feature, small enough for one agent: which files it may change, what to build, and how to tell it is done.
+
 **Worker (tests).** A background process that runs tests. Reusing one worker for all test files saves start-up time.
+
+**Worktree.** A second working copy of the same Git project in another folder, on its own branch. Agents working at the same time each get one, so they never edit the same files.
 
 **Zod.** The tool that does validation, with the same rules used in the browser and on the server.
 
