@@ -12,7 +12,7 @@ import {
 } from "@/server/data/reminders";
 import { pushConfigured, sendToUser } from "@/server/push";
 import { getSession } from "@/server/session";
-import { pushSubscriptionSchema, reminderSettingsSchema } from "./schema";
+import { isAllowedPushEndpoint, pushSubscriptionSchema, reminderSettingsSchema } from "./schema";
 
 /**
  * Settings › Notifications actions (docs/reminders-spec.md §2, §8). Each one checks the sign-in,
