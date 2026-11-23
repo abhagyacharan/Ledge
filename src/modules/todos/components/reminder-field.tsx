@@ -150,19 +150,19 @@ export function ReminderField({
     {
       key: "none",
       label: "None",
-      on: selected.kind === "none",
+      on: !editingCustom && selected.kind === "none",
       choose: pickNone,
     },
     {
       key: "at_due",
       label: atDueLabel(hasTime, morningTime, locale),
-      on: selected.kind === "at_due",
+      on: !editingCustom && selected.kind === "at_due",
       choose: () => pick({ kind: "at_due" }),
     },
     ...BEFORE_CHOICES.map((minutes) => ({
       key: `before-${minutes}`,
       label: beforeLabel(minutes),
-      on: selected.kind === "before" && selected.offsetMinutes === minutes,
+      on: !editingCustom && selected.kind === "before" && selected.offsetMinutes === minutes,
       choose: () => pick({ kind: "before", offsetMinutes: minutes }),
     })),
     {
