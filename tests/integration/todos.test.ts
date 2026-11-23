@@ -283,6 +283,9 @@ describe("Trash for tasks", () => {
     const child = await newTask(list.id, "Child", { parentId: parent.id });
     const earlier = await newTask(list.id, "Trashed earlier", { parentId: parent.id });
     await trashTask(a.id, earlier.id);
+    // Restore matches rows by their millisecond trash time; a fast machine can do both trashes in
+    // the same millisecond, which no person clicking can.
+    await new Promise((resolve) => setTimeout(resolve, 5));
 
     expect(await trashTask(a.id, parent.id)).toBe(true);
     expect(await getListTasks(a.id, list.id)).toHaveLength(0);
