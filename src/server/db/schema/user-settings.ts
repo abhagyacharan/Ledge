@@ -6,6 +6,7 @@ import {
   pgTable,
   smallint,
   text,
+  time,
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -58,10 +59,27 @@ export const userSettings = pgTable(
     journalRelock: text("journal_relock", { enum: JOURNAL_RELOCK }).notNull().default("leave"),
     /** Paise per US dollar, for showing AI costs in rupees (docs/plans-module-spec.md §5). */
     usdToInr: integer("usd_to_inr").notNull().default(8500),
+    /** Default reminder for tasks that get a time: none, at_due or before:<minutes> (docs/reminders-spec.md §5). */
+    reminderDefault: text("reminder_default").notNull().default("none"),
+    /** When the default last changed; it applies only to tasks created after this. */
+    reminderDefaultSince: timestamp("reminder_default_since", { withTimezone: true }),
+    /** Time of day a reminder for a task with a date but no time goes out. */
+    reminderMorningTime: time("reminder_morning_time").notNull().default("09:00"),
+    /** Quiet hours in the user's timezone: both set or both null. */
+    quietStart: time("quiet_start"),
+    quietEnd: time("quiet_end"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
+    check(
+      "user_settings_reminder_default_check",
+      sql`${t.reminderDefault} ~ '^(none|at_due|before:(5|10|15|30|60|120|1440))$'`,
+    ),
+    check(
+      "user_settings_quiet_hours_check",
+      sql`(${t.quietStart} is null) = (${t.quietEnd} is null)`,
+    ),
     check("user_settings_usd_to_inr_check", sql`${t.usdToInr} between 100 and 100000`),
     check("user_settings_week_starts_on_check", sql`${t.weekStartsOn} between 1 and 7`),
     check("user_settings_theme_check", sql`${t.theme} in ('system', 'light', 'dark')`),

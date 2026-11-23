@@ -8,6 +8,7 @@ import {
   journalEntries,
   lists,
   plans,
+  taskReminders,
   tasks,
   userSettings,
 } from "@/server/db/schema";
@@ -19,36 +20,44 @@ import {
 
 /** Everything as one JSON document: settings, lists, tasks, money entries and journal pages. */
 export async function exportEverything(userId: string) {
-  const [settings, myLists, myTasks, entries, pages, myPlans, usage] = await Promise.all([
-    db.select().from(userSettings).where(eq(userSettings.userId, userId)),
-    db
-      .select()
-      .from(lists)
-      .where(and(eq(lists.userId, userId), isNull(lists.deletedAt)))
-      .orderBy(asc(lists.position)),
-    db
-      .select()
-      .from(tasks)
-      .where(and(eq(tasks.userId, userId), isNull(tasks.deletedAt)))
-      .orderBy(asc(tasks.createdAt)),
-    db
-      .select()
-      .from(financeEntries)
-      .where(and(eq(financeEntries.userId, userId), isNull(financeEntries.deletedAt)))
-      .orderBy(asc(financeEntries.entryDate)),
-    db
-      .select()
-      .from(journalEntries)
-      .where(eq(journalEntries.userId, userId))
-      .orderBy(asc(journalEntries.entryDate)),
-    db
-      .select()
-      .from(plans)
-      .where(and(eq(plans.userId, userId), isNull(plans.deletedAt)))
-      .orderBy(asc(plans.createdAt)),
-    // Counts only (never words): what each AI request used.
-    db.select().from(aiUsage).where(eq(aiUsage.userId, userId)).orderBy(asc(aiUsage.createdAt)),
-  ]);
+  const [settings, myLists, myTasks, entries, pages, myPlans, usage, reminders] = await Promise.all(
+    [
+      db.select().from(userSettings).where(eq(userSettings.userId, userId)),
+      db
+        .select()
+        .from(lists)
+        .where(and(eq(lists.userId, userId), isNull(lists.deletedAt)))
+        .orderBy(asc(lists.position)),
+      db
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.userId, userId), isNull(tasks.deletedAt)))
+        .orderBy(asc(tasks.createdAt)),
+      db
+        .select()
+        .from(financeEntries)
+        .where(and(eq(financeEntries.userId, userId), isNull(financeEntries.deletedAt)))
+        .orderBy(asc(financeEntries.entryDate)),
+      db
+        .select()
+        .from(journalEntries)
+        .where(eq(journalEntries.userId, userId))
+        .orderBy(asc(journalEntries.entryDate)),
+      db
+        .select()
+        .from(plans)
+        .where(and(eq(plans.userId, userId), isNull(plans.deletedAt)))
+        .orderBy(asc(plans.createdAt)),
+      // Counts only (never words): what each AI request used.
+      db.select().from(aiUsage).where(eq(aiUsage.userId, userId)).orderBy(asc(aiUsage.createdAt)),
+      // Reminder choices only: push endpoints and keys are never exported.
+      db
+        .select()
+        .from(taskReminders)
+        .where(eq(taskReminders.userId, userId))
+        .orderBy(asc(taskReminders.createdAt)),
+    ],
+  );
   // The PIN hash and lock counters are not data the user wrote either.
   const shownSettings = settings[0]
     ? (() => {
@@ -78,6 +87,7 @@ export async function exportEverything(userId: string) {
     journal: pages,
     plans: myPlans,
     aiUsage: usage,
+    taskReminders: reminders,
   };
 }
 

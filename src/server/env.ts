@@ -6,19 +6,42 @@ const booleanString = z
   .default("true")
   .transform((v) => v === "true");
 
-const schema = z.object({
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
-  BETTER_AUTH_URL: z.url(),
-  ALLOW_SIGNUP: booleanString,
-  TZ: z.string().default("Asia/Kolkata"),
-  // Name of a request header that the proxy in front of the app sets to the visitor's address
-  // (Cloudflare: "cf-connecting-ip"). Leave empty when nothing sits in front of the app.
-  CLIENT_IP_HEADER: z
-    .string()
-    .optional()
-    .transform((value) => value?.trim().toLowerCase() || undefined),
-});
+const optionalText = z
+  .string()
+  .optional()
+  .transform((value) => value?.trim() || undefined);
+
+const schema = z
+  .object({
+    DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
+    BETTER_AUTH_URL: z.url(),
+    ALLOW_SIGNUP: booleanString,
+    TZ: z.string().default("Asia/Kolkata"),
+    // Name of a request header that the proxy in front of the app sets to the visitor's address
+    // (Cloudflare: "cf-connecting-ip"). Leave empty when nothing sits in front of the app.
+    CLIENT_IP_HEADER: z
+      .string()
+      .optional()
+      .transform((value) => value?.trim().toLowerCase() || undefined),
+    // Web Push for task reminders (docs/reminders-spec.md §11): all three set, or none.
+    VAPID_PUBLIC_KEY: optionalText,
+    VAPID_PRIVATE_KEY: optionalText,
+    VAPID_SUBJECT: optionalText,
+  })
+  .superRefine((value, ctx) => {
+    const set = [value.VAPID_PUBLIC_KEY, value.VAPID_PRIVATE_KEY, value.VAPID_SUBJECT].filter(
+      Boolean,
+    );
+    if (set.length !== 0 && set.length !== 3) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["VAPID_PUBLIC_KEY"],
+        message:
+          "Set VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT together, or none of them",
+      });
+    }
+  });
 
 export type Env = z.infer<typeof schema>;
 
@@ -53,6 +76,14 @@ export function getVoiceConfig(): VoiceConfig {
     parseModel: process.env.GROQ_PARSE_MODEL?.trim() || "openai/gpt-oss-120b",
     dailyLimit: Number.isFinite(limit) && limit > 0 ? limit : DEFAULT_VOICE_DAILY_LIMIT,
   };
+}
+
+/** Web Push keys for task reminders. All three set, or reminders are off. Read fresh. */
+export function getPushConfig(): { publicKey: string; privateKey: string; subject: string } | null {
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim();
+  const subject = process.env.VAPID_SUBJECT?.trim();
+  return publicKey && privateKey && subject ? { publicKey, privateKey, subject } : null;
 }
 
 /** "Continue with Google" (docs/auth-google-reset-spec.md). Both values set, or the button is hidden. */

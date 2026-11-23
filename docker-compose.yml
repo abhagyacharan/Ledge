@@ -66,6 +66,10 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
+      # Task reminders (docs/reminders-spec.md). All three, or reminders are off.
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
     ports:
       # This machine only. The tunnel reaches the app over the internal Docker network instead.
       - "127.0.0.1:${APP_PORT:-3000}:3000"

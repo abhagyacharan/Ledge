@@ -127,6 +127,13 @@
       "when": 1795436728771,
       "tag": "0017_profile_photo",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795460755326,
+      "tag": "0018_reminders",
+      "breakpoints": true
     }
   ]
 }
