@@ -12,3 +12,6 @@ tests/e2e/.auth
 # Third-party agent skills installed with `npx skills add` (kept as published)
 .agents
 skills-lock.json
+
+# Design exports from Claude Design (kept as exported)
+docs/*designs/

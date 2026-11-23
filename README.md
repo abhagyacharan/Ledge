@@ -1,12 +1,27 @@
 # Ledge
 
-A self-hosted personal life-management app: auth, a to-do/task manager, and an expense tracker. Single owner, run at home, reached over HTTPS through a tunnel.
+A self-hosted personal life-management app: tasks, money, a daily journal and goal plans in one place. Run on a home server with Docker Compose and reached over HTTPS through a Cloudflare Tunnel.
 
-**Status:** Phases 0 to 7 are done: sign-in, the database, a full task manager (an overview, lists, subtasks, detail drawer, quick add, five views, sort, group, filter, drag-and-drop, Undo, Trash, instant updates, keyboard shortcuts, command palette), and an expense tracker (summary, income, EMIs and loans, expenses, investments; month and year views; spec in [docs/expenses-spec.md](docs/expenses-spec.md)), audited for accessibility on phone and desktop in light and dark. The look was redesigned in Phase 8 and again on 2026-11-11 (the dashboard look across the app, a light sidebar and a phone tab bar). Phase 9 (deployment and backups) is built and checked locally; the step-by-step guide for putting it on your server is [docs/deploy-guide.md](docs/deploy-guide.md).
+Built with Next.js 16 (App Router), TypeScript, Tailwind and shadcn/ui, PostgreSQL with Drizzle, and Better Auth.
 
-New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
+## What's in it
 
-This README is kept accurate as phases land. Sections marked _TBD_ are filled in by the phase named.
+| Module          | What it does                                                                                                                                                                       | Spec                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Tasks           | Overview, Today, Upcoming, All, Completed and your lists; subtasks, repeats, natural-language quick add, drag to reorder, Undo, Trash, search, keyboard shortcuts, command palette | [CLAUDE.md §6](CLAUDE.md)                                        |
+| Expense Tracker | Summary, income, EMIs and loans, expenses and investments by month or year; PDF reports                                                                                            | [docs/expenses-spec.md](docs/expenses-spec.md)                   |
+| Journal         | One private page per day with the day's facts and mood; optional PIN lock                                                                                                          | [docs/journal-spec.md](docs/journal-spec.md)                     |
+| Plans           | Describe a goal, answer a few questions, review the suggested tasks and add them as a plan                                                                                         | [docs/plans-module-spec.md](docs/plans-module-spec.md)           |
+| Voice capture   | Hold + and speak tasks and expenses, in eleven languages; always reviewed before saving                                                                                            | [docs/voice-spec.md](docs/voice-spec.md)                         |
+| Account         | Email and password or Google sign-in, forgot password, devices, export (JSON and CSV), delete account                                                                              | [docs/auth-google-reset-spec.md](docs/auth-google-reset-spec.md) |
+
+It installs to a phone's home screen as an app ([docs/pwa-spec.md](docs/pwa-spec.md)). Plans and voice need a Groq API key; everything else works without outside services.
+
+**Status:** in daily use by its owner, being deployed to the home server. Phase-by-phase progress is in [CLAUDE.md §14](CLAUDE.md); decisions are in [docs/decisions.md](docs/decisions.md). New to this? Read the non-technical write-ups in [docs/plain-english](docs/plain-english/README.md).
+
+## Repository layout
+
+The root holds only files that tools look for there: `package.json` and `pnpm-*` (packages), `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `.prettier*`, `vitest.config.mts`, `playwright.config.ts`, `drizzle.config.ts`, `components.json` (shadcn), `Dockerfile` and `docker-compose*.yml` (deploy; the `.dev` file only publishes the database port on your machine), `.env*.example` (settings templates), and `CLAUDE.md`, `AGENTS.md`, `PRODUCT.md` (notes for coding agents). The app is in `src/`, tests in `tests/`, server scripts in `scripts/`, and specs in `docs/`.
 
 ## Setup
 

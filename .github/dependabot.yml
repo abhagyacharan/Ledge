@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Packages: one grouped pull request a week, so updates don't pile up as noise.
+  # Versions are pinned exactly (.npmrc save-exact), so every bump is a visible change.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly

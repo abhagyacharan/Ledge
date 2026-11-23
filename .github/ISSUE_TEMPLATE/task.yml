@@ -1,0 +1,21 @@
+name: Feature or task
+description: A change to build. New features need a spec and a go-ahead first (CLAUDE.md §2 item 7).
+labels: [enhancement]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What and why
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Spec or decision
+      description: Path in docs/ or a link, if one exists.
+      placeholder: docs/reminders-spec.md
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: What has to be true for this to be finished.
