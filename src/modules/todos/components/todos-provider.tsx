@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import type { ReminderChoice } from "@/modules/reminders/schema";
 import type { List } from "@/server/db/schema";
 
 type TodosData = {
@@ -12,6 +13,12 @@ type TodosData = {
   timeZone: string;
   locale: string;
   weekStartsOn: number;
+  /** Task reminders (docs/reminders-spec.md): off without push keys; the Settings default for new tasks with a time. */
+  reminders: {
+    available: boolean;
+    morningTime: string;
+    defaultChoice: ReminderChoice | null;
+  };
 };
 
 const TodosContext = createContext<TodosData | null>(null);

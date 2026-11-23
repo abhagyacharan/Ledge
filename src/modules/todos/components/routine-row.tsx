@@ -1,6 +1,6 @@
 "use client";
 
-import { Repeat, TriangleAlert } from "lucide-react";
+import { Bell, Repeat, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { formatTime } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ export function RoutineRow({
   dueTime,
   listName,
   overdue,
+  hasReminder = false,
   locale,
 }: {
   taskId: string;
@@ -28,6 +29,8 @@ export function RoutineRow({
   dueTime: string | null;
   listName: string;
   overdue: boolean;
+  /** An active reminder: shows the bell. */
+  hasReminder?: boolean;
   locale?: string;
 }) {
   const { hrefFor } = useTaskLinks();
@@ -62,6 +65,11 @@ export function RoutineRow({
               {nextText}
               {dueTime ? `, ${formatTime(dueTime, locale)}` : ""}
             </span>
+            {hasReminder ? (
+              <span role="img" aria-label="Has a reminder">
+                <Bell aria-hidden className="size-3.5" />
+              </span>
+            ) : null}
             <span>{listName}</span>
           </span>
         </span>

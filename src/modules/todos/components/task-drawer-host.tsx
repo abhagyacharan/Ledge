@@ -1,5 +1,8 @@
 import { listLists } from "@/server/data/lists";
 import { getTaskPlanChip } from "@/server/data/plans";
+import { getReminderSettings, getTaskReminder } from "@/server/data/reminders";
+import { pushConfigured } from "@/server/push";
+import { defaultChoiceFor, rowToChoice } from "../reminders";
 import { getTask, getTaskDetail } from "@/server/data/tasks";
 import { id as uuid } from "../schema";
 import { TaskDrawer, type TaskDetailData } from "./task-drawer";
@@ -30,7 +33,23 @@ export async function TaskDrawerHost({
     const parent = task.parentId ? await getTask(userId, task.parentId) : null;
     // A task from a plan names it (and its phase) in a chip that links back to the plan.
     const plan = await getTaskPlanChip(userId, task);
-    detail = { task, subtasks, parentTitle: parent?.title ?? null, plan };
+    // The reminder row and the Settings default, when push is set up (else the field is hidden).
+    // The default is passed whether or not the task has a time yet; the drawer applies it the
+    // moment one is set.
+    let reminder: TaskDetailData["reminder"] = null;
+    if (pushConfigured()) {
+      const [row, reminderSettings] = await Promise.all([
+        getTaskReminder(userId, task.id),
+        getReminderSettings(userId),
+      ]);
+      reminder = {
+        choice: row ? rowToChoice(row) : null,
+        defaultChoice: reminderSettings
+          ? defaultChoiceFor({ dueTime: "00:00", createdAt: task.createdAt }, reminderSettings)
+          : null,
+      };
+    }
+    detail = { task, subtasks, parentTitle: parent?.title ?? null, plan, reminder };
   }
 
   return <TaskDrawer detail={detail} lists={lists} ctx={ctx} />;

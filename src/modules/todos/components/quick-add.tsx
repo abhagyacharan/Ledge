@@ -32,6 +32,8 @@ import { timeNowIn, todayIn } from "@/lib/dates";
 import type { RecurrenceMode } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
 import { LOG_TRANSACTION_EVENT } from "@/modules/expenses/components/transaction-launcher";
+import type { ReminderChoice } from "@/modules/reminders/schema";
+import { setTaskReminderAction } from "../actions/reminders";
 import { createTaskAction, trashTaskAction } from "../actions/tasks";
 import { deleteTaskForeverAction } from "../actions/trash";
 import {
@@ -42,6 +44,7 @@ import {
 } from "../quick-add-parser";
 import { DueDateField } from "./due-date-field";
 import { QUICK_ADD_EVENT, type QuickAddPrefill } from "./quick-add-button";
+import { ReminderField } from "./reminder-field";
 import { RepeatField, type RepeatChange } from "./repeat-field";
 import { ListGlyph } from "../list-icons";
 import { run, undoToast } from "./run-action";
@@ -198,7 +201,7 @@ function QuickAddForm({
   /** The title field: the sheet focuses it on open, and Enter puts the caret back in it. */
   inputRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  const { lists, timeZone, locale, weekStartsOn } = useTodos();
+  const { lists, timeZone, locale, weekStartsOn, reminders } = useTodos();
   const [dateCtx] = useState<DateContext>(() => {
     const now = new Date();
     return {
@@ -225,6 +228,8 @@ function QuickAddForm({
   const [repeatRule, setRepeatRule] = useState<string | null>(null);
   const [repeatMode, setRepeatMode] = useState<RecurrenceMode>("fixed");
   const [repeatUntil, setRepeatUntil] = useState<string | null>(null);
+  // The reminder picked here, kept until the task is saved; null means none picked.
+  const [reminder, setReminder] = useState<ReminderChoice | null>(null);
   const [pending, startTransition] = useTransition();
   // Opened from somewhere that already chose things (the inline field's "More options"): show all.
   const [more, setMore] = useState(Boolean(prefill.expanded));
@@ -251,6 +256,7 @@ function QuickAddForm({
     if (next.dueDate === null) {
       setRepeatRule(null); // nothing to repeat from
       setRepeatUntil(null);
+      setReminder(null); // nothing to remind about without a date
     }
   }
 
@@ -302,6 +308,11 @@ function QuickAddForm({
         }),
       );
       if (result.ok) {
+        // The reminder is saved right after the task exists. If it fails the task stays and a
+        // toast says why; the reminder can be set again in the task's details.
+        if (reminder && due.dueDate && reminders.available) {
+          await run(setTaskReminderAction({ taskId: result.data.id, choice: reminder }));
+        }
         const date = parsed.tokens.find((t) => t.kind === "date");
         const where = lists.find((l) => l.id === effectiveListId)?.name ?? "list";
         const message = `Added "${value}" to ${where}${date ? `, due ${date.label.toLowerCase()}` : ""}`;
@@ -325,6 +336,7 @@ function QuickAddForm({
         setRepeatRule(null);
         setRepeatMode("fixed");
         setRepeatUntil(null);
+        setReminder(null);
       }
       inputRef.current?.focus();
     });
@@ -547,6 +559,24 @@ function QuickAddForm({
                   onChange={changeRepeat}
                 />
               </div>
+
+              {reminders.available ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className={label}>Reminder</span>
+                  <ReminderField
+                    value={reminder}
+                    defaultChoice={due.dueTime ? reminders.defaultChoice : null}
+                    hasDate={Boolean(due.dueDate)}
+                    hasTime={Boolean(due.dueTime)}
+                    dueDate={due.dueDate}
+                    morningTime={reminders.morningTime}
+                    today={dateCtx.today}
+                    locale={dateCtx.locale}
+                    onChange={setReminder}
+                    triggerClassName="inline-flex min-h-11 min-w-0 items-center justify-end gap-1 rounded-full px-3 text-right text-[14px] font-medium text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50"
+                  />
+                </div>
+              ) : null}
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="quick-add-notes" className={label}>

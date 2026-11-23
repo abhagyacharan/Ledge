@@ -73,6 +73,7 @@ export type RoutineSummary = {
   dueTime: string | null;
   listName: string;
   overdue: boolean;
+  hasReminder: boolean;
 };
 
 /** Every open frequent repeat, once each, for the Repeating card in Upcoming. */
@@ -96,6 +97,7 @@ export async function loadRoutines(userId: string, ctx: DateContext): Promise<Ro
         dueTime: t.dueTime,
         listName: t.listName,
         overdue,
+        hasReminder: t.hasReminder === true,
       };
     });
 }

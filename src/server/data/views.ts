@@ -3,7 +3,7 @@ import { and, desc, eq, gte, ilike, isNotNull, isNull, lte, or, sql, type SQL } 
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/server/db/client";
 import { lists, tasks, type Task } from "@/server/db/schema";
-import type { TaskRow } from "./tasks";
+import { withReminderFlags, type TaskRow } from "./tasks";
 
 /**
  * Queries behind the cross-list views: Overview, Today, Upcoming, All and Completed.
@@ -50,8 +50,12 @@ async function fetchViewTasks(
   const rows = await (options.order ? query.orderBy(options.order) : query).limit(
     options.limit ?? 5000,
   );
-  return rows.map((r) => ({
-    ...r.task,
+  const flagged = await withReminderFlags(
+    userId,
+    rows.map((r) => r.task),
+  );
+  return rows.map((r, i) => ({
+    ...flagged[i],
     listName: r.listName,
     listIcon: r.listIcon,
     listIsInbox: r.listIsInbox,

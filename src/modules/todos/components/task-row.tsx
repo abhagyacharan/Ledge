@@ -1,6 +1,15 @@
 "use client";
 
-import { CalendarDays, Check, Flag, Folder, ListChecks, Repeat, TriangleAlert } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  Check,
+  Flag,
+  Folder,
+  ListChecks,
+  Repeat,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
@@ -391,6 +400,11 @@ export function TaskRow({
         <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs empty:hidden">
           {marker}
           <DueLabel task={task} ctx={ctx} done={done} timeOnly={timeOnly} />
+          {task.hasReminder && !done ? (
+            <span role="img" aria-label="Has a reminder" className="text-dash-ink-soft">
+              <Bell className="size-3.5" aria-hidden />
+            </span>
+          ) : null}
           {repeatText ? (
             <span className="inline-flex items-center gap-1 text-dash-ink-soft">
               <Repeat className="size-3.5" aria-hidden />

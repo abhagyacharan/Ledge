@@ -11,6 +11,8 @@ import { getUserSettings } from "@/server/data/settings";
 import { maybePurgeTrash } from "@/server/data/trash";
 import { requireUser } from "@/server/session";
 import { voiceAvailable } from "@/server/voice";
+import { pushConfigured } from "@/server/push";
+import { parseReminderDefault } from "@/modules/reminders/schema";
 import { VoiceRoot } from "@/modules/voice/components/voice-sheet";
 import { JournalAutoLock } from "@/modules/journal/components/journal-lock";
 import { journalLock } from "@/server/journal-lock";
@@ -33,6 +35,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     journalLock(userId),
     listActivePlanLinks(userId),
   ]);
+  const defaultReminder = parseReminderDefault(settings.reminderDefault);
   const account = { name: user.name, email: user.email, image: user.image };
 
   return (
@@ -43,6 +46,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         timeZone: settings.timezone,
         locale: settings.locale,
         weekStartsOn: settings.weekStartsOn,
+        reminders: {
+          available: pushConfigured(),
+          morningTime: settings.reminderMorningTime.slice(0, 5),
+          defaultChoice: defaultReminder.kind === "none" ? null : defaultReminder,
+        },
       }}
     >
       {/* Voice capture (docs/voice-spec.md): hold + to speak. Off without a Groq key. */}

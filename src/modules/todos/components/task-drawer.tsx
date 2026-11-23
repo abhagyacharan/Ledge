@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  Bell,
   CalendarDays,
   Check,
   ChevronLeft,
@@ -41,6 +42,7 @@ import {
 import { daysBetween, formatRowDay, formatTime, isOverdue, timeNowIn, trimTime } from "@/lib/dates";
 import { describeStored } from "@/lib/recurrence";
 import { cn } from "@/lib/utils";
+import type { ReminderChoice } from "@/modules/reminders/schema";
 import type { List } from "@/server/db/schema";
 import type { TaskRow } from "@/server/data/tasks";
 import {
@@ -50,7 +52,9 @@ import {
   trashTaskAction,
   updateTaskAction,
 } from "../actions/tasks";
+import { clearTaskReminderAction, setTaskReminderAction } from "../actions/reminders";
 import { DueDateField } from "./due-date-field";
+import { ReminderField } from "./reminder-field";
 import { RepeatField } from "./repeat-field";
 import { InlineAdd } from "./inline-add";
 import { ListGlyph } from "../list-icons";
@@ -67,6 +71,8 @@ export type TaskDetailData = {
   parentTitle: string | null;
   /** The plan this task belongs to, and its phase, for the chip under the title. */
   plan?: { planId: string; title: string; phase: string | null } | null;
+  /** The task's reminder choice (null: none set) and the Settings default that may apply to it. Null when push is not set up. */
+  reminder?: { choice: ReminderChoice | null; defaultChoice: ReminderChoice | null } | null;
 };
 
 type Props = {
@@ -139,7 +145,7 @@ function DrawerBody({
   const isSubtask = task.parentId !== null;
   const { hrefFor } = useTaskLinks();
   const router = useRouter();
-  const { timeZone } = useTodos();
+  const { timeZone, reminders } = useTodos();
   const done = task.status === "done";
 
   const [title, setTitle] = useState(task.title);
@@ -166,6 +172,24 @@ function DrawerBody({
         if (result.ok) setSavedAt(formatTime(timeNowIn(timeZone), ctx.locale));
         resolve(result.ok);
       });
+    });
+  }
+
+  // The reminder saves on its own too, and shows the pick at once (back if saving fails).
+  const [reminderChoice, applyReminder] = useOptimistic(detail.reminder?.choice ?? null);
+
+  function saveReminder(choice: ReminderChoice | null) {
+    if (choice === null && reminderChoice === null) return;
+    startTransition(async () => {
+      applyReminder(choice);
+      setSaveState("saving");
+      const result = await run(
+        choice
+          ? setTaskReminderAction({ taskId: task.id, choice })
+          : clearTaskReminderAction({ taskId: task.id }),
+      );
+      setSaveState(result.ok ? "saved" : "error");
+      if (result.ok) setSavedAt(formatTime(timeNowIn(timeZone), ctx.locale));
     });
   }
 
@@ -439,6 +463,25 @@ function DrawerBody({
               className="ml-auto h-11 rounded-full bg-transparent px-2 text-right text-[14px] font-medium text-dash-ink outline-none hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 disabled:text-dash-ink-soft"
             />
           </div>
+          {reminders.available && detail.reminder ? (
+            <div className={rowClass}>
+              <span className={rowLabel}>
+                <Bell aria-hidden className="size-4" /> Reminder
+              </span>
+              <ReminderField
+                value={reminderChoice}
+                defaultChoice={view.dueTime ? detail.reminder.defaultChoice : null}
+                hasDate={Boolean(view.dueDate)}
+                hasTime={Boolean(view.dueTime)}
+                dueDate={view.dueDate}
+                morningTime={reminders.morningTime}
+                today={ctx.today}
+                locale={ctx.locale}
+                onChange={saveReminder}
+                triggerClassName={rowValue}
+              />
+            </div>
+          ) : null}
           {isSubtask ? null : (
             <div className={rowClass}>
               <span className={rowLabel}>

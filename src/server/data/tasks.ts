@@ -2,9 +2,15 @@ import "server-only";
 import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
+import { todayIn } from "@/lib/dates";
+import type { ReminderChoice } from "@/modules/reminders/schema";
+import { hasActiveReminder } from "@/modules/todos/reminders";
 import { db } from "@/server/db/client";
-import { lists, plans, tasks, type Task } from "@/server/db/schema";
+import { lists, plans, taskReminders, tasks, type Task } from "@/server/db/schema";
+import { getPushConfig } from "@/server/env";
 import { getInbox, getList, trashList } from "./lists";
+import { getReminderSettings, getTaskReminder, setTaskReminder } from "./reminders";
+import { getUserSettings } from "./settings";
 
 /**
  * Data functions for tasks. Every function takes the authenticated `userId` and filters by it
@@ -15,7 +21,37 @@ import { getInbox, getList, trashList } from "./lists";
  * restoring brings back exactly the rows that were trashed together.
  */
 
-export type TaskRow = Task;
+/** A task as the screens show it. `hasReminder` is set by the list and view queries (the bell). */
+export type TaskRow = Task & { hasReminder?: boolean };
+
+/**
+ * Adds `hasReminder` to rows: an open task with a reminder (its own, or the Settings default for
+ * a task with a time created after the default last changed) for a date that has not passed.
+ * Always false when push is not set up. One query for the user's reminder rows, none per task.
+ */
+export async function withReminderFlags<T extends Task>(
+  userId: string,
+  rows: T[],
+): Promise<(T & { hasReminder: boolean })[]> {
+  if (rows.length === 0 || !getPushConfig()) {
+    return rows.map((r) => ({ ...r, hasReminder: false }));
+  }
+  const [reminders, reminderSettings, settings] = await Promise.all([
+    db.select().from(taskReminders).where(eq(taskReminders.userId, userId)),
+    getReminderSettings(userId),
+    getUserSettings(userId),
+  ]);
+  const byTask = new Map(reminders.map((r) => [r.taskId, r]));
+  const defaults = {
+    reminderDefault: reminderSettings?.reminderDefault ?? "none",
+    reminderDefaultSince: reminderSettings?.reminderDefaultSince ?? null,
+  };
+  const today = todayIn(settings.timezone);
+  return rows.map((r) => ({
+    ...r,
+    hasReminder: hasActiveReminder(r, byTask.get(r.id) ?? null, defaults, today),
+  }));
+}
 
 export type TaskPatch = {
   title?: string;
@@ -53,7 +89,7 @@ export async function listTasksInList(userId: string, listId: string): Promise<T
 }
 
 export async function getListTasks(userId: string, listId: string): Promise<TaskRow[]> {
-  return listTasksInList(userId, listId);
+  return withReminderFlags(userId, await listTasksInList(userId, listId));
 }
 
 export async function getTask(userId: string, taskId: string): Promise<Task | null> {
@@ -66,8 +102,9 @@ export async function getTaskDetail(
   userId: string,
   taskId: string,
 ): Promise<{ task: TaskRow; subtasks: TaskRow[] } | null> {
-  const task = await getTask(userId, taskId);
-  if (!task) return null;
+  const found = await getTask(userId, taskId);
+  if (!found) return null;
+  const [task] = await withReminderFlags(userId, [found]);
   const subtasks = await db
     .select()
     .from(tasks)
@@ -549,6 +586,19 @@ export async function duplicateTask(userId: string, taskId: string): Promise<Tas
     recurrenceUntil: source.recurrenceUntil,
   });
   if (!copy) return null;
+  // The reminder comes along, "None" included (it may be switching the default off).
+  const reminder = await getTaskReminder(userId, source.id);
+  if (reminder) {
+    const choice: ReminderChoice =
+      reminder.kind === "before" && reminder.offsetMinutes !== null
+        ? { kind: "before", offsetMinutes: reminder.offsetMinutes }
+        : reminder.kind === "custom" && reminder.customDate && reminder.customTime
+          ? { kind: "custom", date: reminder.customDate, time: reminder.customTime.slice(0, 5) }
+          : reminder.kind === "at_due"
+            ? { kind: "at_due" }
+            : { kind: "none" };
+    await setTaskReminder(userId, copy.id, choice);
+  }
   if (!source.parentId) {
     for (const sub of subtasks) {
       await createTask(userId, {
