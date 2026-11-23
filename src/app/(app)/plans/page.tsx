@@ -131,7 +131,8 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
       ) : (
         <>
           <PlansFilter current={filter} counts={counts} />
-          <div className="mt-4 grid gap-3 md:grid-cols-2 md:gap-4">
+          {/* grid-cols-1 is minmax(0, 1fr): a long word in a card wraps instead of widening it. */}
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             {drafts.map((p) => (
               <DraftCard
                 key={p.id}
