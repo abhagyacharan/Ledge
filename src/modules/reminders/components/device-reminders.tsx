@@ -22,12 +22,12 @@ import {
   sendTestNotificationAction,
   subscribePushAction,
   unsubscribePushAction,
+  whichDeviceAction,
 } from "../notification-actions";
 import { detectPushSupport, urlBase64ToUint8Array, type PushSupport } from "../push-support";
 
 export type ReminderDevice = {
   id: string;
-  endpoint: string;
   label: string;
   /** Already formatted in the person's locale and time zone. */
   added: string;
@@ -70,7 +70,9 @@ export function DeviceReminders({
   devices: ReminderDevice[];
 }) {
   const [phase, setPhase] = useState<Phase>("loading");
-  const [endpoint, setEndpoint] = useState<string | null>(null);
+  // The id of this browser's row in `devices`, found by the server from the browser's own address.
+  const [thisDeviceId, setThisDeviceId] = useState<string | null>(null);
+  const [hasSub, setHasSub] = useState(false);
   const [busy, startBusy] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [testNote, setTestNote] = useState<{ text: string; bad: boolean } | null>(null);
@@ -85,26 +87,33 @@ export function DeviceReminders({
     async function look() {
       const support = currentSupport();
       let found: string | null = null;
+      let id: string | null = null;
       if (support === "ready") {
         try {
           const reg = await readyRegistration();
           found = (await reg.pushManager.getSubscription())?.endpoint ?? null;
+          if (found) {
+            const which = await whichDeviceAction(found);
+            id = which.ok ? which.data.id : null;
+          }
         } catch {
           // The worker is not ready (plain http, or it failed); the switch will say so if tapped.
         }
       }
       if (cancelled) return;
-      setEndpoint(found);
+      setHasSub(found !== null);
+      setThisDeviceId(id);
       setPhase(support);
     }
     void look();
     return () => {
       cancelled = true;
     };
-  }, []);
+    // Looked at again when the server's list changes (turned on, turned off, removed).
+  }, [devices]);
 
   // On means: the browser holds a subscription and the server lists it.
-  const serverHas = endpoint !== null && devices.some((d) => d.endpoint === endpoint);
+  const serverHas = hasSub && thisDeviceId !== null && devices.some((d) => d.id === thisDeviceId);
   // `forced` bridges the moment before the refreshed device list arrives.
   const on = phase === "ready" && (forced ?? serverHas);
 
@@ -135,11 +144,16 @@ export function DeviceReminders({
         const result = await subscribePushAction(sub.toJSON());
         if (!result.ok) {
           await sub.unsubscribe();
-          setEndpoint(null);
-          setError(result.error);
+          setHasSub(false);
+          setError(
+            /push service|host/i.test(result.error)
+              ? "This browser's push service isn't supported."
+              : result.error,
+          );
           return;
         }
-        setEndpoint(sub.endpoint);
+        setHasSub(true);
+        setThisDeviceId(result.data.id);
         setForced(true);
         switchSave.save(async () => result, { apply: () => {}, undo: () => {} });
       } catch {
@@ -162,7 +176,8 @@ export function DeviceReminders({
           }
           await sub.unsubscribe();
         }
-        setEndpoint(null);
+        setHasSub(false);
+        setThisDeviceId(null);
         setForced(false);
         switchSave.save(async () => ok(), {
           apply: () => {},
@@ -183,10 +198,11 @@ export function DeviceReminders({
         setError(result.error);
         return;
       }
-      if (device.endpoint === endpoint) {
+      if (device.id === thisDeviceId) {
         const reg = await readyRegistration();
         await (await reg.pushManager.getSubscription())?.unsubscribe();
-        setEndpoint(null);
+        setHasSub(false);
+        setThisDeviceId(null);
         setForced(false);
       }
     } catch {
@@ -286,7 +302,7 @@ export function DeviceReminders({
               <span className="min-w-0 flex-1">
                 <span className="block truncate">
                   {d.label}
-                  {d.endpoint === endpoint ? (
+                  {d.id === thisDeviceId ? (
                     <span className="ml-2 text-[12px] font-normal text-dash-ink-soft">
                       This device
                     </span>

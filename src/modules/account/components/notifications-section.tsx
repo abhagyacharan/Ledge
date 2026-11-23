@@ -1,13 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
+import { trimTime } from "@/lib/dates";
 import { PlanSelect } from "@/modules/planner/components/review/plan-select";
 import {
   DeviceReminders,
   type ReminderDevice,
 } from "@/modules/reminders/components/device-reminders";
 import { updateReminderSettingsAction } from "@/modules/reminders/notification-actions";
-import { REMINDER_DEFAULT_OPTIONS, trimTime } from "@/modules/reminders/push-support";
+import { REMINDER_DEFAULT_OPTIONS } from "@/modules/reminders/push-support";
 import { SavedMark } from "./saved-mark";
 import { ErrorLine, GroupLabel, settingsCard, Sub, Switch } from "./ui";
 import { useSave } from "./use-save";

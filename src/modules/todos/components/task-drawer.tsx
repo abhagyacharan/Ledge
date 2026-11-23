@@ -474,8 +474,10 @@ function DrawerBody({
                 hasDate={Boolean(view.dueDate)}
                 hasTime={Boolean(view.dueTime)}
                 dueDate={view.dueDate}
+                dueTime={view.dueTime}
                 morningTime={reminders.morningTime}
                 today={ctx.today}
+                timeZone={timeZone}
                 locale={ctx.locale}
                 onChange={saveReminder}
                 triggerClassName={rowValue}

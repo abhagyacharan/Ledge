@@ -3,7 +3,6 @@ import {
   detectPushSupport,
   isIosDevice,
   REMINDER_DEFAULT_OPTIONS,
-  trimTime,
   urlBase64ToUint8Array,
   type PushEnvironment,
 } from "./push-support";
@@ -66,9 +65,5 @@ describe("reminder choices", () => {
     for (const o of REMINDER_DEFAULT_OPTIONS) {
       expect(reminderDefaultSchema.safeParse(o.value).success).toBe(true);
     }
-  });
-  it("trims seconds off a time", () => {
-    expect(trimTime("09:00:00")).toBe("09:00");
-    expect(trimTime("23:30")).toBe("23:30");
   });
 });

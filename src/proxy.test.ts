@@ -55,7 +55,8 @@ describe("service worker privacy rule (docs/pwa-spec.md)", () => {
     expect(source).toContain('request.mode === "navigate"');
     expect(source).toContain("/_next/static/");
     // The worker's own POSTs for the reminder buttons are the only /api use; nothing is cached.
-    expect([...source.matchAll(/\/api\/[a-z]+/g)].map((m) => m[0])).toEqual(["/api/reminders"]);
+    const paths = [...source.matchAll(/\/api\/[a-z]+/g)].map((m) => m[0]);
+    expect([...new Set(paths)]).toEqual(["/api/reminders"]);
   });
 
   it("never stores a page: the only cache.put is for static files", () => {

@@ -11,7 +11,7 @@
  *
  * Registered as /sw.js?dev=1 (development, push only) it skips all caching and the offline page.
  */
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const DEV = new URL(self.location.href).searchParams.get("dev") === "1";
 const STATIC_CACHE = `ledge-static-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -108,7 +108,11 @@ self.addEventListener("push", (event) => {
     tag: typeof payload.tag === "string" ? payload.tag : isReminder ? payload.taskId : "ledge",
     icon: ICON,
     badge: ICON,
-    data: { url, taskId: isReminder ? payload.taskId : null },
+    data: {
+      url,
+      taskId: isReminder ? payload.taskId : null,
+      round: typeof payload.round === "string" ? payload.round : null,
+    },
   };
   if (isReminder) {
     options.renotify = true;
@@ -132,10 +136,12 @@ function openApp(url) {
   });
 }
 
-function postReminder(taskId, action) {
+function postReminder(taskId, action, round) {
   return fetch(`/api/reminders/${encodeURIComponent(taskId)}/${action}`, {
     method: "POST",
     credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ round }),
   });
 }
 
@@ -155,7 +161,8 @@ self.addEventListener("notificationclick", (event) => {
 
   if (event.action === "done" && data.taskId) {
     event.waitUntil(
-      postReminder(data.taskId, "done").then(
+      // A failure (409: the round already moved on) opens the app instead of saying "Marked done".
+      postReminder(data.taskId, "done", data.round ?? null).then(
         (response) => (response.ok ? showMarkedDone(notification.tag) : openApp(url)),
         () => openApp(url),
       ),
@@ -165,7 +172,7 @@ self.addEventListener("notificationclick", (event) => {
   if (event.action === "snooze" && data.taskId) {
     // The server sends the reminder again in 10 minutes; if that fails, open the app instead.
     event.waitUntil(
-      postReminder(data.taskId, "snooze").then(
+      postReminder(data.taskId, "snooze", data.round ?? null).then(
         (response) => (response.ok ? undefined : openApp(url)),
         () => openApp(url),
       ),
@@ -175,6 +182,31 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(openApp(url));
 });
 
-/* pushsubscriptionchange is deliberately not handled here. Re-subscribing from the worker would
- * need a new signed-in route to save the new address; instead Settings > Notifications shows
- * reminders as off for a device the server no longer lists, and one tap turns them back on. */
+/* The browser replaced this device's push subscription (the push service rotated it). Get the new
+ * one, or make one from the old options, and tell the server so reminders keep arriving. */
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        let subscription = event.newSubscription;
+        if (!subscription && event.oldSubscription && event.oldSubscription.options) {
+          subscription = await self.registration.pushManager.subscribe(
+            event.oldSubscription.options,
+          );
+        }
+        if (!subscription) return;
+        await fetch("/api/reminders/subscription", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            oldEndpoint: event.oldSubscription ? event.oldSubscription.endpoint : undefined,
+            subscription: subscription.toJSON(),
+          }),
+        });
+      } catch {
+        // Nothing more to do; Settings shows reminders as off and one tap turns them back on.
+      }
+    })(),
+  );
+});

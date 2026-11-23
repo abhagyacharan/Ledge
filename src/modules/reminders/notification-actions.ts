@@ -35,6 +35,17 @@ export async function subscribePushAction(input: unknown) {
   });
 }
 
+/**
+ * Which listed device is this browser? The browser sends its own push address and the match is
+ * made here, so the list sent to the page never carries addresses. Null when none matches.
+ */
+export async function whichDeviceAction(endpoint: unknown) {
+  return guarded(z.url().max(2048), endpoint, async (address, userId) => {
+    const mine = (await listLiveSubscriptions(userId)).find((s) => s.endpoint === address);
+    return ok({ id: mine?.id ?? null });
+  });
+}
+
 /** Removes this device's subscription, found by its push address. Nothing to remove is fine. */
 export async function unsubscribePushAction(input: unknown) {
   return guarded(z.object({ endpoint: z.url().max(2048) }), input, async ({ endpoint }, userId) => {

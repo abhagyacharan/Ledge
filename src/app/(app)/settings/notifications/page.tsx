@@ -29,7 +29,6 @@ export default async function NotificationsPage() {
         publicKey={publicKey}
         devices={subs.map((s) => ({
           id: s.id,
-          endpoint: s.endpoint,
           label: s.deviceLabel,
           added: shortDate(s.createdAt, settings.locale, settings.timezone) ?? "",
         }))}

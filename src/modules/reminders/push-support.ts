@@ -58,8 +58,3 @@ export const REMINDER_DEFAULT_OPTIONS: { value: string; label: string }[] = [
   { value: "before:120", label: "2 hours before" },
   { value: "before:1440", label: "1 day before" },
 ];
-
-/** "HH:MM:SS" or "HH:MM" to "HH:MM", the form a time input wants. */
-export function trimTime(time: string): string {
-  return time.slice(0, 5);
-}

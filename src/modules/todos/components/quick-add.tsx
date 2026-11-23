@@ -569,8 +569,10 @@ function QuickAddForm({
                     hasDate={Boolean(due.dueDate)}
                     hasTime={Boolean(due.dueTime)}
                     dueDate={due.dueDate}
+                    dueTime={due.dueTime}
                     morningTime={reminders.morningTime}
                     today={dateCtx.today}
+                    timeZone={timeZone}
                     locale={dateCtx.locale}
                     onChange={setReminder}
                     triggerClassName="inline-flex min-h-11 min-w-0 items-center justify-end gap-1 rounded-full px-3 text-right text-[14px] font-medium text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50"
