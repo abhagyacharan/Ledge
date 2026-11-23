@@ -1,5 +1,7 @@
 import "server-only";
 import { getAiUsageSummary } from "@/server/data/ai-usage";
+import { listLiveSubscriptions } from "@/server/data/reminders";
+import { pushConfigured } from "@/server/push";
 import { listArchivedLists } from "@/server/data/lists";
 import { getUserSettings } from "@/server/data/settings";
 import { getSignInMethods } from "@/server/data/sign-in-methods";
@@ -27,13 +29,18 @@ export function shortDate(at: Date | null, locale: string, timeZone: string): st
 
 /** The short live line at the end of each row on the phone settings home (screen 9a). */
 export async function homeSummaries(userId: string) {
-  const [methods, settings, lock, archived, usage] = await Promise.all([
+  const [methods, settings, lock, archived, usage, subs] = await Promise.all([
     getSignInMethods(userId),
     getUserSettings(userId),
     journalLock(userId),
     listArchivedLists(userId),
     getAiUsageSummary(userId),
+    pushConfigured() ? listLiveSubscriptions(userId) : Promise.resolve([]),
   ]);
+  // The device count: this phone's own state is only known in the browser, so the home says how
+  // many devices have reminders on.
+  const pushSummary =
+    subs.length === 0 ? "Off" : `On for ${subs.length} ${subs.length === 1 ? "device" : "devices"}`;
   const signIn =
     methods.google && methods.password
       ? "Google and password"
@@ -43,6 +50,7 @@ export async function homeSummaries(userId: string) {
   const theme = { system: "System", light: "Light", dark: "Dark" }[settings.theme];
   const cost = formatInr(microsToPaise(usage.thisMonth.costMicros, settings.usdToInr));
   return {
+    notifications: pushSummary,
     security: signIn,
     appearance: theme,
     voice: `${cost} this month`,

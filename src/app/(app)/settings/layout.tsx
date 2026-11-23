@@ -1,4 +1,5 @@
 import { SettingsNav } from "@/modules/account/components/settings-nav";
+import { pushConfigured } from "@/server/push";
 import { APP_VERSION } from "@/server/version";
 
 /**
@@ -9,7 +10,7 @@ import { APP_VERSION } from "@/server/version";
 export default function SettingsLayout({ children }: LayoutProps<"/settings">) {
   return (
     <div className="dash flex gap-10 lg:gap-14">
-      <SettingsNav version={APP_VERSION} />
+      <SettingsNav version={APP_VERSION} pushOn={pushConfigured()} />
       <div className="mx-auto flex w-full max-w-[640px] min-w-0 flex-col gap-3">{children}</div>
     </div>
   );

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { ABOUT_SECTION, currentSection, GROUPS, SETTINGS_SECTIONS } from "../sections";
+import { ABOUT_SECTION, currentSection, GROUPS, visibleSections } from "../sections";
 
 const item =
   "flex h-10 w-full items-center gap-2.5 rounded-full px-3 text-[14px] font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-4 [&_svg]:shrink-0";
@@ -35,7 +35,7 @@ export function useSignOut() {
  * the chosen one as a well pill, then About and Sign out at the bottom. Hidden on phones, where
  * the settings home lists the sections instead.
  */
-export function SettingsNav({ version }: { version: string }) {
+export function SettingsNav({ version, pushOn }: { version: string; pushOn: boolean }) {
   const pathname = usePathname();
   const current = currentSection(pathname);
   const { signOut, pending } = useSignOut();
@@ -48,24 +48,26 @@ export function SettingsNav({ version }: { version: string }) {
       {GROUPS.map((group) => (
         <div key={group} className="flex flex-col gap-0.5">
           <p className="px-3 pt-3 pb-1 text-[12px] font-medium text-dash-ink-soft">{group}</p>
-          {SETTINGS_SECTIONS.filter((s) => s.group === group).map((s) => {
-            const on = current === s.id;
-            return (
-              <Link
-                key={s.id}
-                href={s.href}
-                aria-current={on ? "page" : undefined}
-                className={cn(
-                  item,
-                  on ? "bg-dash-well font-semibold text-dash-ink" : "hover:bg-dash-well/60",
-                  s.danger ? "text-dash-bad" : on ? "" : "text-dash-ink",
-                )}
-              >
-                <s.icon aria-hidden />
-                {s.label}
-              </Link>
-            );
-          })}
+          {visibleSections(pushOn)
+            .filter((s) => s.group === group)
+            .map((s) => {
+              const on = current === s.id;
+              return (
+                <Link
+                  key={s.id}
+                  href={s.href}
+                  aria-current={on ? "page" : undefined}
+                  className={cn(
+                    item,
+                    on ? "bg-dash-well font-semibold text-dash-ink" : "hover:bg-dash-well/60",
+                    s.danger ? "text-dash-bad" : on ? "" : "text-dash-ink",
+                  )}
+                >
+                  <s.icon aria-hidden />
+                  {s.label}
+                </Link>
+              );
+            })}
         </div>
       ))}
       <div className="mt-6 flex flex-col gap-0.5 border-t border-dash-edge pt-3">

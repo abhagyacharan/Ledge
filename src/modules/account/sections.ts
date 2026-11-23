@@ -1,4 +1,5 @@
 import {
+  Bell,
   Download,
   Info,
   ListTodo,
@@ -22,6 +23,8 @@ export type SettingsSection = {
   icon: LucideIcon;
   group: "You" | "App" | "Your data" | null;
   danger?: boolean;
+  /** Shown only when the server has push set up (VAPID keys). */
+  needsPush?: boolean;
 };
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
@@ -50,6 +53,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   },
   { id: "tasks", href: "/settings/tasks", label: "Tasks", icon: ListTodo, group: "App" },
   {
+    id: "notifications",
+    href: "/settings/notifications",
+    label: "Notifications",
+    icon: Bell,
+    group: "App",
+    needsPush: true,
+  },
+  {
     id: "export",
     href: "/settings/export",
     label: "Reports & export",
@@ -73,6 +84,11 @@ export const ABOUT_SECTION: SettingsSection = {
   icon: Info,
   group: null,
 };
+
+/** The sections to show: Notifications only when reminders are set up on the server. */
+export function visibleSections(pushOn: boolean): SettingsSection[] {
+  return SETTINGS_SECTIONS.filter((s) => pushOn || !s.needsPush);
+}
 
 /** Which section an address belongs to; /settings itself is Account (with a mouse). */
 export function currentSection(pathname: string): string | null {

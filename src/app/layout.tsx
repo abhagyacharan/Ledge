@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Geist, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
+import { getPushConfig } from "@/server/env";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
@@ -50,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
         </ThemeProvider>
-        <ServiceWorkerRegister />
+        <ServiceWorkerRegister pushConfigured={getPushConfig() !== null} />
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ABOUT_SECTION, GROUPS, SETTINGS_SECTIONS } from "../sections";
+import { ABOUT_SECTION, GROUPS, visibleSections } from "../sections";
 import { Avatar, GroupLabel, RowIcon, rowClass, settingsCard } from "./ui";
 import { SignOutRow } from "./settings-nav";
 
@@ -15,11 +15,14 @@ export function SettingsHome({
   user,
   summaries,
   version,
+  pushOn,
 }: {
   user: { name: string; email: string; image: string | null };
   /** The short line at the end of each row, by section id. */
   summaries: Partial<Record<string, ReactNode>>;
   version: string;
+  /** Whether the server has push set up; Notifications is hidden otherwise. */
+  pushOn: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2 md:hidden">
@@ -52,28 +55,30 @@ export function SettingsHome({
         <section key={group} aria-label={group} className="flex flex-col gap-2">
           <GroupLabel>{group}</GroupLabel>
           <div className={settingsCard}>
-            {SETTINGS_SECTIONS.filter((s) => s.group === group && s.id !== "account").map((s) => (
-              <Link
-                key={s.id}
-                href={s.href}
-                className={cn(
-                  rowClass,
-                  "outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
-                  s.danger && "text-dash-bad",
-                )}
-              >
-                <RowIcon className={s.danger ? "bg-dash-bad-bg text-dash-bad" : undefined}>
-                  <s.icon />
-                </RowIcon>
-                <span className="min-w-0 flex-1 truncate">{s.label}</span>
-                {summaries[s.id] ? (
-                  <span className="shrink-0 text-[13px] font-normal text-dash-ink-soft">
-                    {summaries[s.id]}
-                  </span>
-                ) : null}
-                <ChevronRight aria-hidden className="size-4 shrink-0 text-dash-ink-soft" />
-              </Link>
-            ))}
+            {visibleSections(pushOn)
+              .filter((s) => s.group === group && s.id !== "account")
+              .map((s) => (
+                <Link
+                  key={s.id}
+                  href={s.href}
+                  className={cn(
+                    rowClass,
+                    "outline-none focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+                    s.danger && "text-dash-bad",
+                  )}
+                >
+                  <RowIcon className={s.danger ? "bg-dash-bad-bg text-dash-bad" : undefined}>
+                    <s.icon />
+                  </RowIcon>
+                  <span className="min-w-0 flex-1 truncate">{s.label}</span>
+                  {summaries[s.id] ? (
+                    <span className="shrink-0 text-[13px] font-normal text-dash-ink-soft">
+                      {summaries[s.id]}
+                    </span>
+                  ) : null}
+                  <ChevronRight aria-hidden className="size-4 shrink-0 text-dash-ink-soft" />
+                </Link>
+              ))}
           </div>
         </section>
       ))}
