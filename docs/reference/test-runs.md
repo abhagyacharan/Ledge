@@ -1,0 +1,16 @@
+# Earlier verified test runs
+
+Moved from the CLAUDE.md status snapshot on 2026-11-24. Newest first. CLAUDE.md keeps only the latest run;
+when a new run is recorded, move the previous one to the top of this list.
+
+- 2026-11-23 (Settings redesign, Google button under the form): `typecheck`, `lint` and `format:check` clean, all 779 Vitest tests pass (run with `node`); checked in the browser with a throwaway account (deleted afterwards): sign-in and sign-up at desktop and phone size, every Settings section on desktop in light, the phone settings home and sections in dark with no tab bar or + and no sideways scroll, photo upload, crop, remove and Undo, rename, change password (wrong current refused), the Google "already used" message, Saved on a switch, delete account (wrong password refused). Real Google (connect, Google photo, Confirm with Google) not tried (no keys); e2e specs updated, not run.
+
+- 2026-11-23 (Google sign-in and forgot password): `typecheck` and `lint` clean, all 757 Vitest tests pass; the reset flow tried end to end in the browser with a throwaway account (link from the dev console, new password, sign in, used link expired), the Google button and error messages, Settings › Security, at desktop and phone size. A real Google sign-in and a real Resend email not tried (no keys); e2e not run.
+
+- 2026-11-23 (Plans fixes after O's try: follow-ups pick several, Type my own in place with voice, scale without tick, new-list switch, styled dropdowns, thinner edit border, equal plan-page cards, prompt tuning and a High cap): `typecheck` and `lint` clean, all 735 Vitest tests pass; each fix checked in the browser on desktop in dark mode with the real Groq key.
+
+- 2026-11-23 (Plans module, Phase 15): `typecheck` and `lint` clean, all 733 Vitest tests pass (run with `node`); the whole flow tried in the browser at desktop size with the real Groq key (goal, basics, four question kinds, follow-ups, list and card review with keys, Add plan, plan page, resources, Add more tasks, reschedule preview, Plans home, Home card, Settings AI usage) in dark and light. Phone sizes and the e2e specs not run. `fab.tsx` (another session's work) fails `format:check`.
+
+- 2026-11-23 (daily voice limit lowered to 30): `typecheck` and `lint` clean, all 618 Vitest tests pass.
+
+- 2026-11-22 (goal planner and multilingual voice): `typecheck` and `lint` clean and all 618 Vitest tests pass (run with `node`); the planner tried end to end in the browser with the real Groq key (questions, plan, edit, Add all, the list); the language chips saved and reloaded; Tasks header on a phone in dark mode. `fab.tsx` (another session's work) fails `format:check`. Earlier the same day (repeating tasks as routines): all 565 Vitest tests pass; Today and Upcoming Repeating cards, untick, and the early-tick refusal checked by hand in the browser at desktop and phone size, dark and light. Earlier the same day (public page tidy-up, voice hint): all 553 Vitest tests pass; e2e `site.spec.ts`, `site.mobile.spec.ts`, `auth.spec.ts` and sign-out from the sidebar pass; the two sign-out-from-Settings tests fail only when run in the same minute as the other sign-in tests (the 5-per-minute sign-in limit) and pass on their own. The full e2e suite was not rerun. Last full e2e run 2026-11-11: 102 Playwright tests passed
