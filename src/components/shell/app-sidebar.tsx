@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { enabledModules, isCurrent, type AppModule } from "@/config/modules";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/modules/account/components/ui";
+import { OPEN_PALETTE_EVENT } from "@/modules/todos/components/shortcuts";
 import { Brand } from "./brand";
 import { NavRow } from "./nav-row";
 import { SignOutButton } from "./sign-out-button";
@@ -20,10 +22,13 @@ import { ThemeToggle } from "./theme-toggle";
 export function AppSidebar({
   user,
   journalLocked = false,
+  activePlans = 0,
 }: {
-  user: { name: string; email: string };
+  user: { name: string; email: string; image: string | null };
   /** The Journal row shows a lock icon while the journal is locked (screen 7h). */
   journalLocked?: boolean;
+  /** How many plans are active: shown beside Plans. */
+  activePlans?: number;
 }) {
   const pathname = usePathname();
 
@@ -45,6 +50,7 @@ export function AppSidebar({
             module={m}
             pathname={pathname}
             locked={m.id === "journal" && journalLocked}
+            count={m.id === "plans" ? activePlans : 0}
           />
         ))}
       </SidebarContent>
@@ -54,6 +60,8 @@ export function AppSidebar({
           label="Search"
           icon={Search}
           current={pathname === "/search"}
+          // The same palette as Ctrl K: jump anywhere, or press Enter to search everything.
+          onPress={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
           trailing={
             <kbd aria-hidden className="font-mono text-[11px] font-medium text-muted-foreground">
               Ctrl K
@@ -65,15 +73,11 @@ export function AppSidebar({
           href="/settings"
           label="Settings"
           icon={Settings}
-          current={pathname === "/settings"}
+          current={pathname === "/settings" || pathname.startsWith("/settings/")}
         />
         <div className="mt-3 flex items-center gap-2.5 border-t border-sidebar-border px-1 pt-3">
-          <span
-            aria-hidden
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground text-xs font-semibold text-background"
-          >
-            {user.name.trim().charAt(0).toUpperCase() || "?"}
-          </span>
+          {/* The profile photo, or initials (Settings › Account). */}
+          <Avatar image={user.image} name={user.name} className="size-8 text-xs" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{user.name}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
@@ -90,10 +94,13 @@ function ModuleSection({
   module: m,
   pathname,
   locked = false,
+  count = 0,
 }: {
   module: AppModule;
   pathname: string;
   locked?: boolean;
+  /** A count shown at the end of the row (active plans). */
+  count?: number;
 }) {
   const inside = m.owns(pathname);
   // A module with no views of its own (Journal) is one plain link.
@@ -106,12 +113,18 @@ function ModuleSection({
           icon={m.icon}
           strong
           current={inside}
+          badge={m.beta ? "Beta" : undefined}
           trailing={
             locked ? (
               <>
                 <Lock aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
                 <span className="sr-only">(locked)</span>
               </>
+            ) : count > 0 ? (
+              <span className="font-mono text-xs font-medium text-muted-foreground">
+                {count}
+                <span className="sr-only"> active</span>
+              </span>
             ) : null
           }
         />

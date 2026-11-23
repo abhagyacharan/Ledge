@@ -19,25 +19,28 @@ Later it can grow: a calendar, notes, a goals page, a public portfolio.
 
 The work is done in thirteen steps, called phases, always in the same order. A phase is "done" only when its checklist is finished and the automatic checks pass.
 
-| Phase | Name                          | Status                                                 | Read                                                         |
-| ----- | ----------------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
-| 0     | Scaffold (the empty workshop) | Done (2026-11-10)                                      | [phase-0-scaffold.md](phase-0-scaffold.md)                   |
-| 1     | Auth (sign in and sign up)    | Done (2026-11-10)                                      | [phase-1-auth.md](phase-1-auth.md)                           |
-| 2     | Data model                    | Done (2026-11-10)                                      | [phase-2-data-model.md](phase-2-data-model.md)               |
-| 3     | Lists, tasks and tags         | Done (2026-11-10)                                      | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md)   |
-| 4     | Views (Today, Upcoming...)    | Done (2026-11-10)                                      | [phase-4-views.md](phase-4-views.md)                         |
-| 5     | Safety (undo, trash, keys)    | Done (2026-11-10)                                      | [phase-5-safety.md](phase-5-safety.md)                       |
-| 6     | Polish                        | Done (2026-11-10)                                      | [phase-6-polish.md](phase-6-polish.md)                       |
-| 7     | Expense tracker               | Done (2026-11-11)                                      | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)     |
-| 8     | Frontend redesign             | Done (2026-11-11)                                      | [phase-8-redesign.md](phase-8-redesign.md)                   |
-| 9     | Deploy and backup             | Built, you deploy                                      | [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md) |
-| 10    | Extra features (if time)      | In progress                                            | [phase-10-extra-features.md](phase-10-extra-features.md)     |
-| 11    | Journal                       | Built (2026-11-12), browser tests not run yet          | [phase-11-journal.md](phase-11-journal.md)                   |
-| 12    | Voice capture                 | Built (2026-11-15), not tried with a real Groq key yet | [phase-12-voice.md](phase-12-voice.md)                       |
-| 13    | Installable app (PWA)         | Built (2026-11-21), not tried on a phone yet           | [phase-13-installable-app.md](phase-13-installable-app.md)   |
+| Phase | Name                          | Status                                                 | Read                                                                   |
+| ----- | ----------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| 0     | Scaffold (the empty workshop) | Done (2026-11-10)                                      | [phase-0-scaffold.md](phase-0-scaffold.md)                             |
+| 1     | Auth (sign in and sign up)    | Done (2026-11-10); Google and reset added 2026-11-23   | [phase-1-auth.md](phase-1-auth.md)                                     |
+| 2     | Data model                    | Done (2026-11-10)                                      | [phase-2-data-model.md](phase-2-data-model.md)                         |
+| 3     | Lists, tasks and tags         | Done (2026-11-10)                                      | [phase-3-lists-tasks-tags.md](phase-3-lists-tasks-tags.md)             |
+| 4     | Views (Today, Upcoming...)    | Done (2026-11-10)                                      | [phase-4-views.md](phase-4-views.md)                                   |
+| 5     | Safety (undo, trash, keys)    | Done (2026-11-10)                                      | [phase-5-safety.md](phase-5-safety.md)                                 |
+| 6     | Polish                        | Done (2026-11-10)                                      | [phase-6-polish.md](phase-6-polish.md)                                 |
+| 7     | Expense tracker               | Done (2026-11-11)                                      | [phase-7-expense-tracker.md](phase-7-expense-tracker.md)               |
+| 8     | Frontend redesign             | Done (2026-11-11)                                      | [phase-8-redesign.md](phase-8-redesign.md)                             |
+| 9     | Deploy and backup             | Built, you deploy                                      | [phase-9-deploy-and-backup.md](phase-9-deploy-and-backup.md)           |
+| 10    | Extra features (if time)      | In progress                                            | [phase-10-extra-features.md](phase-10-extra-features.md)               |
+| 11    | Journal                       | Built (2026-11-12), browser tests not run yet          | [phase-11-journal.md](phase-11-journal.md)                             |
+| 12    | Voice capture                 | Built (2026-11-15), not tried with a real Groq key yet | [phase-12-voice.md](phase-12-voice.md)                                 |
+| 13    | Installable app (PWA)         | Built (2026-11-21), not tried on a phone yet           | [phase-13-installable-app.md](phase-13-installable-app.md)             |
+| 14    | Goal planner, more languages  | Built (2026-11-22), other languages not spoken yet     | [phase-14-planner-and-languages.md](phase-14-planner-and-languages.md) |
+| 15    | Plans                         | Built (2026-11-23), phone polish to come               | [phase-15-plans.md](phase-15-plans.md)                                 |
 
 ## Other pages
 
+- [The new Settings](settings.md): one section at a time, the profile picture, devices, change password, the Google button under the form, and no tab bar on Settings on a phone (23 November 2026).
 - [The public page](public-site.md): what signed-out visitors now see at Ledge's address, built from your own design (21 November 2026).
 - [How the tests work](how-tests-work.md): where test data comes from, why tests were slow, and how they were sped up.
 - [What comes next](whats-next.md): the plan for after deployment (automatic updates, a glass look, smarter search, a phone app, open source). The glass look was tried and dropped; only the floating phone bar stayed. Smarter search and the phone app are on hold (14 November 2026). It also describes a new idea, the Work page with a daily briefing, which is a written proposal only. The rest is not built yet.
@@ -56,6 +59,8 @@ The work is done in thirteen steps, called phases, always in the same order. A p
 - **Phase 10: Extra features, only if time remains (in progress).** See [phase-10-extra-features.md](phase-10-extra-features.md). Done so far: type tasks in plain sentences, search, and repeating tasks (a board view was built and then removed at your request). Still to come: export your data, and select many tasks at once.
 - **Phase 11: Journal (built; its browser tests have not run yet).** See [phase-11-journal.md](phase-11-journal.md). It was added at your request and built before the rest of Phase 10.
 - **Phase 12: Voice capture (built; waiting for your Groq key to be tried for real).** See [phase-12-voice.md](phase-12-voice.md). Hold + and speak to add tasks and money.
+- **Phase 14: Goal planner and voice in more languages (built).** See [phase-14-planner-and-languages.md](phase-14-planner-and-languages.md). Describe a goal and get a plan of tasks to check and add; speak to voice in eleven languages, or a mix.
+- **Phase 15: Plans (built).** See [phase-15-plans.md](phase-15-plans.md). Plans became a module: your plans stay, with their own page, history, resources and the AI cost; the one-page planner from Phase 14 is gone.
 
 ## The rule for keeping this folder up to date
 

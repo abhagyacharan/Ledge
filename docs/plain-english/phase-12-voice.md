@@ -55,6 +55,6 @@ For testing there is a **fake mode**: `VOICE_FAKE=1` in the settings makes Ledge
 - **The browser tests** for voice were written but not run (pnpm is blocked on this computer).
 - The test set of 60 or more real sentences from the plan (to measure how often the AI gets it right) needs the Groq key, so it is still to do.
 
-## Later: more languages (an idea, not built)
+## Later: more languages (first step built on 22 November 2026; see [phase-14-planner-and-languages.md](phase-14-planner-and-languages.md))
 
 Written on 22 November 2026, in [`docs/voice-multilingual-spec.md`](../voice-multilingual-spec.md). Today voice is told to expect English only. That is why Hindi sometimes comes out written in English letters, or half translated, and why Telugu does not work. The idea is to let you speak in any of about ten Indian languages, or mix them in one sentence the way people really talk, and still get the right tasks and money entries. It probably needs a speech service made for Indian languages, which would be a second company your recordings go to. Nothing is decided yet: the spec ends with questions for you, starting with which service your earlier project used.

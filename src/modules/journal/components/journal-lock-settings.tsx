@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight, EyeOff, Lock, LockOpen } from "lucide-react";
+import { ArrowRight, EyeOff, Info, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -15,6 +15,16 @@ import {
   turnOffJournalLockAction,
 } from "../lock-actions";
 import { PinPad } from "./pin-pad";
+import {
+  ChoiceRow,
+  GroupLabel,
+  Notice,
+  pill,
+  RowIcon,
+  settingsCard,
+  Sub,
+  Switch,
+} from "@/modules/account/components/ui";
 
 /**
  * Journal lock settings (docs/new_design.md screen 7f): the lock on or off, Change PIN, and when
@@ -155,17 +165,17 @@ function PinSheet({
   );
 }
 
-const cardClass =
-  "rounded-3xl border border-dash-edge bg-dash-card px-4 shadow-(--dash-card-shadow)";
-
 export function JournalLockSettings({
   on,
   pinLength,
   relock,
+  hasPassword,
 }: {
   on: boolean;
   pinLength: 4 | 6;
   relock: JournalRelock;
+  /** Accounts made with Google set a password first: it is the way back in after a forgotten PIN. */
+  hasPassword: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step | null>(null);
@@ -182,106 +192,94 @@ export function JournalLockSettings({
   }
 
   return (
-    <div className="dash mx-auto w-full max-w-[560px] pb-24">
-      <Link
-        href="/settings"
-        className="inline-flex min-h-11 items-center gap-1 text-[14px] text-dash-ink-soft outline-none hover:text-dash-ink focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <ChevronLeft aria-hidden className="size-4" />
-        Settings
-      </Link>
-      <h1 className="mt-1 mb-5 font-display text-[32px] leading-tight font-semibold">
-        Journal lock
-      </h1>
+    <div className="flex flex-col gap-3">
+      {!hasPassword && !on ? (
+        <Notice icon={<Info aria-hidden />}>
+          You signed up with Google, so this account has no password yet. The lock needs one in case
+          you forget the PIN.
+          <Link
+            href="/settings/security"
+            className="mt-2 flex min-h-8 w-fit items-center gap-1 font-semibold text-dash-ink outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            Set a password
+            <ArrowRight aria-hidden className="size-3.5" />
+          </Link>
+        </Notice>
+      ) : null}
 
-      <section className={cardClass} aria-label="Lock">
-        <div className="flex min-h-15 items-center gap-3">
-          <Lock aria-hidden className="size-4 shrink-0" />
-          <span id="lock-switch-label" className="flex-1 text-[15px] font-semibold">
-            Lock Journal with a PIN
+      <section aria-label="Lock" className={settingsCard}>
+        <div className="flex items-start gap-3 p-4">
+          <span className="min-w-0 flex-1">
+            <span id="lock-switch-label" className="block text-[15px] font-semibold">
+              Lock the Journal
+            </span>
+            <Sub className="mt-0.5">
+              {hasPassword || on
+                ? "A PIN guards the Journal only. Tasks and money stay open."
+                : "Available once a password is set."}
+            </Sub>
           </span>
-          <span className="text-[13px] text-dash-ink-soft" aria-hidden>
-            {on ? "On" : "Off"}
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={on}
-            aria-labelledby="lock-switch-label"
-            onClick={() =>
+          <Switch
+            on={on}
+            labelledBy="lock-switch-label"
+            disabled={!on && !hasPassword}
+            onChange={() =>
               on ? setStep({ purpose: "off", step: "current" }) : router.push("/journal?lock=setup")
             }
-            className={cn(
-              "relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50",
-              on ? "bg-dash-ink" : "bg-dash-track",
-            )}
-          >
-            <span
-              aria-hidden
-              className={cn(
-                "size-6 rounded-full bg-dash-card shadow-(--dash-lift) transition-transform duration-150 ease-snap",
-                on && "translate-x-5",
-              )}
-            />
-          </button>
+          />
         </div>
         {on ? (
-          <button
-            type="button"
-            onClick={() => setStep({ purpose: "change", step: "current" })}
-            className="flex min-h-13 w-full items-center border-t border-dash-edge pl-7 text-left text-[14px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <span className="flex-1">Change PIN</span>
-            <ChevronRight aria-hidden className="size-4 text-dash-ink-soft" />
-          </button>
+          <div className="flex min-h-14 items-center gap-3 border-t border-dash-edge px-4 py-2.5">
+            <RowIcon>
+              <KeyRound />
+            </RowIcon>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium">PIN</span>
+              <span className="block font-mono text-[12px] font-medium text-dash-ink-soft">
+                {pinLength} digits
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setStep({ purpose: "change", step: "current" })}
+              className={pill.small}
+            >
+              Change PIN
+            </button>
+          </div>
         ) : null}
       </section>
 
-      <section className={cn(cardClass, "mt-3 py-2", !on && "opacity-60")}>
-        <h2 id="relock-title" className="pt-2 pb-1 text-[12px] font-medium text-dash-ink-soft">
-          Lock again
-        </h2>
-        <div role="radiogroup" aria-labelledby="relock-title">
-          {RELOCK.map((option) => {
-            const checked = choice === option.value;
-            return (
-              <button
+      {on ? (
+        <>
+          <GroupLabel id="relock-title">Lock again</GroupLabel>
+          <div role="radiogroup" aria-labelledby="relock-title" className={settingsCard}>
+            {RELOCK.map((option) => (
+              <ChoiceRow
                 key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={checked}
-                disabled={!on}
-                onClick={() => choose(option.value)}
-                className="flex min-h-13 w-full items-center border-t border-dash-edge text-left text-[14px] outline-none first:border-t-0 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-default"
+                checked={choice === option.value}
+                onSelect={() => choose(option.value)}
               >
-                <span className={cn("flex-1", checked && "font-semibold")}>{option.label}</span>
-                {checked ? (
-                  <span className="grid size-6 place-items-center rounded-full bg-dash-ink text-dash-card">
-                    <Check aria-hidden className="size-3.5" strokeWidth={3} />
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                {option.label}
+              </ChoiceRow>
+            ))}
+          </div>
 
-      <p className="mt-3 flex gap-2.5 rounded-2xl bg-dash-well px-4 py-3 text-[13px] text-dash-ink-soft">
+          <GroupLabel>If you forget the PIN</GroupLabel>
+          <div className={cn(settingsCard, "p-4")}>
+            <span className="block text-[15px] font-medium">Unlock with my account password</span>
+            <Sub className="mt-0.5">
+              Then choose a new PIN. This always works, so a forgotten PIN never locks you out.
+            </Sub>
+          </div>
+        </>
+      ) : null}
+
+      <p className="flex gap-2.5 rounded-2xl bg-dash-well px-4 py-3 text-[13px] text-dash-ink-soft">
         <EyeOff aria-hidden className="mt-0.5 size-4 shrink-0" />
         While the Journal is locked, Home shows only whether you&apos;ve written, never the words.
         Data exports still include journal pages.
       </p>
-
-      {on ? (
-        <button
-          type="button"
-          onClick={() => setStep({ purpose: "off", step: "current" })}
-          className="mt-5 inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-dash-bad outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <LockOpen aria-hidden className="size-4" />
-          Turn off the lock
-        </button>
-      ) : null}
 
       <PinSheet step={step} pinLength={pinLength} onStep={setStep} onClose={() => setStep(null)} />
     </div>

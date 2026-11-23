@@ -11,7 +11,8 @@ export const getSession = cache(async () => {
 
 export type AuthedUser = {
   userId: string;
-  user: { id: string; name: string; email: string };
+  /** `image` is the profile photo's address (Settings � Account), or null. */
+  user: { id: string; name: string; email: string; image: string | null };
 };
 
 /**
@@ -22,6 +23,6 @@ export type AuthedUser = {
 export async function requireUser(): Promise<AuthedUser> {
   const session = await getSession();
   if (!session) redirect("/sign-in");
-  const { id, name, email } = session.user;
-  return { userId: id, user: { id, name, email } };
+  const { id, name, email, image } = session.user;
+  return { userId: id, user: { id, name, email, image: image ?? null } };
 }

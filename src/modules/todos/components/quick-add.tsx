@@ -53,7 +53,13 @@ import { PRIORITY_LABELS, type DateContext } from "./types";
  * (docs/new_design.md §3: one + on every screen), but with a mouse these pages keep their
  * calm, button-free look (O, 2026-11-12).
  */
-const PHONE_ONLY_ADD_BUTTON = ["/journal", "/search", "/settings", "/trash"];
+const PHONE_ONLY_ADD_BUTTON = ["/journal", "/search", "/trash"];
+
+/**
+ * Pages with no round button at all: Settings has no tab bar on a phone either (O, 2026-11-23),
+ * and with a mouse it stays button-free like the pages above. q still opens quick add.
+ */
+const NO_ADD_BUTTON = ["/expenses", "/settings"];
 
 /** How the priority pill glides between options: quick, no bounce (docs/design.md §9). */
 /** The icon on each "Understood as" chip (docs/new_design.md screen 1d). */
@@ -134,9 +140,9 @@ export function QuickAdd() {
 
   return (
     <>
-      {/* On Expense Tracker pages the round button logs a transaction instead. q still adds a
-          task everywhere. */}
-      {under(pathname, "/expenses") ? null : (
+      {/* On Expense Tracker pages the round button logs a transaction instead; Settings has
+          none. q still adds a task everywhere. */}
+      {NO_ADD_BUTTON.some((p) => under(pathname, p)) ? null : (
         <button
           type="button"
           aria-label={
@@ -157,7 +163,7 @@ export function QuickAdd() {
         </button>
       )}
       {voice &&
-      !under(pathname, "/expenses") &&
+      !NO_ADD_BUTTON.some((p) => under(pathname, p)) &&
       !PHONE_ONLY_ADD_BUTTON.some((p) => under(pathname, p)) ? (
         <FabVoiceHint />
       ) : null}

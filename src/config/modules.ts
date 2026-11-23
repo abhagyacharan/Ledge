@@ -9,6 +9,7 @@ import {
   NotebookPen,
   ReceiptIndianRupee,
   Sun,
+  Target,
   TrendingUp,
   Wallet,
   type LucideIcon,
@@ -37,6 +38,8 @@ export type AppModule = {
   /** Where the module's own entry (and the phone tab) goes. */
   route: string;
   enabled: boolean;
+  /** Still being shaped: a Beta tag shows beside its name. */
+  beta?: boolean;
   /**
    * The module's views, shown under it in the sidebar and as the tabs on its pages. Empty for a
    * single-page module, which the sidebar shows as one plain link.
@@ -96,6 +99,18 @@ export const modules: AppModule[] = [
     enabled: true,
     nav: [],
     owns: (path) => path === "/journal" || path.startsWith("/journal/"),
+  },
+  {
+    // Goals turned into tasks (docs/plans-module-spec.md). Fourth, so the phone tab bar (which
+    // pins the first three) leaves it to Home and the command palette.
+    id: "plans",
+    label: "Plans",
+    icon: Target,
+    route: "/plans",
+    enabled: true,
+    beta: true,
+    nav: [],
+    owns: (path) => path === "/plans" || path.startsWith("/plans/"),
   },
 ];
 

@@ -17,6 +17,19 @@
         "NEXT_DIST_DIR": ".next-e2e",
         "BETTER_AUTH_URL": "http://localhost:3200"
       }
+    },
+    {
+      "name": "ledge-auth-check",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "--port", "3300"],
+      "port": 3300,
+      "autoPort": false,
+      "env": {
+        "NEXT_DIST_DIR": ".next-auth-check",
+        "BETTER_AUTH_URL": "http://localhost:3300",
+        "GOOGLE_CLIENT_ID": "placeholder.apps.googleusercontent.com",
+        "GOOGLE_CLIENT_SECRET": "placeholder-secret"
+      }
     }
   ]
 }

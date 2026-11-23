@@ -1,0 +1,1 @@
+ALTER TABLE "plans" ADD COLUMN "milestone_task_ids" jsonb DEFAULT '[]'::jsonb NOT NULL;

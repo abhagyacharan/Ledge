@@ -1,6 +1,17 @@
 # Multilingual voice spec
 
-Drafted for O on 2026-11-22. **Status: future idea. Nothing here is built and it is not a phase yet.** It builds on voice capture (Phase 12, `docs/voice-spec.md`) and needs O's answers to the open questions at the end, and his go-ahead, before any code.
+Drafted for O on 2026-11-22. **Status: first stage built the same day** at O's request ("plan and implement"). It builds on voice capture (Phase 12, `docs/voice-spec.md`).
+
+## Decided for the first build (2026-11-22)
+
+O asked to build it without answering the open questions, so the first build takes the choices that need no new provider, key or bill:
+
+- **Speech stays on Groq Whisper (option A)**, with the language no longer forced to English. Only English chosen: `en`, as today. Exactly one language besides English chosen: that language's code. Otherwise left open, so Whisper detects it.
+- **Settings:** "Languages I speak", chips for the eleven languages below (default English and Hindi), and "Write titles in": English (default) or As I said them. Stored in `user_settings.voice_languages` and `user_settings.voice_title_language`.
+- **Understanding:** the system prompt learns mixed and non-English speech, Indian number words and "kal"; the user message says which languages to expect and which title language to use.
+- **Review sheet:** the heard words show in their own script and direction.
+- **Fake mode** understands a Hindi and a Telugu example.
+- **Left for later:** an Indian speech service (option B) or a home model (option C) if Whisper is too weak for some languages, and the per-language eval with its 85% bar, which needs recorded clips and O's key. The open questions below still stand.
 
 ## What it is
 

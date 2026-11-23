@@ -7,6 +7,11 @@ import { enabledModules } from "@/config/modules";
 import { cn } from "@/lib/utils";
 import { FILLED_TAB_ICONS } from "./tab-icons";
 
+/** Settings pages show no tab bar on a phone (and no round + button). */
+export function onSettings(pathname: string): boolean {
+  return pathname === "/settings" || pathname.startsWith("/settings/");
+}
+
 /** At most three modules are pinned to the bar beside Home (docs/new_design.md §3). */
 const MAX_PINS = 3;
 
@@ -14,10 +19,12 @@ const MAX_PINS = 3;
  * Phone navigation (docs/new_design.md §3, `LedgeTabBar`): a floating 64px pill with Home and the
  * pinned modules, each an icon and a short label. The round + button sits to its right on the same
  * line (FAB_CLASS). There is no More or Search tab: Search, Trash and Settings are tiles on Home.
- * Hidden from tablet width up, where the sidebar takes over.
+ * Hidden from tablet width up, where the sidebar takes over, and on Settings, whose sections lead
+ * back with "‹ Settings" and "‹ Home" instead (O, 2026-11-23).
  */
 export function MobileTabBar() {
   const pathname = usePathname();
+  if (onSettings(pathname)) return null;
   const pins = enabledModules().slice(0, MAX_PINS);
   const tabs: { id: string; href: string; label: string; icon: LucideIcon; current: boolean }[] = [
     { id: "home", href: "/", label: "Home", icon: House, current: pathname === "/" },

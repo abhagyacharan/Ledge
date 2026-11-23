@@ -105,3 +105,43 @@ It also builds the **frame** of the app (the side menu and the page layout) that
 - The automatic browser-clicking tests (Playwright) do not exist yet. The sign-in flow was checked by hand in a browser.
 - At the end of this phase a new account did not yet get an Inbox list and personal settings. That was added in Phase 2, along with the lists and tasks storage.
 - "Sign out everywhere" and "delete my account" are later optional features (Phase 10).
+
+## Added later: Sign in with Google, and Forgot password (2026-11-23)
+
+You asked for two more ways through the front door. Both were built on 2026-11-23. The technical details are in `docs/auth-google-reset-spec.md`.
+
+### Continue with Google
+
+- Sign in and Create account now have a Google button **under** the email form, after a thin "or" line: black, with Google's four-colour G, reading **Continue with Google** on Sign in and **Sign up with Google** on Create account (moved there and made black at your request later the same day; it started above the form). You pick your Google account, Google tells Ledge your name and email, and you are in. Ledge never sees your Google password.
+- This uses a standard called **OAuth**: Google vouches for you, so Ledge does not need a password of its own for you.
+- The button only appears once you have created a "client" in Google's developer console and put its two values (`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`) in the server's settings. Until then it stays hidden.
+- **When sign-ups are closed** (`ALLOW_SIGNUP=false`), Google can only sign in people who already have an account. Anyone new sees "Sign-ups are closed".
+- **If you already have an account with the same email**, Google joins it to that account, so you can sign in either way afterwards. There is one catch, on purpose: Google only joins an account whose email has been **confirmed**. Otherwise a stranger could sign up with your email first and then capture your Google sign-in. Ledge never used to confirm emails, so now **resetting your password confirms your email** (clicking the emailed link proves the address is yours). In practice: reset your password once, and from then on Google works for your existing account. Until then, Google sends you back to Sign in with a message explaining this.
+
+### Forgot password
+
+1. On Sign in, click **Forgot password?** and type your email.
+2. Ledge always answers "If this email has a Ledge account, a link is on its way". It says the same thing for emails that have no account, so nobody can use the page to find out who has one.
+3. The email has a link that works **once, for 60 minutes**.
+4. The link opens a page where you type your new password twice (10 characters or more).
+5. When you save it, Ledge **signs you out everywhere**, to be safe: if someone else had your old password, they are thrown out too. Then you sign in with the new password.
+6. A link that was already used, has run out, or was typed wrong shows "This link has expired" with a button to send a new one.
+
+**How the email is sent:** through a service called **Resend**. You add your domain to Resend, create a key, and put `RESEND_API_KEY` and `EMAIL_FROM` in the server's settings. Without them, the server cannot send email, so **Forgot password?** is hidden. On a developer's computer, the email is printed in the dev server's window instead of being sent.
+
+**Limits:** 3 reset requests and 5 new-password attempts per minute per visitor, and 10 Google sign-ins per minute, so nobody can hammer these pages.
+
+### Accounts made with Google, and the journal lock
+
+- An account made with Google has no password. **Settings › Sign-in & security** shows how you sign in: Password (with **Change password**, or **Set a password** if there is none) and Google (with **Connect Google** or **Disconnect**). See [the new Settings](settings.md).
+- The journal lock needs a password, because the password is the way back in if you forget your PIN. So an account with no password must set one before it can turn the lock on. The lock page explains this and links to Settings. Unlocking with Google instead is an idea for later.
+
+### A safety fix found while testing
+
+While testing, a sign-up form was submitted a moment before the page had finished loading, and the browser put the typed password into the web address. All the sign-in forms now send their contents the hidden way (a "POST"), so that cannot happen, even on a slow phone.
+
+### What was checked, and what was not
+
+- Checked: automatic tests for the reset email, the whole reset (old password stops working, every sign-in ends, the email is confirmed, the link works once), the same answer for unknown emails, closed sign-ups stopping Google, an account made with Google setting its first password, and the journal lock refusing an account with no password. All 757 automatic tests pass.
+- Checked by hand in the browser: the whole Forgot password path with a throwaway account (ask for the link, open it, set a new password, sign in with it, a used link shows "expired"), the Google button and its messages, and the new Settings rows, on a computer and at phone size.
+- **Not checked yet:** a real Google sign-in (that needs your Google client values) and a real email arriving (that needs your Resend key and domain). The browser-clicking tests (Playwright) were not run.

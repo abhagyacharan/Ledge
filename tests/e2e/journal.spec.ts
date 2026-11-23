@@ -104,9 +104,9 @@ test("the journal lock: turn on, lock when hidden, wrong PIN, unlock, turn off",
 
   // Turn it off again in Settings with the current PIN, so other tests find it open.
   await page.goto("/settings/journal-lock");
-  await page.getByRole("button", { name: "Turn off the lock" }).click();
+  await page.getByRole("switch", { name: "Lock the Journal" }).click();
   await page.getByLabel("Enter your current PIN").fill(E2E_JOURNAL_PIN);
-  await expect(page.getByRole("switch", { name: "Lock Journal with a PIN" })).toHaveAttribute(
+  await expect(page.getByRole("switch", { name: "Lock the Journal" })).toHaveAttribute(
     "aria-checked",
     "false",
   );

@@ -2,21 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Circle, CircleCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { PASSWORD_MIN_LENGTH } from "@/config/app";
 import { authClient } from "@/lib/auth-client";
 import { FormField } from "./form-field";
+import { GoogleButton, OrDivider } from "./google-button";
+import { PasswordRule } from "./password-rule";
 import { fieldErrors, signUpSchema } from "./schema";
 
-export function SignUpForm() {
+/** Sign-up: the email form, then "or" and Sign up with Google when Google is set up. */
+export function SignUpForm({ google }: { google: boolean }) {
   const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [passwordLength, setPasswordLength] = useState(0);
-  const longEnough = passwordLength >= PASSWORD_MIN_LENGTH;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,52 +43,48 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-      <FormField id="name" label="Name" autoComplete="name" autoFocus error={errors.name} />
-      <FormField
-        id="email"
-        label="Email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
-        error={errors.email}
-      />
-      <FormField
-        id="password"
-        label="Password"
-        type="password"
-        autoComplete="new-password"
-        error={errors.password}
-        onChange={(e) => setPasswordLength(e.target.value.length)}
-        aria-describedby="password-rule"
-      />
-      <p
-        id="password-rule"
-        aria-live="polite"
-        className={`-mt-2 inline-flex items-center gap-1.5 text-sm ${longEnough ? "font-medium text-dash-good" : "text-muted-foreground"}`}
-      >
-        {longEnough ? (
-          <CircleCheck aria-hidden className="size-4" />
-        ) : (
-          <Circle aria-hidden className="size-4" />
-        )}
-        At least {PASSWORD_MIN_LENGTH} characters
-        {!longEnough && passwordLength > 0 ? ` · ${passwordLength} so far` : ""}
-      </p>
-      {formError ? (
-        <p role="alert" className="text-sm text-destructive">
-          {formError}
-        </p>
+    <>
+      <form method="post" onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+        <FormField id="name" label="Name" autoComplete="name" autoFocus error={errors.name} />
+        <FormField
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          error={errors.email}
+        />
+        <FormField
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          error={errors.password}
+          onChange={(e) => setPasswordLength(e.target.value.length)}
+          aria-describedby="password-rule"
+        />
+        <PasswordRule id="password-rule" length={passwordLength} />
+        {formError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {formError}
+          </p>
+        ) : null}
+        <Button type="submit" className="h-11" disabled={pending}>
+          {pending ? "Creating account…" : "Create account"}
+        </Button>
+      </form>
+      {google ? (
+        <div className="mt-4 flex flex-col gap-4">
+          <OrDivider />
+          <GoogleButton label="Sign up with Google" />
+        </div>
       ) : null}
-      <Button type="submit" className="h-11" disabled={pending}>
-        {pending ? "Creating account…" : "Create account"}
-      </Button>
-      <p className="text-sm text-muted-foreground">
+      <p className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/sign-in" className="font-medium text-foreground underline underline-offset-4">
           Sign in
         </Link>
       </p>
-    </form>
+    </>
   );
 }

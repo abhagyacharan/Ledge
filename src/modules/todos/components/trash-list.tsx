@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { deleteEntryForeverAction, restoreEntryAction } from "@/modules/expenses/actions";
+import { restorePlanAction } from "@/modules/planner/actions";
 import { restoreListAction } from "../actions/lists";
 import { restoreTaskAction } from "../actions/tasks";
 import {
   deleteListForeverAction,
+  deletePlanForeverAction,
   deleteTaskForeverAction,
   emptyTrashAction,
 } from "../actions/trash";
@@ -24,7 +26,7 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { run } from "./run-action";
 
 export type TrashItem = {
-  kind: "list" | "task" | "entry";
+  kind: "list" | "task" | "entry" | "plan";
   id: string;
   title: string;
   /** After the title: "₹260" for money, "6 tasks" for a list. */
@@ -53,6 +55,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "task", label: "Tasks" },
   { value: "list", label: "Lists" },
+  { value: "plan", label: "Plans" },
   { value: "entry", label: "Money entries" },
 ];
 
@@ -91,6 +94,11 @@ export function TrashList({ items }: { items: TrashItem[] }) {
       );
       return;
     }
+    if (item.kind === "plan") {
+      const result = await run(restorePlanAction({ planId: item.id }));
+      if (result.ok) toast.success(`Restored "${item.title}"`, view(item.href));
+      return;
+    }
     const result = await run(
       item.kind === "list"
         ? restoreListAction({ id: item.id })
@@ -100,13 +108,18 @@ export function TrashList({ items }: { items: TrashItem[] }) {
   }
 
   async function deleteForever(item: TrashItem) {
+    const success = { success: `Deleted "${item.title}" for good` };
+    if (item.kind === "plan") {
+      await run(deletePlanForeverAction({ planId: item.id }), success);
+      return;
+    }
     const action =
       item.kind === "list"
         ? deleteListForeverAction
         : item.kind === "entry"
           ? deleteEntryForeverAction
           : deleteTaskForeverAction;
-    await run(action({ id: item.id }), { success: `Deleted "${item.title}" for good` });
+    await run(action({ id: item.id }), success);
   }
 
   const when = (item: TrashItem, withDate: boolean) =>

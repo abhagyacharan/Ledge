@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignUpForm } from "@/modules/auth/sign-up-form";
-import { isSignupAllowed } from "@/server/env";
+import { getGoogleConfig, isSignupAllowed } from "@/server/env";
 import { getSession } from "@/server/session";
 
 export const metadata: Metadata = { title: "Create account" };
@@ -33,11 +33,9 @@ export default async function SignUpPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold tracking-tight">Create account</h1>
-      <p className="mt-2 mb-8 text-sm text-muted-foreground">
-        Start your book. It stays on this server.
-      </p>
-      <SignUpForm />
+      <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
+      <p className="mt-2 mb-8 text-sm text-muted-foreground">Your tasks, money and journal.</p>
+      <SignUpForm google={getGoogleConfig() !== null} />
     </>
   );
 }

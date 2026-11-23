@@ -14,20 +14,28 @@
 export const testAuth = {
   userId: "",
   sessionId: "session-1",
+  /** When this session signed in (Delete account's "Confirm with Google" checks it). */
+  sessionCreatedAt: new Date(0),
   jar: new Map<string, string>(),
   reset(userId: string) {
     this.userId = userId;
     this.sessionId = "session-1";
+    this.sessionCreatedAt = new Date(0);
     this.jar.clear();
   },
 };
 
 export const sessionModule = {
   getSession: async () =>
-    testAuth.userId ? { session: { id: testAuth.sessionId }, user: { id: testAuth.userId } } : null,
+    testAuth.userId
+      ? {
+          session: { id: testAuth.sessionId, createdAt: testAuth.sessionCreatedAt },
+          user: { id: testAuth.userId },
+        }
+      : null,
   requireUser: async () => ({
     userId: testAuth.userId,
-    user: { id: testAuth.userId, name: "", email: "" },
+    user: { id: testAuth.userId, name: "", email: "", image: null },
   }),
 };
 

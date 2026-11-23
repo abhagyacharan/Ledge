@@ -1,10 +1,22 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, pgTable, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  integer,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./_columns";
 import { user } from "./auth";
 
 export const THEMES = ["system", "light", "dark"] as const;
 export type Theme = (typeof THEMES)[number];
+
+export const VOICE_TITLE_LANGUAGES = ["english", "as_spoken"] as const;
+export type VoiceTitleLanguage = (typeof VOICE_TITLE_LANGUAGES)[number];
 
 export const JOURNAL_RELOCK = ["leave", "1m", "5m", "close"] as const;
 export type JournalRelock = (typeof JOURNAL_RELOCK)[number];
@@ -24,6 +36,15 @@ export const userSettings = pgTable(
     locale: text("locale").notNull().default("en-IN"),
     /** Voice capture on or off (docs/voice-spec.md §9); it also needs GROQ_API_KEY on the server. */
     voiceEnabled: boolean("voice_enabled").notNull().default(true),
+    /** Languages the person speaks to voice capture (ISO 639-1 codes; docs/voice-multilingual-spec.md). */
+    voiceLanguages: text("voice_languages")
+      .array()
+      .notNull()
+      .default(sql`'{en,hi}'::text[]`),
+    /** Titles from voice: translated to English, or kept as spoken. */
+    voiceTitleLanguage: text("voice_title_language", { enum: VOICE_TITLE_LANGUAGES })
+      .notNull()
+      .default("english"),
     /** The journal lock (docs/journal-spec.md, "PIN lock"): a scrypt hash of the 4-digit PIN, or null. */
     journalPinHash: text("journal_pin_hash"),
     /** Wrong PINs in a row; five lock the PIN for a while. */
@@ -35,12 +56,19 @@ export const userSettings = pgTable(
     journalPinLockouts: smallint("journal_pin_lockouts").notNull().default(0),
     /** When the journal locks again: leaving it, 1 or 5 minutes away, or closing Ledge. */
     journalRelock: text("journal_relock", { enum: JOURNAL_RELOCK }).notNull().default("leave"),
+    /** Paise per US dollar, for showing AI costs in rupees (docs/plans-module-spec.md §5). */
+    usdToInr: integer("usd_to_inr").notNull().default(8500),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [
+    check("user_settings_usd_to_inr_check", sql`${t.usdToInr} between 100 and 100000`),
     check("user_settings_week_starts_on_check", sql`${t.weekStartsOn} between 1 and 7`),
     check("user_settings_theme_check", sql`${t.theme} in ('system', 'light', 'dark')`),
+    check(
+      "user_settings_voice_title_language_check",
+      sql`${t.voiceTitleLanguage} in ('english', 'as_spoken')`,
+    ),
     check("user_settings_currency_check", sql`${t.currency} ~ '^[A-Z]{3}$'`),
   ],
 );

@@ -11,8 +11,9 @@ test("signed-out visitors see the public page at /", async ({ page }) => {
     "One calm place to run your day.",
   );
 
-  // The hero phone switches screens from its own tab bar.
-  await page.getByRole("tab", { name: "Expenses" }).click();
+  // The hero phone switches screens from its own tab bar. The phone floats gently, so it is never
+  // "stable" for Playwright; click it anyway.
+  await page.getByRole("tab", { name: "Expenses" }).click({ force: true });
   await expect(page.getByRole("tab", { name: "Expenses" })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -55,7 +56,7 @@ for (const scheme of ["light", "dark"] as const) {
 test("sign-in and sign-up point first-time visitors to the public page", async ({ page }) => {
   for (const path of ["/sign-in", "/sign-up"]) {
     await page.goto(path);
-    await page.getByRole("link", { name: "See what it does" }).click();
+    await page.getByRole("link", { name: "See what Ledge does" }).click();
     await expect(page).toHaveURL(/\/welcome$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "One calm place to run your day.",

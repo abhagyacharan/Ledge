@@ -2528,13 +2528,15 @@
     & .sw .dot {
       display: none;
     }
+    /* Smaller on phones, so the headline, the whole phone and the switch share the first screen
+       with room around them (O, 2026-11-22, on a Galaxy S24 Ultra). */
     & .phone {
-      width: min(300px, calc(100vw - 56px));
-      border-radius: 46px;
-      padding: 9px;
+      width: min(236px, 60vw);
+      border-radius: 38px;
+      padding: 8px;
     }
     & .screen {
-      border-radius: 37px;
+      border-radius: 30px;
     }
     & .scr {
       padding: 4px 14px 92px;
@@ -2714,11 +2716,10 @@
     & .dk {
       display: none;
     }
+    /* No pictures here on a phone: a phone screen alone says nothing about the laptop, so the
+       text and the three rows explain both (O, 2026-11-22). */
     & .pk-shots {
-      display: flex;
-      justify-content: center;
-      margin-top: 36px;
-      padding-bottom: 0;
+      display: none;
     }
     & .pk-phone {
       position: static;

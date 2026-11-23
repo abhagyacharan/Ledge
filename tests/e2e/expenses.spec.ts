@@ -399,12 +399,9 @@ test("the report cards and Settings download the PDFs", async ({ page }) => {
   expect((await trend.body()).subarray(0, 5).toString()).toBe("%PDF-");
   expect((await page.request.get("/api/export/expense-breakdown?y=2026&m=13")).status()).toBe(400);
 
-  // Settings: any period, including a year with nothing in it.
-  await page.goto("/settings");
-  const reports = page.getByRole("region", { name: "Expense Tracker" });
-  await reports.getByRole("button", { name: "Annual cash flow" }).click();
-  await reports.getByRole("button", { name: "Previous year" }).click();
+  // Settings › Reports & export: one month pill drives both PDFs (screen 9m).
+  await page.goto("/settings/export");
   const second = page.waitForEvent("download");
-  await reports.getByRole("link", { name: /annual cash flow trend for \d{4}/ }).click();
+  await page.getByRole("link", { name: /^Cash flow PDF for \d{4}$/ }).click();
   expect((await second).suggestedFilename()).toMatch(/^ledge-cash-flow-\d{4}\.pdf$/);
 });

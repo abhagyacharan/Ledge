@@ -9,8 +9,10 @@ import {
   type PromptEmi,
   VOICE_SYSTEM_PROMPT,
 } from "@/modules/voice/prompt";
+import { languageNames, whisperLanguage } from "@/modules/voice/languages";
 import { resolvePlan, type ResolveEmi, unclearPlan } from "@/modules/voice/resolve";
 import { modelReply, type VoicePlan } from "@/modules/voice/schema";
+import { recordAiUsage } from "@/server/data/ai-usage";
 import { frequentEntryTitles, listUnpaidEmis } from "@/server/data/finance";
 import { listLists } from "@/server/data/lists";
 import { getUserSettings } from "@/server/data/settings";
@@ -75,19 +77,33 @@ export async function transcribeForUser(
   const admitted = await admit(userId);
   if (!admitted.ok) return admitted;
   const config = admitted.data;
-  if (config.fake) return { ok: true, data: FAKE_TRANSCRIPT };
+  if (config.fake) {
+    await recordAiUsage(userId, { feature: "voice_transcribe", model: "fake" });
+    return { ok: true, data: FAKE_TRANSCRIPT };
+  }
   try {
-    const [lists, titles] = await Promise.all([listLists(userId), frequentEntryTitles(userId)]);
-    const text = await transcribe(
+    const [lists, titles, settings] = await Promise.all([
+      listLists(userId),
+      frequentEntryTitles(userId),
+      getUserSettings(userId),
+    ]);
+    const heard = await transcribe(
       config,
       audio,
       filename,
       buildWhisperPrompt(
         lists.map((l) => l.name),
         titles,
+        settings.voiceLanguages,
       ),
+      whisperLanguage(settings.voiceLanguages),
     );
-    return text ? { ok: true, data: text } : { ok: false, failure: "empty" };
+    await recordAiUsage(userId, {
+      feature: "voice_transcribe",
+      model: heard.model,
+      audioSeconds: heard.audioSeconds,
+    });
+    return heard.text ? { ok: true, data: heard.text } : { ok: false, failure: "empty" };
   } catch (error) {
     return { ok: false, failure: fromGroq(error) };
   }
@@ -130,9 +146,10 @@ export async function understandForUser(
   let raw: unknown;
   if (config.fake) {
     raw = fakeReply(transcript, today, promptEmis);
+    await recordAiUsage(userId, { feature: "voice_understand", model: "fake" });
   } else {
     try {
-      raw = await completeJson(
+      const completed = await completeJson(
         config,
         VOICE_SYSTEM_PROMPT,
         buildUserMessage(
@@ -143,12 +160,21 @@ export async function understandForUser(
             currency: settings.currency,
             lists: lists.map((l) => l.name),
             emis: promptEmis,
+            languages: languageNames(settings.voiceLanguages),
+            titleLanguage: settings.voiceTitleLanguage,
           },
           transcript,
         ),
         "ledge_voice_actions",
         VOICE_JSON_SCHEMA,
       );
+      raw = completed.data;
+      await recordAiUsage(userId, {
+        feature: "voice_understand",
+        model: completed.usage.model,
+        inputTokens: completed.usage.inputTokens,
+        outputTokens: completed.usage.outputTokens,
+      });
     } catch (error) {
       const failure = fromGroq(error);
       if (failure !== "unavailable") return { ok: false, failure };

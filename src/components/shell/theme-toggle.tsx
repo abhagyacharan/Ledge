@@ -4,6 +4,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { switchTheme } from "@/lib/theme-transition";
 
 const ORDER = ["system", "light", "dark"] as const;
 const LABEL = { system: "System theme", light: "Light theme", dark: "Dark theme" } as const;
@@ -30,7 +31,7 @@ export function ThemeToggle() {
       size="icon"
       className="size-11 md:size-8"
       aria-label={`${LABEL[current]}. Switch to ${LABEL[next].toLowerCase()}.`}
-      onClick={() => setTheme(next)}
+      onClick={(event) => switchTheme(next, event.currentTarget, setTheme)}
     >
       <Icon />
     </Button>

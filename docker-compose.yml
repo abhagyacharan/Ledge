@@ -61,6 +61,11 @@ services:
       GROQ_TRANSCRIBE_MODEL: ${GROQ_TRANSCRIBE_MODEL:-}
       GROQ_PARSE_MODEL: ${GROQ_PARSE_MODEL:-}
       VOICE_DAILY_LIMIT: ${VOICE_DAILY_LIMIT:-}
+      # Google sign-in and password-reset emails (docs/auth-google-reset-spec.md). Empty: off.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
     ports:
       # This machine only. The tunnel reaches the app over the internal Docker network instead.
       - "127.0.0.1:${APP_PORT:-3000}:3000"

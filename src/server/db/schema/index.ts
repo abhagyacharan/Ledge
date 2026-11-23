@@ -7,3 +7,6 @@ export * from "./tags";
 export * from "./task-tags";
 export * from "./finance";
 export * from "./journal";
+export * from "./plans";
+export * from "./ai-usage";
+export * from "./avatars";

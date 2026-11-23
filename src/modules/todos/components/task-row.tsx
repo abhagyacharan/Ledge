@@ -309,6 +309,7 @@ export function TaskRow({
   liStyle,
   dragging = false,
   timeOnly = false,
+  marker,
 }: {
   task: TaskRowData;
   subtasks: TaskRowData[];
@@ -323,6 +324,8 @@ export function TaskRow({
   dragging?: boolean;
   /** The view is grouped by day already: the row shows only the time (Upcoming). */
   timeOnly?: boolean;
+  /** A word with an icon at the start of the details line (a plan's "Milestone"). */
+  marker?: ReactNode;
 }) {
   const { done, toggle, ahead } = useToggleDone(
     task.id,
@@ -386,6 +389,7 @@ export function TaskRow({
           </span>
         </span>
         <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs empty:hidden">
+          {marker}
           <DueLabel task={task} ctx={ctx} done={done} timeOnly={timeOnly} />
           {repeatText ? (
             <span className="inline-flex items-center gap-1 text-dash-ink-soft">

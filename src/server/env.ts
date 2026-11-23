@@ -55,6 +55,33 @@ export function getVoiceConfig(): VoiceConfig {
   };
 }
 
+/** "Continue with Google" (docs/auth-google-reset-spec.md). Both values set, or the button is hidden. */
+export function getGoogleConfig(): { clientId: string; clientSecret: string } | null {
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
+}
+
+export type EmailConfig =
+  /** Sends through Resend's HTTP API. */
+  | { mode: "resend"; apiKey: string; from: string }
+  /** Development and tests without a key: kept in memory and printed to the server console. */
+  | { mode: "outbox" }
+  /** Production without a key: no email, so "Forgot password?" is hidden. */
+  | { mode: "off" };
+
+/** Email for password-reset links. Read fresh, like ALLOW_SIGNUP. */
+export function getEmailConfig(): EmailConfig {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.EMAIL_FROM?.trim();
+  if (apiKey && from) return { mode: "resend", apiKey, from };
+  return process.env.NODE_ENV === "production" ? { mode: "off" } : { mode: "outbox" };
+}
+
+export function isPasswordResetEnabled(): boolean {
+  return getEmailConfig().mode !== "off";
+}
+
 /**
  * Read fresh on every call (not cached) so flipping ALLOW_SIGNUP and restarting is the only
  * step needed, and tests can toggle it. Anything other than the literal "false" allows sign-up.

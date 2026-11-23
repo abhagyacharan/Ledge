@@ -6,6 +6,7 @@ playwright-report
 test-results
 coverage
 .next-e2e
+.next-auth-check
 tests/e2e/.auth
 
 # Third-party agent skills installed with `npx skills add` (kept as published)

@@ -16,6 +16,7 @@ import {
 import { createdAt, id, tsvector, updatedAt } from "./_columns";
 import { user } from "./auth";
 import { lists } from "./lists";
+import { plans } from "./plans";
 import { sections } from "./sections";
 
 export const TASK_STATUSES = ["open", "done"] as const;
@@ -54,6 +55,10 @@ export const tasks = pgTable(
     recurrenceOriginId: uuid("recurrence_origin_id").references((): AnyPgColumn => tasks.id, {
       onDelete: "set null",
     }),
+    /** The plan this task came from (docs/plans-module-spec.md); null when the plan is erased. */
+    planId: uuid("plan_id").references(() => plans.id, { onDelete: "set null" }),
+    /** Which of the plan's phases the task belongs to (the phase id). */
+    planPhase: text("plan_phase"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     /** Fractional-index string (CLAUDE.md §3). */
     position: text("position").notNull(),
@@ -81,6 +86,7 @@ export const tasks = pgTable(
     index("tasks_search_idx").using("gin", t.search),
     index("tasks_user_completed_at_idx").on(t.userId, t.completedAt),
     index("tasks_parent_idx").on(t.parentId),
+    index("tasks_user_plan_idx").on(t.userId, t.planId),
     check("tasks_title_check", sql`char_length(${t.title}) between 1 and 500`),
     check("tasks_status_check", sql`${t.status} in ('open', 'done')`),
     check("tasks_priority_check", sql`${t.priority} between 0 and 3`),

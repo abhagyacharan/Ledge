@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   Settings,
+  Target,
   Trash2,
   type LucideIcon,
 } from "lucide-react";
@@ -27,7 +28,9 @@ import {
 } from "@/components/ui/dialog";
 import { enabledModules } from "@/config/modules";
 import { authClient } from "@/lib/auth-client";
+import { switchTheme } from "@/lib/theme-transition";
 import { LOG_TRANSACTION_EVENT } from "@/modules/expenses/components/transaction-launcher";
+import { useActivePlans } from "@/modules/planner/components/plans/plans-nav";
 import { sendVoice, useVoiceAvailable } from "@/modules/voice/components/voice-events";
 import { ListFormDialog } from "./list-form-dialog";
 import { ListGlyph } from "../list-icons";
@@ -80,6 +83,7 @@ function Item({
 export function CommandPalette() {
   const router = useRouter();
   const { lists } = useTodos();
+  const activePlans = useActivePlans();
   const { theme = "system", setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -213,6 +217,13 @@ export function CommandPalette() {
                   New list
                 </Item>
                 <Item
+                  value="new plan goal ai tasks break down"
+                  icon={Target}
+                  onSelect={() => go("/plans/new")}
+                >
+                  New plan
+                </Item>
+                <Item
                   value="keyboard shortcuts help"
                   icon={Keyboard}
                   hint="?"
@@ -223,7 +234,16 @@ export function CommandPalette() {
                 <Item
                   value="theme dark light system appearance"
                   icon={Moon}
-                  onSelect={() => act(() => setTheme(nextTheme))}
+                  onSelect={() =>
+                    act(() =>
+                      // No button to start from, so the circle grows from the middle of the screen.
+                      switchTheme(
+                        nextTheme,
+                        { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+                        setTheme,
+                      ),
+                    )
+                  }
                 >
                   Switch theme (now {theme}, next {nextTheme})
                 </Item>
@@ -235,6 +255,22 @@ export function CommandPalette() {
                   Sign out
                 </Item>
               </Cmdk.Group>
+
+              {activePlans.length > 0 ? (
+                <Cmdk.Group heading="Plans" className={groupClass}>
+                  {activePlans.map((p) => (
+                    <Cmdk.Item
+                      key={p.id}
+                      value={`plan ${p.title}`}
+                      onSelect={() => go(`/plans/${p.id}`)}
+                      className={itemClass}
+                    >
+                      <Target aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                    </Cmdk.Item>
+                  ))}
+                </Cmdk.Group>
+              ) : null}
 
               <Cmdk.Group heading="Lists" className={groupClass}>
                 {lists.map((l) => (

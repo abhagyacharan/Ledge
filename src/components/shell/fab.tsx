@@ -27,7 +27,9 @@ export function FabVoiceHint({ className }: { className?: string }) {
         className,
       )}
     >
-      <span className="rounded-full bg-background/80 px-2 py-0.5 text-[18px] font-medium whitespace-nowrap backdrop-blur-sm">Hold for voice</span>
+      <span className="rounded-full bg-background/80 px-2 py-0.5 text-[18px] font-medium whitespace-nowrap backdrop-blur-sm">
+        Hold for voice
+      </span>
       <svg
         viewBox="0 0 40 28"
         fill="none"

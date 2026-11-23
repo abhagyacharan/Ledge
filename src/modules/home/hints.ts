@@ -1,5 +1,8 @@
 import { daysBetween, isoWeekday } from "@/lib/dates";
 
+// Plans' row on Home (docs/plans designs 8n) is worded in the planner module, beside its tests.
+export { plansHint, type PlansHint } from "@/modules/planner/plan-view";
+
 /**
  * The words on Home (docs/new_design.md §1, screens 1a and 1e): a greeting for the time of day, one
  * sentence about today's tasks, and one short live hint per module. Pure, so it is unit tested.

@@ -4,6 +4,7 @@ import {
   INVESTMENT_TYPES,
   PAYMENT_METHODS,
 } from "@/modules/expenses/categories";
+import { nativeWords } from "./languages";
 
 /**
  * What the language model is told (docs/voice-spec.md §6). Pure, so it can be tested and so the
@@ -25,6 +26,10 @@ export type PromptContext = {
   currency: string;
   lists: string[];
   emis: PromptEmi[];
+  /** English names of the languages they speak ("Hindi", "Telugu"). */
+  languages: string[];
+  /** english: translate titles and notes to English; as_spoken: keep them in their own words. */
+  titleLanguage: "english" | "as_spoken";
 };
 
 export const VOICE_SYSTEM_PROMPT = `You turn what a person said into actions for Ledge, their personal task list and expense tracker. The words come from speech recognition, so expect small mishearings and fix obvious ones.
@@ -53,6 +58,13 @@ EMIs (mark_emi_paid)
 - When they say they paid an EMI or a loan instalment, match it to one of their unpaid EMIs in the context by name, loan type or amount, and give its ref (E1, E2...). If none matches clearly, emi is null. Do not also add a log_entry for it.
 - amount: the amount they said, digits only, or null. paidOn: the day they paid, or null.
 
+Languages
+- They may speak English or any Indian language, in any script or in English letters, and mix languages inside one sentence ("kal subah gym jaana hai, and 450 on lunch"). Understand it fully. The context lists the languages they usually speak.
+- Indian number words in any language become digits: "paanch sau" is 500, "dedh hazaar" is 1500, "do lakh" is 200000, "ఐదు వందలు" is 500.
+- "kal" means tomorrow with a future tense ("kal jaana hai") and yesterday with a past tense ("kal kharch kiye"). If the sentence has no tense to decide, put it in unclear with that reason. "parso" works the same way (day after tomorrow, or day before yesterday); "repu" and "రేపు" mean tomorrow.
+- Never translate names of lists, merchants or people ("Swiggy", "DMart", "Ravi"); a list name must match the context exactly.
+- titleLanguage in the context decides the words of titles and notes. english: write them in English, translating if needed ("दूध लेना" becomes "Buy milk"). as_spoken: keep their own words in the script they used.
+
 Anything you cannot turn into one of these goes in unclear, with the words and a short reason.`;
 
 /** The user message: today's facts, their lists and EMIs, the fixed lists, then the words. */
@@ -68,6 +80,8 @@ export function buildUserMessage(context: PromptContext, transcript: string): st
     incomeCategories: INCOME_CATEGORIES,
     investmentTypes: INVESTMENT_TYPES,
     paymentMethods: PAYMENT_METHODS,
+    languages: context.languages,
+    titleLanguage: context.titleLanguage,
   };
   // Compact JSON: every token counts against the free plan's per-minute limit.
   return `Context:\n${JSON.stringify(data)}\n\nWhat they said:\n"""${transcript}"""`;
@@ -77,8 +91,24 @@ export function buildUserMessage(context: PromptContext, transcript: string): st
  * Words Whisper should spell right (its `prompt` field, at most 224 tokens): their list names,
  * frequent entry titles and a few fixed words. Kept to about 600 characters.
  */
-export function buildWhisperPrompt(lists: string[], recentTitles: string[]): string {
-  const words = ["Ledge", "EMI", "UPI", "rupees", "lakh", "GPay", "PhonePe", "Swiggy", "Zomato"];
+export function buildWhisperPrompt(
+  lists: string[],
+  recentTitles: string[],
+  languages: readonly string[] = [],
+): string {
+  const words = [
+    "Ledge",
+    "EMI",
+    "UPI",
+    "rupees",
+    "lakh",
+    "GPay",
+    "PhonePe",
+    "Swiggy",
+    "Zomato",
+    // Native-script names of the chosen languages nudge Whisper toward those scripts.
+    ...nativeWords(languages),
+  ];
   const seen = new Set<string>();
   const out: string[] = [];
   for (const word of [...lists, ...recentTitles, ...words]) {

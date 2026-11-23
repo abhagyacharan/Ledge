@@ -1,0 +1,829 @@
+<!-- Plans screens 8a to 8n, copied from O's Claude Design project (Ledge.dc.html, section 8) on 2026-11-23. Reference only: the build follows docs/plans-module-spec.md and docs/new_design.md. The style block below is the canvas's shared CSS (tokens and helper classes like .ph, .dk, .b1, .pill, .row, .note). -->
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600&family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"><link rel="stylesheet" href="https://unpkg.com/lucide-static@0.460.0/font/lucide.css"><style>
+:root,[data-theme=light]{--desk:#d8dbd5;--canvas:#eef0ec;--card:#fff;--well:#f4f4f2;--edge:#e6e7e3;--track:#dde1da;--raised:#fff;--ink:#111214;--soft:#5b5f66;--accent:#f26b21;--good:#166534;--good-bg:#dcfce7;--bad:#b42318;--bad-bg:#fee4e2;--warn:#92400e;--warn-bg:#fef3c7;--on-ink:#fff;--shadow:0 1px 2px rgba(17,18,20,.06);--tint:rgba(0,0,0,.15);--hatch:repeating-linear-gradient(135deg,#f26b21 0 3px,transparent 3px 6px)}
+[data-theme=dark]{--desk:#080a09;--canvas:#121514;--card:#1d211f;--well:#282d2a;--edge:#ffffff1a;--track:#282d2a;--raised:#3b423e;--ink:#f2f4f1;--soft:#aeb4ae;--accent:#f58445;--good:#86efac;--good-bg:#14532d;--bad:#fca5a5;--bad-bg:#7f1d1d;--warn:#fcd34d;--warn-bg:#713f12;--on-ink:#111214;--shadow:none;--tint:rgba(0,0,0,.35);--hatch:repeating-linear-gradient(135deg,#f58445 0 3px,transparent 3px 6px)}
+:root{--ui:Geist,system-ui,sans-serif;--fig:'Bricolage Grotesque',Geist,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace}
+body{margin:0;background:var(--desk);color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:hover{color:var(--ink)}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:.55}}
+:where(#t8) button,:where(#t8) input,:where(#t8) textarea{all:unset;box-sizing:border-box;cursor:pointer}
+:where(#t8) input,:where(#t8) textarea{cursor:text;caret-color:var(--accent)}
+:where(#t8) textarea{white-space:pre-wrap;resize:none}
+#t8 :is(button,a,input,textarea,article,label):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#t8 .fr{display:flex;flex-direction:column;gap:10px}
+#t8 .lb{display:flex;align-items:baseline;gap:8px;font:500 12px var(--ui)}
+#t8 .lb a{font:600 11px var(--mono);padding:3px 7px;border-radius:5px;background:var(--ink);color:var(--on-ink);text-decoration:none}
+#t8 .ph{width:390px;min-height:844px;border-radius:40px;background:var(--canvas);color:var(--ink);position:relative;overflow:hidden;box-shadow:0 0 0 1px var(--edge),0 24px 48px -24px rgba(0,0,0,.3)}
+#t8 .dk{width:1440px;min-height:900px;border-radius:16px;background:var(--canvas);color:var(--ink);display:flex;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--edge),0 24px 48px -24px rgba(0,0,0,.3)}
+#t8 .note{display:var(--notes,block);margin:0;max-width:390px;font:400 12px/1.5 var(--ui);color:var(--soft)}
+#t8 .b1,#t8 .b2,#t8 .b3{border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;white-space:nowrap}
+#t8 .b1{height:52px;padding:0 22px;background:var(--ink);color:var(--on-ink);font:600 15px var(--ui)}
+#t8 .b2{height:52px;padding:0 22px;background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--edge);font:600 15px var(--ui)}
+#t8 .b3{height:44px;padding:0 14px;background:var(--well);color:var(--ink);font:500 14px var(--ui)}
+#t8 .ch{height:44px;padding:0 16px;border-radius:999px;background:var(--well);color:var(--ink);display:inline-flex;align-items:center;gap:6px;font:500 14px var(--ui);white-space:nowrap;flex:none}
+#t8 .ch.on{background:var(--ink);color:var(--on-ink);font-weight:600}
+#t8 .ib{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--card);box-shadow:0 0 0 1px var(--edge);color:var(--ink);font-size:18px}
+#t8 .kbd{display:inline-block;font:500 11px/1.4 var(--mono);padding:1px 6px;border-radius:5px;background:var(--well);color:var(--ink)}
+#t8 .mono{font:500 12px var(--mono);color:var(--soft)}
+#t8 .pill{height:22px;padding:0 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;font:600 11px var(--ui);white-space:nowrap}
+#t8 .opt{width:100%;min-height:56px;padding:0 16px;border-radius:14px;background:var(--well);color:var(--ink);display:flex;align-items:center;gap:12px;font:500 15px var(--ui)}
+#t8 .opt.on{background:var(--ink);color:var(--on-ink);font-weight:600}
+#t8 .rad{flex:none;width:20px;height:20px;border-radius:50%;box-sizing:border-box;border:1.5px solid var(--soft)}
+#t8 .box{flex:none;width:20px;height:20px;border-radius:6px;box-sizing:border-box;border:1.5px solid var(--soft);display:grid;place-items:center;font-size:13px}
+#t8 .box.on{border:0;background:var(--ink);color:var(--on-ink)}
+#t8 .sk{background:var(--track);border-radius:8px;animation:breathe 1.6s ease-in-out infinite}
+#t8 .row{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:14px;font:500 14px var(--ui)}
+#t8 .rg{flex:none;width:20px;height:20px;border-radius:50%;box-sizing:border-box;border:1.5px solid var(--soft)}
+#t8 .tbl{width:100%;border-collapse:collapse;font:400 14px var(--ui)}
+#t8 .tbl th{text-align:left;font:500 12px var(--ui);color:var(--soft);padding:8px 0;border-bottom:1px solid var(--edge)}
+#t8 .tbl td{padding:11px 0;border-bottom:1px solid var(--edge)}
+#t8 .tbl .n{text-align:right;font:500 13px var(--mono);font-variant-numeric:tabular-nums}
+#t8 .tbl tr.t td{font-weight:600;border-bottom:0;border-top:2px solid var(--ink)}
+@media (prefers-reduced-motion:reduce){#t8 .sk{animation:none}}
+</style></helmet>
+<h2 style="margin:0 0 4px;font:600 28px var(--fig)">8. Plans</h2>
+<p style="margin:0 0 28px;max-width:760px;font:400 14px/1.5 var(--ui);color:var(--soft)">A goal in your own words becomes a plan of ordinary Ledge tasks. Ledge asks two basics and a few questions written for the goal, drafts phases and dated tasks, and you keep or cut each card before it's added. Fri, 27 Nov 2026. "Start freelancing" was made on Mon 23 Nov.</p>
+<div style="display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start">
+
+<!-- 8a -->
+<div id="8a" class="fr">
+<div class="lb"><a href="#8a">8a</a>Plans home, phone</div>
+<div data-screen-label="8a Plans home" class="ph">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8n" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Home</a><span class="mono">Fri, 27 Nov</span></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px"><h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Plans</h1><a href="#8c" class="b1" style="height:44px;padding:0 16px;font-size:14px"><i class="icon-plus" style="font-size:16px"></i>New plan</a></div>
+<div role="radiogroup" aria-label="Show plans" style="display:flex;gap:6px">
+<button type="button" role="radio" aria-checked="true" class="ch on"><i class="icon-check" style="font-size:14px"></i>Active</button>
+<button type="button" role="radio" aria-checked="false" class="ch">Drafts</button>
+<button type="button" role="radio" aria-checked="false" class="ch">Done</button>
+<button type="button" role="radio" aria-checked="false" class="ch">Archived</button>
+</div>
+<div style="border-radius:16px;border:1.5px dashed var(--soft);padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px"><span style="flex:none;width:44px;height:44px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-pencil-line"></i></span><div style="flex:1;min-width:0"><div style="font:600 16px var(--ui)">Run a 5k</div><div class="mono" style="margin-top:3px">Draft · question 3 of 5</div></div><button type="button" class="ib" aria-label="More for Run a 5k" style="background:transparent;box-shadow:none"><i class="icon-ellipsis"></i></button></div>
+<button type="button" class="b2" style="height:44px;font-size:14px">Continue<i class="icon-arrow-right" style="font-size:16px"></i></button>
+</div>
+<a href="#8j" style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;gap:14px;align-items:center;text-decoration:none">
+<span role="img" aria-label="22% done" style="flex:none;width:52px;height:52px;border-radius:50%;background:conic-gradient(var(--accent) 0 22%,var(--track) 0);display:grid;place-items:center"><span style="width:42px;height:42px;border-radius:50%;background:var(--card);display:grid;place-items:center;font:600 11px var(--mono)">22%</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font:600 16px var(--ui)">Start freelancing</span><span style="display:block;margin-top:3px;font:500 12px var(--mono);color:var(--soft)">4 of 18 · 24 days left</span><span style="display:flex;align-items:center;gap:6px;margin-top:6px;font:400 13px var(--ui);color:var(--soft)"><i class="icon-corner-down-right" style="font-size:13px"></i>Next: <span style="color:var(--ink);font-weight:500">Write your pitch</span></span></span>
+<i class="icon-chevron-right" style="color:var(--soft)"></i></a>
+<a href="#8j" style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;gap:14px;align-items:center;text-decoration:none">
+<span role="img" aria-label="67% done" style="flex:none;width:52px;height:52px;border-radius:50%;background:conic-gradient(var(--ink) 0 67%,var(--track) 0);display:grid;place-items:center"><span style="width:42px;height:42px;border-radius:50%;background:var(--card);display:grid;place-items:center;font:600 11px var(--mono)">67%</span></span>
+<span style="flex:1;min-width:0"><span style="display:block;font:600 16px var(--ui)">Photography</span><span style="display:block;margin-top:3px;font:500 12px var(--mono);color:var(--soft)">8 of 12 · 5 days left</span><span style="display:flex;align-items:center;gap:6px;margin-top:6px;font:400 13px var(--ui);color:var(--soft)"><i class="icon-corner-down-right" style="font-size:13px"></i>Next: <span style="color:var(--ink);font-weight:500">Shoot one roll at golden hour</span></span></span>
+<i class="icon-chevron-right" style="color:var(--soft)"></i></a>
+<a href="#8m" style="display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;font:400 12px var(--ui);color:var(--soft);text-decoration:none"><i class="icon-gauge" style="font-size:13px"></i>AI this month: <span style="font-family:var(--mono)">9 requests · about $0.01</span></a>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+<p class="note">Plans opens from its Home row, so the bar keeps Home selected. Drafts sit first in Active with a dashed edge, because they're unfinished, not active. Only the most recent plan's ring is orange; the others are ink.</p>
+</div>
+
+<!-- 8b -->
+<div id="8b" class="fr">
+<div class="lb"><a href="#8b">8b</a>Plans home, desktop</div>
+<div data-screen-label="8b Plans desktop" class="dk">
+<dc-import name="LedgeSidebar" active="plans" hint-size="248px,900px"></dc-import>
+<div style="flex:1;min-width:0;padding:48px 56px;display:flex;justify-content:center">
+<div style="width:880px;display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:flex-end;gap:16px"><div style="flex:1"><h1 style="margin:0;font:600 44px/1.05 var(--fig);letter-spacing:-.02em">Plans</h1><p style="margin:8px 0 0;font:400 14px var(--ui);color:var(--soft)">Goals turned into tasks. Their tasks also show in Today and Upcoming.</p></div><a href="#8c" class="b1" style="height:44px;padding:0 18px;font-size:14px"><i class="icon-plus" style="font-size:16px"></i>New plan<span class="kbd" style="background:transparent;color:var(--on-ink);box-shadow:inset 0 0 0 1px var(--on-ink);opacity:.8">N</span></a></div>
+<div role="radiogroup" aria-label="Show plans" style="display:flex;gap:6px">
+<button type="button" role="radio" aria-checked="true" class="ch on"><i class="icon-check" style="font-size:14px"></i>Active<span style="font:500 12px var(--mono);opacity:.75">3</span></button>
+<button type="button" role="radio" aria-checked="false" class="ch">Drafts<span style="font:500 12px var(--mono);color:var(--soft)">1</span></button>
+<button type="button" role="radio" aria-checked="false" class="ch">Done<span style="font:500 12px var(--mono);color:var(--soft)">1</span></button>
+<button type="button" role="radio" aria-checked="false" class="ch">Archived<span style="font:500 12px var(--mono);color:var(--soft)">0</span></button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div style="border-radius:24px;border:1.5px dashed var(--soft);padding:22px 24px;display:flex;flex-direction:column;gap:16px;min-height:196px;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:14px"><span style="flex:none;width:52px;height:52px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:20px"><i class="icon-pencil-line"></i></span><div style="flex:1;min-width:0"><div style="font:600 18px var(--ui)">Run a 5k</div><div class="mono" style="margin-top:4px">Draft · question 3 of 5</div></div><button type="button" class="ib" aria-label="More for Run a 5k" style="background:transparent;box-shadow:none"><i class="icon-ellipsis"></i></button></div>
+<p style="margin:0;font:400 14px/1.5 var(--ui);color:var(--soft)">"I want to run 5k without stopping by February."</p>
+<div style="margin-top:auto;display:flex;gap:8px"><button type="button" class="b2" style="height:44px;font-size:14px">Continue<i class="icon-arrow-right" style="font-size:16px"></i></button><button type="button" class="b3" style="background:transparent">Discard</button></div>
+</div>
+<a href="#8k" style="background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:22px 24px;display:flex;flex-direction:column;gap:16px;text-decoration:none;min-height:196px;box-sizing:border-box">
+<span style="display:flex;align-items:center;gap:16px"><span role="img" aria-label="22% done" style="flex:none;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--accent) 0 22%,var(--track) 0);display:grid;place-items:center"><span style="width:52px;height:52px;border-radius:50%;background:var(--card);display:grid;place-items:center;font:600 12px var(--mono)">22%</span></span><span style="flex:1;min-width:0"><span style="display:block;font:600 18px var(--ui)">Start freelancing</span><span style="display:block;margin-top:4px;font:500 12px var(--mono);color:var(--soft)">4 of 18 · 24 days left</span></span><span class="pill" style="background:var(--well);color:var(--ink)"><i class="icon-circle-play" style="font-size:12px"></i>Active</span></span>
+<span style="display:flex;flex-direction:column;gap:6px;font:400 13px var(--ui);color:var(--soft)"><span style="display:flex;justify-content:space-between"><span>Week 1 · Your offer</span><span style="font-family:var(--mono)">4 of 6</span></span><span style="display:flex;justify-content:space-between"><span>Week 2 · Portfolio</span><span style="font-family:var(--mono)">0 of 3</span></span><span style="display:flex;justify-content:space-between"><span>Weeks 3–4 · Outreach</span><span style="font-family:var(--mono)">0 of 9</span></span></span>
+<span style="margin-top:auto;display:flex;align-items:center;gap:6px;padding-top:12px;border-top:1px solid var(--edge);font:400 13px var(--ui);color:var(--soft)"><i class="icon-corner-down-right" style="font-size:13px"></i>Next: <span style="color:var(--ink);font-weight:500">Write your pitch</span><span style="margin-left:auto;font:500 12px var(--mono)">Sat 28 Nov</span></span>
+</a>
+<a href="#8k" style="background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:22px 24px;display:flex;flex-direction:column;gap:16px;text-decoration:none;min-height:196px;box-sizing:border-box">
+<span style="display:flex;align-items:center;gap:16px"><span role="img" aria-label="67% done" style="flex:none;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--ink) 0 67%,var(--track) 0);display:grid;place-items:center"><span style="width:52px;height:52px;border-radius:50%;background:var(--card);display:grid;place-items:center;font:600 12px var(--mono)">67%</span></span><span style="flex:1;min-width:0"><span style="display:block;font:600 18px var(--ui)">Photography</span><span style="display:block;margin-top:4px;font:500 12px var(--mono);color:var(--soft)">8 of 12 · 5 days left</span></span><span class="pill" style="background:var(--well);color:var(--ink)"><i class="icon-circle-play" style="font-size:12px"></i>Active</span></span>
+<span style="display:flex;flex-direction:column;gap:6px;font:400 13px var(--ui);color:var(--soft)"><span style="display:flex;justify-content:space-between"><span>Week 1 · Light</span><span style="font-family:var(--mono)">4 of 4</span></span><span style="display:flex;justify-content:space-between"><span>Week 2 · Composition</span><span style="font-family:var(--mono)">4 of 5</span></span><span style="display:flex;justify-content:space-between"><span>Week 3 · A small series</span><span style="font-family:var(--mono)">0 of 3</span></span></span>
+<span style="margin-top:auto;display:flex;align-items:center;gap:6px;padding-top:12px;border-top:1px solid var(--edge);font:400 13px var(--ui);color:var(--soft)"><i class="icon-corner-down-right" style="font-size:13px"></i>Next: <span style="color:var(--ink);font-weight:500">Shoot one roll at golden hour</span><span style="margin-left:auto;font:500 12px var(--mono)">Today</span></span>
+</a>
+<a href="#8c" style="border-radius:24px;box-shadow:inset 0 0 0 1px var(--edge);padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;min-height:196px;box-sizing:border-box;color:var(--soft);font:500 14px var(--ui)"><span style="width:44px;height:44px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px;color:var(--ink)"><i class="icon-plus"></i></span>Plan another goal</a>
+</div>
+<a href="#8m" style="align-self:flex-start;display:flex;align-items:center;gap:6px;min-height:44px;font:400 12px var(--ui);color:var(--soft);text-decoration:none"><i class="icon-gauge" style="font-size:13px"></i>AI this month: <span style="font-family:var(--mono)">9 requests · about $0.01</span></a>
+</div>
+</div>
+</div>
+<p class="note" style="max-width:760px">Plans sits after Journal in the sidebar, with a count of active plans. Desktop cards add a line per phase, so you can see where a plan stands without opening it.</p>
+</div>
+
+<!-- 8c -->
+<div id="8c" class="fr">
+<div class="lb"><a href="#8c">8c</a>New plan, step 1: goal</div>
+<div data-screen-label="8c New plan goal" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="1" aria-valuemin="0" aria-valuemax="4" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:10%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Step 1 of 4</span></div>
+<label for="p8goal" style="margin-top:12px;font:500 12px var(--mono);color:var(--soft)">Your goal, in your own words</label>
+<textarea id="p8goal" placeholder="What do you want to do?" value="I want to start freelancing. I'm a beginner and have no idea what to do. People say it's more about sales than skills." style="display:block;width:100%;min-height:230px;font:500 22px/1.45 var(--ui);color:var(--ink)"></textarea>
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="display:flex;align-items:center;gap:6px;font:400 13px var(--ui);color:var(--soft)"><i class="icon-mic" style="font-size:14px"></i>Hold <span class="kbd">+</span> to speak</span><span class="mono">118 / 1,000</span></div>
+<div style="margin-top:10px;font:500 12px var(--ui);color:var(--soft)">Or start from an example</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" class="ch">Run a 5k in 8 weeks</button>
+<button type="button" class="ch">Cook 10 new dinners</button>
+<button type="button" class="ch">Learn basic Spanish</button>
+</div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8d" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></a><button type="button" aria-label="Hold to speak your goal" style="flex:none;width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:grid;place-items:center;font-size:22px"><i class="icon-plus"></i></button></div>
+</div>
+</div>
+<p class="note">The + keeps its place beside the main button, so holding it to speak works the same here as everywhere else. Next turns on after 10 characters. Example chips replace the text.</p>
+</div>
+
+<!-- 8d -->
+<div id="8d" class="fr">
+<div class="lb"><a href="#8d">8d</a>Step 2: basics</div>
+<div data-screen-label="8d New plan basics" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="2" aria-valuemin="0" aria-valuemax="4" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:25%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Step 2 of 4</span></div>
+<h1 style="margin:12px 0 0;font:600 28px/1.15 var(--fig)">Two quick basics</h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">Ledge spaces the tasks to fit.</p>
+<div style="margin-top:8px;font:600 15px var(--ui)" id="p8len">Plan length</div>
+<div role="radiogroup" aria-labelledby="p8len" style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" role="radio" aria-checked="false" class="ch">1 week</button>
+<button type="button" role="radio" aria-checked="false" class="ch">2 weeks</button>
+<button type="button" role="radio" aria-checked="true" class="ch on"><i class="icon-check" style="font-size:14px"></i>1 month</button>
+<button type="button" role="radio" aria-checked="false" class="ch">3 months</button>
+<button type="button" role="radio" aria-checked="false" class="ch"><i class="icon-calendar" style="font-size:14px"></i>Pick a date</button>
+</div>
+<div style="margin-top:12px;font:600 15px var(--ui)" id="p8time">Time you can give it</div>
+<div role="radiogroup" aria-labelledby="p8time" style="display:flex;flex-wrap:wrap;gap:8px">
+<button type="button" role="radio" aria-checked="false" class="ch">15 min a day</button>
+<button type="button" role="radio" aria-checked="true" class="ch on"><i class="icon-check" style="font-size:14px"></i>30 min</button>
+<button type="button" role="radio" aria-checked="false" class="ch">1 hour</button>
+<button type="button" role="radio" aria-checked="false" class="ch">2+ hours</button>
+<button type="button" role="radio" aria-checked="false" class="ch">Weekends only</button>
+</div>
+<div style="margin-top:8px;padding:12px 14px;border-radius:14px;background:var(--well);display:flex;align-items:center;gap:10px;font:400 13px/1.45 var(--ui);color:var(--soft)"><i class="icon-calendar-range" style="font-size:16px;color:var(--ink)"></i><span>About <span style="font-family:var(--mono);color:var(--ink)">14 hours</span> in all, Mon 23 Nov to Mon 21 Dec.</span></div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8c" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><a href="#8e" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></a></div>
+</div>
+</div>
+<p class="note">Both answers are needed, so there's no Skip on this step. "Pick a date" opens the due date sheet from 2e with today and earlier days turned off.</p>
+</div>
+
+<!-- 8e -->
+<div id="8e" class="fr">
+<div class="lb"><a href="#8e">8e</a>Step 3: questions, one per screen (one choice, several, scale, short text)</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div data-screen-label="8e Question one choice" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:45%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Question 2 of 5</span><button type="button" class="b3" style="background:transparent;font-weight:600">Skip</button></div>
+<h1 style="margin:12px 0 0;font:600 28px/1.15 var(--fig)">What kind of websites?</h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">Pick the one you'd most like to make.</p>
+<div role="radiogroup" aria-label="What kind of websites?" style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>SaaS</button>
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>E-commerce</button>
+<button type="button" role="radio" aria-checked="true" class="opt on"><i class="icon-circle-check" style="font-size:20px"></i>Landing pages</button>
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>Portfolios</button>
+<button type="button" class="opt" style="background:transparent;box-shadow:inset 0 0 0 1px var(--edge);color:var(--soft)"><i class="icon-pencil" style="font-size:16px;width:20px;text-align:center"></i>Type my own</button>
+</div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8d" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><button type="button" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></button></div>
+</div>
+</div>
+
+<div data-screen-label="8e Question several choices" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:45%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Question 2 of 5</span><button type="button" class="b3" style="background:transparent;font-weight:600">Skip</button></div>
+<h1 style="margin:12px 0 0;font:600 28px/1.15 var(--fig)">What can you do already?</h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">Pick any that fit. <span style="font-family:var(--mono);font-size:12px">2 picked</span></p>
+<div role="group" aria-label="What can you do already?" style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+<button type="button" role="checkbox" aria-checked="true" class="opt" style="box-shadow:inset 0 0 0 2px var(--ink);font-weight:600"><span class="box on"><i class="icon-check"></i></span>Build a page with HTML and CSS</button>
+<button type="button" role="checkbox" aria-checked="true" class="opt" style="box-shadow:inset 0 0 0 2px var(--ink);font-weight:600"><span class="box on"><i class="icon-check"></i></span>Use a builder like Webflow</button>
+<button type="button" role="checkbox" aria-checked="false" class="opt"><span class="box"></span>Write JavaScript</button>
+<button type="button" role="checkbox" aria-checked="false" class="opt"><span class="box"></span>Write the words for a site</button>
+<button type="button" role="checkbox" aria-checked="false" class="opt"><span class="box"></span>Get a site found on Google</button>
+<button type="button" class="opt" style="background:transparent;box-shadow:inset 0 0 0 1px var(--edge);color:var(--soft)"><i class="icon-pencil" style="font-size:16px;width:20px;text-align:center"></i>Type my own</button>
+</div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8d" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><button type="button" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></button></div>
+</div>
+</div>
+
+<div data-screen-label="8e Question scale" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:45%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Question 2 of 5</span><button type="button" class="b3" style="background:transparent;font-weight:600">Skip</button></div>
+<h1 style="margin:12px 0 0;font:600 28px/1.15 var(--fig)">How good are you at web design?</h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">A rough guess is fine.</p>
+<div role="radiogroup" aria-label="How good are you at web design? 1 is never tried, 5 is for a living" style="margin-top:18px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px">
+<button type="button" role="radio" aria-checked="false" aria-label="1, never tried" style="height:64px;border-radius:16px;background:var(--well);display:grid;place-items:center;font:600 24px var(--fig)">1</button>
+<button type="button" role="radio" aria-checked="true" aria-label="2" style="height:64px;border-radius:16px;background:var(--ink);color:var(--on-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:600 24px/1 var(--fig)">2<i class="icon-check" style="font-size:13px"></i></button>
+<button type="button" role="radio" aria-checked="false" aria-label="3" style="height:64px;border-radius:16px;background:var(--well);display:grid;place-items:center;font:600 24px var(--fig)">3</button>
+<button type="button" role="radio" aria-checked="false" aria-label="4" style="height:64px;border-radius:16px;background:var(--well);display:grid;place-items:center;font:600 24px var(--fig)">4</button>
+<button type="button" role="radio" aria-checked="false" aria-label="5, for a living" style="height:64px;border-radius:16px;background:var(--well);display:grid;place-items:center;font:600 24px var(--fig)">5</button>
+</div>
+<div style="display:flex;justify-content:space-between;font:500 12px var(--ui);color:var(--soft)"><span>Never tried</span><span>For a living</span></div>
+<div style="margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--well);font:400 14px var(--ui);display:flex;align-items:center;gap:8px"><span style="font:600 12px var(--mono)">2 of 5</span><span style="color:var(--soft)">You've made a page or two.</span></div>
+<button type="button" class="opt" style="margin-top:6px;background:transparent;box-shadow:inset 0 0 0 1px var(--edge);color:var(--soft)"><i class="icon-pencil" style="font-size:16px;width:20px;text-align:center"></i>Type my own</button>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8d" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><button type="button" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></button></div>
+</div>
+</div>
+
+<div data-screen-label="8e Question short text" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:45%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Question 2 of 5</span><button type="button" class="b3" style="background:transparent;font-weight:600">Skip</button></div>
+<h1 style="margin:12px 0 0;font:600 28px/1.15 var(--fig)"><label for="p8avoid">Anything you've tried or want to avoid?</label></h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">Optional. A sentence or two is plenty.</p>
+<textarea id="p8avoid" value="I tried Fiverr for a week and got no replies. I'd rather not do cold calls." style="display:block;width:100%;min-height:168px;margin-top:6px;padding:14px 16px;border-radius:16px;background:var(--well);font:400 16px/1.5 var(--ui);color:var(--ink)"></textarea>
+<div class="mono" style="text-align:right">75 / 300</div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8d" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><a href="#8f" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></a></div>
+</div>
+</div>
+
+</div>
+<p class="note" style="max-width:1632px">One choice, several choices, a 1 to 5 scale, and short text. A single choice moves on by itself after 300ms; the others need Next. "Type my own" turns into a text field in place, under the choices. Skip keeps the question in "What you told Ledge" as "Skipped".</p>
+</div>
+
+<!-- 8f -->
+<div id="8f" class="fr">
+<div class="lb"><a href="#8f">8f</a>Step 4: follow-ups</div>
+<div data-screen-label="8f Follow-up" class="ph" style="height:844px">
+<div role="progressbar" aria-label="New plan progress" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:80%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Follow-up 1 of 2</span><button type="button" class="b3" style="background:transparent;font-weight:600">Skip</button></div>
+<span style="margin-top:12px;align-self:flex-start;height:28px;padding:0 10px;border-radius:999px;background:var(--well);display:inline-flex;align-items:center;gap:6px;font:500 12px var(--ui);color:var(--soft)"><i class="icon-corner-down-right" style="font-size:13px"></i>Because you said sales feels hard</span>
+<h1 style="margin:0;font:600 28px/1.15 var(--fig)">Have you ever pitched to a client?</h1>
+<p style="margin:0;font:400 15px/1.5 var(--ui);color:var(--soft)">It helps Ledge decide how gently to start outreach.</p>
+<div role="radiogroup" aria-label="Have you ever pitched to a client?" style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+<button type="button" role="radio" aria-checked="true" class="opt on"><i class="icon-circle-check" style="font-size:20px"></i>Never</button>
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>Once or twice</button>
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>A few times</button>
+<button type="button" role="radio" aria-checked="false" class="opt"><span class="rad"></span>Yes, often</button>
+<button type="button" class="opt" style="background:transparent;box-shadow:inset 0 0 0 1px var(--edge);color:var(--soft)"><i class="icon-pencil" style="font-size:16px;width:20px;text-align:center"></i>Type my own</button>
+</div>
+<div style="margin-top:auto;display:flex;gap:8px"><a href="#8e" class="b2"><i class="icon-arrow-left" style="font-size:18px"></i>Back</a><a href="#8g" class="b1" style="flex:1">Next<i class="icon-arrow-right" style="font-size:18px"></i></a></div>
+</div>
+</div>
+<p class="note">Follow-ups only appear when an answer leaves a real gap, at most 3. The eyebrow quotes the reason in plain words, so the extra question doesn't feel random.</p>
+</div>
+
+<!-- 8g -->
+<div id="8g" class="fr">
+<div class="lb"><a href="#8g">8g</a>Making your plan, and its error</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div data-screen-label="8g Making plan" class="ph" style="height:844px" aria-busy="true">
+<div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:92%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close, the plan keeps making in Drafts"><i class="icon-x"></i></button><span class="mono">Making your plan</span><span style="width:44px"></span></div>
+<p role="status" aria-live="polite" style="margin:12px 0 0;font:600 24px/1.2 var(--fig)">Shaping a 1-month plan around 30 minutes a day</p>
+<p style="margin:0;font:400 14px/1.5 var(--ui);color:var(--soft)">Usually under 20 seconds. You can leave; it waits in Drafts.</p>
+<span class="sk" style="margin-top:8px;height:30px;width:62%"></span>
+<span class="sk" style="height:14px;width:92%"></span>
+<div style="display:flex;gap:6px"><span class="sk" style="height:44px;width:150px;border-radius:999px"></span><span class="sk" style="height:44px;width:130px;border-radius:999px"></span><span class="sk" style="height:44px;width:60px;border-radius:999px"></span></div>
+<div style="flex:1;border-radius:24px;background:var(--card);box-shadow:0 0 0 1px var(--edge);padding:20px;display:flex;flex-direction:column;gap:12px">
+<span class="sk" style="height:12px;width:40%"></span>
+<span class="sk" style="height:26px;width:85%"></span>
+<span class="sk" style="height:26px;width:55%"></span>
+<div style="display:flex;gap:10px"><span class="sk" style="height:14px;width:80px"></span><span class="sk" style="height:14px;width:50px"></span><span class="sk" style="height:14px;width:90px"></span></div>
+<span class="sk" style="height:12px;width:100%"></span><span class="sk" style="height:12px;width:94%"></span><span class="sk" style="height:12px;width:60%"></span>
+<span class="sk" style="margin-top:8px;height:16px;width:75%"></span><span class="sk" style="height:16px;width:68%"></span>
+</div>
+<span class="sk" style="align-self:center;height:12px;width:130px"></span>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px"><span class="sk" style="height:52px;border-radius:999px"></span><span class="sk" style="height:52px;border-radius:999px"></span><span class="sk" style="height:52px;border-radius:999px"></span></div>
+</div>
+</div>
+<div data-screen-label="8g Plan error" class="ph" style="height:844px">
+<div style="padding:56px 16px 28px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close"><i class="icon-x"></i></button><span class="mono">Making your plan</span><span style="width:44px"></span></div>
+<div role="alert" style="margin:auto 0;background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:28px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+<span style="width:56px;height:56px;border-radius:50%;background:var(--bad-bg);color:var(--bad);display:grid;place-items:center;font-size:24px"><i class="icon-circle-alert"></i></span>
+<div style="margin-top:6px;font:600 20px/1.3 var(--fig)">Ledge couldn't make a plan right now. Your answers are kept.</div>
+<div style="font:400 14px/1.5 var(--ui);color:var(--soft)">The planner didn't answer in time. This usually clears up in a minute.</div>
+<button type="button" class="b1" style="margin-top:10px;width:100%"><i class="icon-rotate-ccw" style="font-size:17px"></i>Try again</button>
+<button type="button" class="b2" style="width:100%;height:44px;font-size:14px">Save as draft</button>
+</div>
+</div>
+</div>
+</div>
+<p class="note" style="max-width:804px">Skeletons sit at the real sizes of the review screen, so nothing jumps when the plan lands. They pulse with breathe 1.6s and hold still with reduced motion. After 30 seconds the error shows; Try again resends the same answers, and the draft is already saved either way.</p>
+</div>
+
+<!-- 8h -->
+<div id="8h" class="fr">
+<div class="lb"><a href="#8h">8h</a>Review, card by card, phone: the card, mid-swipe left and right, the cut tray, the last frame, and dark</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div data-screen-label="8h Review cards" class="ph" style="height:844px">
+<div role="progressbar" aria-label="Cards reviewed" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:17%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:52px 16px 20px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close, the plan stays in Drafts"><i class="icon-x"></i></button><span class="mono">Review your plan</span><button type="button" class="b3" style="background:transparent;font-weight:600">Save draft</button></div>
+<div style="display:flex;align-items:center;gap:8px"><input aria-label="Plan title" value="Start freelancing" style="flex:1;min-width:0;height:40px;font:600 28px/1.15 var(--fig);letter-spacing:-.01em;color:var(--ink)"><i class="icon-pencil" aria-hidden="true" style="font-size:16px;color:var(--soft)"></i></div>
+<p style="margin:-4px 0 0;font:400 14px/1.45 var(--ui);color:var(--soft)">Four weeks: your offer first, then outreach every weekday.</p>
+<div role="tablist" aria-label="Phases" style="display:flex;gap:6px;overflow:hidden;margin-right:-16px">
+<button type="button" role="tab" aria-selected="true" class="ch on" style="font-size:13px;padding:0 14px"><i class="icon-check" style="font-size:13px"></i>Week 1 · Your offer</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Week 2 · Portfolio</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Weeks 3–4 · Outreach</button>
+</div>
+<div style="flex:1;position:relative;display:flex;flex-direction:column">
+<div aria-hidden="true" style="position:absolute;left:14px;right:14px;top:14px;bottom:-8px;border-radius:24px;background:var(--card);box-shadow:0 0 0 1px var(--edge);opacity:.7"></div>
+<article tabindex="0" aria-roledescription="card" aria-label="Card 4 of 18: Pick one offer you can sell" style="flex:1;position:relative;background:var(--card);border-radius:24px;box-shadow:0 0 0 1px var(--edge),0 12px 28px -16px rgba(0,0,0,.25);padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Week 1 · Your offer</span><span class="mono">4 / 18</span></div>
+<h2 style="margin:0;font:600 24px/1.2 var(--fig);letter-spacing:-.01em">Pick one offer you can sell</h2>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px var(--ui);color:var(--soft)"><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-calendar" style="font-size:14px"></i>Tue 24 Nov</span><span style="display:inline-flex;align-items:center;gap:5px;color:var(--bad);font-weight:600"><i class="icon-flag" style="font-size:14px"></i>High</span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-clock" style="font-size:14px"></i><span style="font:500 12px var(--mono)">about 45 min</span></span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-repeat" style="font-size:14px"></i>Does not repeat</span></div>
+<p style="margin:0;font:400 14px/1.5 var(--ui)">Choose one thing, like landing pages for local cafés, not "websites". A narrow offer is easier to explain, price and find buyers for.</p>
+<div style="margin-top:auto;border-top:1px solid var(--edge)"><div style="display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--edge);font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>List three things you can already build</div><div style="display:flex;align-items:center;gap:10px;min-height:40px;font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Pick the one a small business would pay for</div></div>
+</article>
+</div>
+<div class="mono" aria-live="polite" style="text-align:center;margin-top:6px">Card 4 of 18 · 3 cut</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px">
+<button type="button" class="b2" aria-keyshortcuts="ArrowLeft X" style="padding:0 12px"><i class="icon-arrow-left" style="font-size:17px"></i>Cut</button>
+<button type="button" class="b2" aria-keyshortcuts="E" style="padding:0 12px"><i class="icon-pencil" style="font-size:16px"></i>Edit</button>
+<button type="button" class="b1" aria-keyshortcuts="ArrowRight" style="padding:0 12px">Keep<i class="icon-arrow-right" style="font-size:17px"></i></button>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8h-tray" class="ch" aria-label="Cut cards, 3. Open to bring one back"><i class="icon-scissors" style="font-size:15px"></i>Cut (3)<i class="icon-chevron-up" style="font-size:15px"></i></a><a href="#8h-end" class="b3" style="background:transparent;font-weight:600">Skip to summary</a></div>
+</div>
+</div>
+
+<div data-screen-label="8h Swipe to cut" class="ph" style="height:844px">
+<div role="progressbar" aria-label="Cards reviewed" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:17%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:52px 16px 20px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close, the plan stays in Drafts"><i class="icon-x"></i></button><span class="mono">Review your plan</span><button type="button" class="b3" style="background:transparent;font-weight:600">Save draft</button></div>
+<div style="display:flex;align-items:center;gap:8px"><input aria-label="Plan title" value="Start freelancing" style="flex:1;min-width:0;height:40px;font:600 28px/1.15 var(--fig);letter-spacing:-.01em;color:var(--ink)"><i class="icon-pencil" aria-hidden="true" style="font-size:16px;color:var(--soft)"></i></div>
+<p style="margin:-4px 0 0;font:400 14px/1.45 var(--ui);color:var(--soft)">Four weeks: your offer first, then outreach every weekday.</p>
+<div role="tablist" aria-label="Phases" style="display:flex;gap:6px;overflow:hidden;margin-right:-16px">
+<button type="button" role="tab" aria-selected="true" class="ch on" style="font-size:13px;padding:0 14px"><i class="icon-check" style="font-size:13px"></i>Week 1 · Your offer</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Week 2 · Portfolio</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Weeks 3–4 · Outreach</button>
+</div>
+<div style="flex:1;position:relative;display:flex;flex-direction:column">
+<div aria-hidden="true" style="position:absolute;inset:0;border-radius:24px;background:var(--card);box-shadow:0 0 0 1px var(--edge);padding:20px;display:flex;flex-direction:column;gap:12px"><span class="mono">Week 1 · Your offer</span><span style="font:600 24px/1.2 var(--fig);color:var(--soft)">Set your starter prices</span></div>
+<article tabindex="0" aria-roledescription="card" aria-label="Card 4 of 18: Pick one offer you can sell" style="flex:1;position:relative;background:var(--card);border-radius:24px;box-shadow:0 0 0 1px var(--edge),0 12px 28px -16px rgba(0,0,0,.25);padding:20px;display:flex;flex-direction:column;gap:12px;transform:translateX(-72px) rotate(-7deg);transform-origin:50% 110%">
+<span aria-hidden="true" style="position:absolute;top:18px;right:18px;height:38px;padding:0 14px;border-radius:999px;background:var(--bad-bg);color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad);display:inline-flex;align-items:center;gap:6px;font:700 16px var(--ui);transform:rotate(7deg)"><i class="icon-x" style="font-size:17px"></i>Cut</span>
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Week 1 · Your offer</span></div>
+<h2 style="margin:0;font:600 24px/1.2 var(--fig);letter-spacing:-.01em">Pick one offer you can sell</h2>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px var(--ui);color:var(--soft)"><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-calendar" style="font-size:14px"></i>Tue 24 Nov</span><span style="display:inline-flex;align-items:center;gap:5px;color:var(--bad);font-weight:600"><i class="icon-flag" style="font-size:14px"></i>High</span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-clock" style="font-size:14px"></i><span style="font:500 12px var(--mono)">about 45 min</span></span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-repeat" style="font-size:14px"></i>Does not repeat</span></div>
+<p style="margin:0;font:400 14px/1.5 var(--ui)">Choose one thing, like landing pages for local cafés, not "websites". A narrow offer is easier to explain, price and find buyers for.</p>
+<div style="margin-top:auto;border-top:1px solid var(--edge)"><div style="display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--edge);font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>List three things you can already build</div><div style="display:flex;align-items:center;gap:10px;min-height:40px;font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Pick the one a small business would pay for</div></div>
+</article>
+</div>
+<div class="mono" aria-live="polite" style="text-align:center;margin-top:6px">Let go to cut</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px">
+<button type="button" class="b2" aria-keyshortcuts="ArrowLeft X" style="padding:0 12px;box-shadow:inset 0 0 0 2px var(--ink)"><i class="icon-arrow-left" style="font-size:17px"></i>Cut</button>
+<button type="button" class="b2" aria-keyshortcuts="E" style="padding:0 12px"><i class="icon-pencil" style="font-size:16px"></i>Edit</button>
+<button type="button" class="b1" aria-keyshortcuts="ArrowRight" style="padding:0 12px">Keep<i class="icon-arrow-right" style="font-size:17px"></i></button>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8h-tray" class="ch" aria-label="Cut cards, 3. Open to bring one back"><i class="icon-scissors" style="font-size:15px"></i>Cut (3)<i class="icon-chevron-up" style="font-size:15px"></i></a><a href="#8h-end" class="b3" style="background:transparent;font-weight:600">Skip to summary</a></div>
+</div>
+</div>
+
+<div data-screen-label="8h Swipe to keep" class="ph" style="height:844px">
+<div role="progressbar" aria-label="Cards reviewed" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:17%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:52px 16px 20px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close, the plan stays in Drafts"><i class="icon-x"></i></button><span class="mono">Review your plan</span><button type="button" class="b3" style="background:transparent;font-weight:600">Save draft</button></div>
+<div style="display:flex;align-items:center;gap:8px"><input aria-label="Plan title" value="Start freelancing" style="flex:1;min-width:0;height:40px;font:600 28px/1.15 var(--fig);letter-spacing:-.01em;color:var(--ink)"><i class="icon-pencil" aria-hidden="true" style="font-size:16px;color:var(--soft)"></i></div>
+<p style="margin:-4px 0 0;font:400 14px/1.45 var(--ui);color:var(--soft)">Four weeks: your offer first, then outreach every weekday.</p>
+<div role="tablist" aria-label="Phases" style="display:flex;gap:6px;overflow:hidden;margin-right:-16px">
+<button type="button" role="tab" aria-selected="true" class="ch on" style="font-size:13px;padding:0 14px"><i class="icon-check" style="font-size:13px"></i>Week 1 · Your offer</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Week 2 · Portfolio</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Weeks 3–4 · Outreach</button>
+</div>
+<div style="flex:1;position:relative;display:flex;flex-direction:column">
+<div aria-hidden="true" style="position:absolute;inset:0;border-radius:24px;background:var(--card);box-shadow:0 0 0 1px var(--edge);padding:20px;display:flex;flex-direction:column;gap:12px"><span class="mono">Week 1 · Your offer</span><span style="font:600 24px/1.2 var(--fig);color:var(--soft)">Set your starter prices</span></div>
+<article tabindex="0" aria-roledescription="card" aria-label="Card 4 of 18: Pick one offer you can sell" style="flex:1;position:relative;background:var(--card);border-radius:24px;box-shadow:0 0 0 1px var(--edge),0 12px 28px -16px rgba(0,0,0,.25);padding:20px;display:flex;flex-direction:column;gap:12px;transform:translateX(72px) rotate(7deg);transform-origin:50% 110%">
+<span aria-hidden="true" style="position:absolute;top:18px;left:18px;height:38px;padding:0 14px;border-radius:999px;background:var(--good-bg);color:var(--good);box-shadow:inset 0 0 0 2px var(--good);display:inline-flex;align-items:center;gap:6px;font:700 16px var(--ui);transform:rotate(-7deg)"><i class="icon-check" style="font-size:17px"></i>Keep</span>
+<div style="display:flex;justify-content:flex-end;align-items:center"><span class="mono">4 / 18</span></div>
+<h2 style="margin:0;font:600 24px/1.2 var(--fig);letter-spacing:-.01em">Pick one offer you can sell</h2>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px var(--ui);color:var(--soft)"><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-calendar" style="font-size:14px"></i>Tue 24 Nov</span><span style="display:inline-flex;align-items:center;gap:5px;color:var(--bad);font-weight:600"><i class="icon-flag" style="font-size:14px"></i>High</span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-clock" style="font-size:14px"></i><span style="font:500 12px var(--mono)">about 45 min</span></span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-repeat" style="font-size:14px"></i>Does not repeat</span></div>
+<p style="margin:0;font:400 14px/1.5 var(--ui)">Choose one thing, like landing pages for local cafés, not "websites". A narrow offer is easier to explain, price and find buyers for.</p>
+<div style="margin-top:auto;border-top:1px solid var(--edge)"><div style="display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--edge);font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>List three things you can already build</div><div style="display:flex;align-items:center;gap:10px;min-height:40px;font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Pick the one a small business would pay for</div></div>
+</article>
+</div>
+<div class="mono" aria-live="polite" style="text-align:center;margin-top:6px">Let go to keep</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px">
+<button type="button" class="b2" aria-keyshortcuts="ArrowLeft X" style="padding:0 12px"><i class="icon-arrow-left" style="font-size:17px"></i>Cut</button>
+<button type="button" class="b2" aria-keyshortcuts="E" style="padding:0 12px"><i class="icon-pencil" style="font-size:16px"></i>Edit</button>
+<button type="button" class="b1" aria-keyshortcuts="ArrowRight" style="padding:0 12px;box-shadow:0 0 0 2px var(--canvas),0 0 0 4px var(--ink)">Keep<i class="icon-arrow-right" style="font-size:17px"></i></button>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8h-tray" class="ch" aria-label="Cut cards, 3. Open to bring one back"><i class="icon-scissors" style="font-size:15px"></i>Cut (3)<i class="icon-chevron-up" style="font-size:15px"></i></a><a href="#8h-end" class="b3" style="background:transparent;font-weight:600">Skip to summary</a></div>
+</div>
+</div>
+
+<div id="8h-tray" data-screen-label="8h Cut tray" class="ph" style="height:844px">
+<div style="padding:52px 16px 20px;display:flex;flex-direction:column;gap:12px" aria-hidden="true"><span class="mono" style="text-align:center">Review your plan</span><span style="font:600 28px/1.15 var(--fig)">Start freelancing</span></div>
+<div style="position:absolute;inset:0;background:var(--tint)"></div>
+<div role="dialog" aria-label="Cut cards" style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:10px 16px 28px;display:flex;flex-direction:column;gap:12px">
+<span style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--track)"></span>
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:600 18px var(--ui)">Cut cards</span><span class="mono">3</span></div>
+<p style="margin:-4px 0 0;font:400 13px/1.45 var(--ui);color:var(--soft)">These won't be added. Bring one back and it goes back into its phase.</p>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:12px;min-height:64px;border-bottom:1px solid var(--edge)"><div style="flex:1;min-width:0"><div style="font:500 15px var(--ui)">Read three freelancing guides</div><div class="mono" style="margin-top:3px">Week 1 · Your offer</div></div><button type="button" class="b3"><i class="icon-undo-2" style="font-size:15px"></i>Bring back</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:64px;border-bottom:1px solid var(--edge)"><div style="flex:1;min-width:0"><div style="font:500 15px var(--ui)">Design a logo for yourself</div><div class="mono" style="margin-top:3px">Week 2 · Portfolio</div></div><button type="button" class="b3"><i class="icon-undo-2" style="font-size:15px"></i>Bring back</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:64px"><div style="flex:1;min-width:0"><div style="font:500 15px var(--ui)">Learn a JavaScript framework</div><div class="mono" style="margin-top:3px">Week 2 · Portfolio</div></div><button type="button" class="b3"><i class="icon-undo-2" style="font-size:15px"></i>Bring back</button></div>
+</div>
+<div style="display:flex;gap:8px"><button type="button" class="b2" style="flex:1;height:48px;font-size:14px">Bring all back</button><button type="button" class="b1" style="flex:1;height:48px;font-size:14px">Done</button></div>
+</div>
+</div>
+
+<div id="8h-end" data-screen-label="8h Review summary" class="ph" style="height:844px">
+<div role="progressbar" aria-label="Cards reviewed" aria-valuenow="18" aria-valuemin="0" aria-valuemax="18" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:100%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:52px 16px 20px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Back to the cards"><i class="icon-arrow-left"></i></button><span class="mono">All 18 cards seen</span><span style="width:44px"></span></div>
+<div style="margin-top:8px"><div class="mono">Start freelancing</div><h1 style="margin:6px 0 0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">15 tasks over 4 weeks, 2 repeating</h1><p style="margin:8px 0 0;font:400 15px/1.45 var(--ui);color:var(--soft)">First task Tue 24 Nov. The milestone is Mon 21 Dec.</p></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 16px">
+<div style="display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--edge)"><i class="icon-circle-check" style="font-size:18px"></i><span style="flex:1;font:500 15px var(--ui)">Week 1 · Your offer</span><span class="mono">6 tasks</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--edge)"><i class="icon-circle-check" style="font-size:18px"></i><span style="flex:1;font:500 15px var(--ui)">Week 2 · Portfolio</span><span class="mono">3 tasks</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:52px"><i class="icon-circle-check" style="font-size:18px"></i><span style="flex:1;font:500 15px var(--ui)">Weeks 3–4 · Outreach</span><span class="mono">6 tasks · 1 milestone</span></div>
+</div>
+<div style="display:flex;align-items:center;gap:8px"><a href="#8h-tray" class="ch"><i class="icon-scissors" style="font-size:15px"></i>Cut (3)<i class="icon-chevron-up" style="font-size:15px"></i></a><span style="font:400 13px var(--ui);color:var(--soft)">Not added. You can bring them back.</span></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow)">
+<button type="button" aria-expanded="true" style="width:100%;min-height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font:600 15px var(--ui)">Options<i class="icon-chevron-up" style="font-size:16px;color:var(--soft)"></i></button>
+<div style="padding:0 16px 14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--edge);padding-top:12px"><label for="p8other" style="flex:1;min-width:0"><span style="display:block;font:500 15px var(--ui)">Put the tasks in another list</span><span style="display:block;margin-top:2px;font:400 13px/1.4 var(--ui);color:var(--soft)">Otherwise Ledge makes a new list called Start freelancing.</span></label><button type="button" id="p8other" role="switch" aria-checked="false" style="flex:none;width:48px;height:28px;border-radius:999px;background:var(--track);padding:3px;display:flex"><span style="width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></button></div>
+</div>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:8px"><a href="#8j" class="b1" style="width:100%;box-sizing:border-box"><i class="icon-check" style="font-size:18px"></i>Add plan</a><a href="#8h" class="b3" style="background:transparent;width:100%;box-sizing:border-box;font-weight:600">Back to the cards</a></div>
+</div>
+</div>
+
+<div data-screen-label="8h Review cards dark" class="ph" style="height:844px" data-theme="dark">
+<div role="progressbar" aria-label="Cards reviewed" aria-valuenow="3" aria-valuemin="0" aria-valuemax="18" style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--track)"><div style="width:17%;height:100%;background:var(--accent)"></div></div>
+<div style="padding:52px 16px 20px;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="ib" aria-label="Close, the plan stays in Drafts"><i class="icon-x"></i></button><span class="mono">Review your plan</span><button type="button" class="b3" style="background:transparent;font-weight:600">Save draft</button></div>
+<div style="display:flex;align-items:center;gap:8px"><input aria-label="Plan title" value="Start freelancing" style="flex:1;min-width:0;height:40px;font:600 28px/1.15 var(--fig);letter-spacing:-.01em;color:var(--ink)"><i class="icon-pencil" aria-hidden="true" style="font-size:16px;color:var(--soft)"></i></div>
+<p style="margin:-4px 0 0;font:400 14px/1.45 var(--ui);color:var(--soft)">Four weeks: your offer first, then outreach every weekday.</p>
+<div role="tablist" aria-label="Phases" style="display:flex;gap:6px;overflow:hidden;margin-right:-16px">
+<button type="button" role="tab" aria-selected="true" class="ch on" style="font-size:13px;padding:0 14px"><i class="icon-check" style="font-size:13px"></i>Week 1 · Your offer</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Week 2 · Portfolio</button>
+<button type="button" role="tab" aria-selected="false" class="ch" style="font-size:13px;padding:0 14px">Weeks 3–4 · Outreach</button>
+</div>
+<div style="flex:1;position:relative;display:flex;flex-direction:column">
+<div aria-hidden="true" style="position:absolute;left:14px;right:14px;top:14px;bottom:-8px;border-radius:24px;background:var(--card);box-shadow:0 0 0 1px var(--edge);opacity:.7"></div>
+<article tabindex="0" aria-roledescription="card" aria-label="Card 4 of 18: Pick one offer you can sell" style="flex:1;position:relative;background:var(--card);border-radius:24px;box-shadow:0 0 0 1px var(--edge);padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Week 1 · Your offer</span><span class="mono">4 / 18</span></div>
+<h2 style="margin:0;font:600 24px/1.2 var(--fig);letter-spacing:-.01em">Pick one offer you can sell</h2>
+<div style="display:flex;flex-wrap:wrap;gap:6px 14px;font:500 13px var(--ui);color:var(--soft)"><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-calendar" style="font-size:14px"></i>Tue 24 Nov</span><span style="display:inline-flex;align-items:center;gap:5px;color:var(--bad);font-weight:600"><i class="icon-flag" style="font-size:14px"></i>High</span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-clock" style="font-size:14px"></i><span style="font:500 12px var(--mono)">about 45 min</span></span><span style="display:inline-flex;align-items:center;gap:5px"><i class="icon-repeat" style="font-size:14px"></i>Does not repeat</span></div>
+<p style="margin:0;font:400 14px/1.5 var(--ui)">Choose one thing, like landing pages for local cafés, not "websites". A narrow offer is easier to explain, price and find buyers for.</p>
+<div style="margin-top:auto;border-top:1px solid var(--edge)"><div style="display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--edge);font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>List three things you can already build</div><div style="display:flex;align-items:center;gap:10px;min-height:40px;font:400 14px var(--ui)"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Pick the one a small business would pay for</div></div>
+</article>
+</div>
+<div class="mono" aria-live="polite" style="text-align:center;margin-top:6px">Card 4 of 18 · 3 cut</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px">
+<button type="button" class="b2" aria-keyshortcuts="ArrowLeft X" style="padding:0 12px"><i class="icon-arrow-left" style="font-size:17px"></i>Cut</button>
+<button type="button" class="b2" aria-keyshortcuts="E" style="padding:0 12px"><i class="icon-pencil" style="font-size:16px"></i>Edit</button>
+<button type="button" class="b1" aria-keyshortcuts="ArrowRight" style="padding:0 12px">Keep<i class="icon-arrow-right" style="font-size:17px"></i></button>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8h-tray" class="ch" aria-label="Cut cards, 3. Open to bring one back"><i class="icon-scissors" style="font-size:15px"></i>Cut (3)<i class="icon-chevron-up" style="font-size:15px"></i></a><a href="#8h-end" class="b3" style="background:transparent;font-weight:600">Skip to summary</a></div>
+</div>
+</div>
+
+</div>
+<p class="note" style="max-width:1000px">Swipe past a third of the card's width to commit; the word appears from 40px and the matching button below lights up, so the gesture is never the only way. Keyboard: ← or X cuts, → keeps, E edits the card in place, Enter opens the full task. Every action shows "Cut 'Pick one offer…' · Undo" for 6 seconds. With reduced motion the card cross-fades to the next one instead of flying off. Edit turns the card's fields into the 2d task detail fields, on the card itself.</p>
+</div>
+
+<!-- 8i -->
+<div id="8i" class="fr">
+<div class="lb"><a href="#8i">8i</a>Review, desktop, list view</div>
+<div data-screen-label="8i Review list desktop" class="dk">
+<dc-import name="LedgeSidebar" active="plans" hint-size="248px,900px"></dc-import>
+<div style="flex:1;min-width:0;padding:36px 40px 40px 48px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:8px;font:500 12px var(--mono);color:var(--soft)"><span>Plans</span><i class="icon-chevron-right" style="font-size:12px"></i><span>New plan</span><i class="icon-chevron-right" style="font-size:12px"></i><span style="color:var(--ink)">Review</span></div>
+<div style="display:flex;align-items:center;gap:16px"><input aria-label="Plan title" value="Start freelancing" style="flex:1;min-width:0;height:52px;font:600 44px/1.05 var(--fig);letter-spacing:-.02em;color:var(--ink)">
+<div role="radiogroup" aria-label="Review as" style="height:44px;padding:4px;box-sizing:border-box;border-radius:999px;background:var(--well);display:flex;font:500 14px var(--ui)"><button type="button" role="radio" aria-checked="false" style="padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:6px;color:var(--soft)"><i class="icon-gallery-horizontal" style="font-size:15px"></i>Cards</button><button type="button" role="radio" aria-checked="true" style="padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:6px;background:var(--raised);box-shadow:0 0 0 1px var(--edge),var(--shadow);font-weight:600"><i class="icon-check" style="font-size:14px"></i>List</button></div></div>
+<p style="margin:-6px 0 0;font:400 14px var(--ui);color:var(--soft)">Four weeks: your offer first, then outreach every weekday.</p>
+
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:6px">
+<div style="display:flex;align-items:baseline;gap:10px;padding:10px 12px 6px"><span style="font:600 15px var(--ui)">Week 1 · Your offer</span><span class="mono">Mon 23 – Sun 29 Nov · 6 kept, 1 cut</span></div>
+<div class="row" style="padding-top:8px;padding-bottom:8px;align-items:flex-start;flex-direction:column;gap:10px;box-shadow:inset 0 0 0 2px var(--ink);margin:2px 0">
+<div style="display:flex;align-items:center;gap:12px;width:100%"><span class="rg" style="border:2px solid var(--bad)"></span><input aria-label="Task title" value="Pick one offer you can sell" style="flex:1;min-width:0;height:36px;font:600 15px var(--ui);color:var(--ink)"><span class="mono">Editing</span></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:32px"><button type="button" class="b3" style="height:36px;font-size:13px"><i class="icon-calendar" style="font-size:14px"></i>Tue 24 Nov</button><button type="button" class="b3" style="height:36px;font-size:13px;color:var(--bad);font-weight:600"><i class="icon-flag" style="font-size:14px"></i>High</button><button type="button" class="b3" style="height:36px;font-size:13px"><i class="icon-clock" style="font-size:14px"></i><span style="font-family:var(--mono);font-size:12px">about 45 min</span></button><button type="button" class="b3" style="height:36px;font-size:13px;color:var(--soft)"><i class="icon-repeat" style="font-size:14px"></i>Does not repeat</button></div>
+<textarea aria-label="Notes" value="Choose one thing, like landing pages for local cafés, not &quot;websites&quot;. A narrow offer is easier to explain, price and find buyers for." style="display:block;margin-left:32px;width:calc(100% - 32px);min-height:60px;padding:10px 12px;border-radius:14px;background:var(--well);font:400 14px/1.5 var(--ui);color:var(--ink)"></textarea>
+<div style="padding-left:32px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;font:400 14px var(--ui)"><span style="display:flex;align-items:center;gap:10px;min-height:36px"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>List three things you can already build</span><span style="display:flex;align-items:center;gap:10px;min-height:36px"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Pick the one a small business would pay for</span><span style="display:flex;align-items:center;gap:10px;min-height:36px;color:var(--soft)"><i class="icon-plus" style="font-size:15px"></i>Add subtask</span></div>
+<div style="align-self:flex-end;display:flex;align-items:center;gap:8px"><span style="font:400 12px var(--ui);color:var(--soft)"><span class="kbd">Esc</span> cancel</span><button type="button" class="b3" style="height:36px;font-size:13px">Cancel</button><button type="button" class="b1" style="height:36px;padding:0 16px;font-size:13px">Done</button></div>
+</div>
+<div class="row" style="background:var(--well)"><span class="rg" style="border:2px solid var(--warn)"></span><span style="flex:1;min-width:0">Set your starter prices</span><span class="mono" style="width:92px">Wed 25 Nov</span><span style="width:84px;display:inline-flex;align-items:center;gap:5px;font:500 13px var(--ui);color:var(--warn)"><i class="icon-flag" style="font-size:13px"></i>Medium</span><button type="button" aria-label="Remove Set your starter prices" style="height:32px;padding:0 10px;border-radius:999px;background:var(--card);box-shadow:0 0 0 1px var(--edge);display:inline-flex;align-items:center;gap:5px;font:500 12px var(--ui)"><i class="icon-x" style="font-size:13px"></i>Remove</button></div>
+<div class="row"><span class="rg"></span><span style="flex:1;min-width:0">Look at 5 freelancers who sell it</span><span class="mono" style="width:92px">Wed 25 Nov</span><span style="width:84px"></span><span style="width:84px"></span></div>
+<div class="row"><span class="rg"></span><span style="flex:1;min-width:0">Set up a simple profile</span><span class="mono" style="width:92px">Thu 26 Nov</span><span style="width:84px;display:inline-flex;align-items:center;gap:5px;font:500 13px var(--ui);color:var(--soft)"><i class="icon-flag" style="font-size:13px"></i>Low</span><span style="width:84px"></span></div>
+<div class="row"><span class="rg" style="border:2px solid var(--warn)"></span><span style="flex:1;min-width:0">Write your pitch</span><span class="mono" style="width:92px">Sat 28 Nov</span><span style="width:84px;display:inline-flex;align-items:center;gap:5px;font:500 13px var(--ui);color:var(--warn)"><i class="icon-flag" style="font-size:13px"></i>Medium</span><span style="width:84px"></span></div>
+<div class="row"><span class="rg"></span><span style="flex:1;min-width:0">Make a one-page offer sheet</span><span class="mono" style="width:92px">Sun 29 Nov</span><span style="width:84px"></span><span style="width:84px"></span></div>
+<div class="row" style="color:var(--soft)"><i class="icon-scissors" style="width:20px;text-align:center;font-size:15px"></i><span style="flex:1;min-width:0;text-decoration:line-through">Read three freelancing guides</span><span class="pill" style="background:var(--well);color:var(--soft)"><i class="icon-x" style="font-size:11px"></i>Cut</span><button type="button" style="height:32px;padding:0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;font:600 12px var(--ui);color:var(--ink)"><i class="icon-undo-2" style="font-size:13px"></i>Bring back</button></div>
+<button type="button" class="row" style="width:100%;color:var(--soft);border-top:1px solid var(--edge);border-radius:0 0 12px 12px"><i class="icon-plus" style="width:20px;text-align:center"></i>Add a task</button>
+</div>
+
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:6px">
+<div style="display:flex;align-items:baseline;gap:10px;padding:10px 12px 6px"><span style="font:600 15px var(--ui)">Week 2 · Portfolio</span><span class="mono">Mon 30 Nov – Sun 6 Dec · 3 kept, 2 cut</span></div>
+<div class="row"><span class="rg" style="border:2px solid var(--bad)"></span><span style="flex:1;min-width:0">Build two sample sites<span style="margin-left:10px;font:400 12px var(--ui);color:var(--soft)"><i class="icon-list-checks" style="font-size:12px"></i> 3 subtasks</span></span><span class="mono" style="width:92px">Fri 4 Dec</span><span style="width:84px;display:inline-flex;align-items:center;gap:5px;font:500 13px var(--ui);color:var(--bad)"><i class="icon-flag" style="font-size:13px"></i>High</span><span style="width:84px"></span></div>
+<div class="row"><span class="rg"></span><span style="flex:1;min-width:0">Write a short case study for each</span><span class="mono" style="width:92px">Sat 5 Dec</span><span style="width:84px"></span><span style="width:84px"></span></div>
+<button type="button" class="row" style="width:100%;color:var(--soft);border-top:1px solid var(--edge);border-radius:0 0 12px 12px"><i class="icon-plus" style="width:20px;text-align:center"></i>Add a task</button>
+</div>
+<div style="display:flex;gap:16px;font:400 12px var(--ui);color:var(--soft)"><span><span class="kbd">J</span> <span class="kbd">K</span> move</span><span><span class="kbd">←</span> or <span class="kbd">X</span> cut</span><span><span class="kbd">→</span> keep</span><span><span class="kbd">E</span> edit in place</span><span><span class="kbd">Enter</span> open</span></div>
+</div>
+<aside style="width:400px;flex:none;align-self:flex-start;position:sticky;top:0;min-height:900px;box-sizing:border-box;background:var(--card);border-left:1px solid var(--edge);padding:32px 28px;display:flex;flex-direction:column;gap:18px">
+<div class="mono">Summary</div>
+<div style="font:600 26px/1.2 var(--fig);letter-spacing:-.01em">15 tasks over 4 weeks, 2 repeating</div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:500 13px var(--ui)"><span>Reviewed</span><span style="font-family:var(--mono)">18 of 18</span></div><div role="progressbar" aria-label="Cards reviewed" aria-valuenow="18" aria-valuemin="0" aria-valuemax="18" style="height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:100%;height:100%;background:var(--accent)"></div></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<div style="border-radius:16px;background:var(--well);padding:12px 14px"><div style="font:500 12px var(--ui);color:var(--soft);display:flex;align-items:center;gap:5px"><i class="icon-check" style="font-size:13px"></i>Kept</div><div style="margin-top:4px;font:600 30px/1 var(--fig)">15</div></div>
+<div style="border-radius:16px;background:var(--well);padding:12px 14px"><div style="font:500 12px var(--ui);color:var(--soft);display:flex;align-items:center;gap:5px"><i class="icon-scissors" style="font-size:13px"></i>Cut</div><div style="margin-top:4px;font:600 30px/1 var(--fig)">3</div></div>
+<div style="border-radius:16px;background:var(--well);padding:12px 14px"><div style="font:500 12px var(--ui);color:var(--soft);display:flex;align-items:center;gap:5px"><i class="icon-repeat" style="font-size:13px"></i>Repeating</div><div style="margin-top:4px;font:600 30px/1 var(--fig)">2</div></div>
+<div style="border-radius:16px;background:var(--well);padding:12px 14px"><div style="font:500 12px var(--ui);color:var(--soft);display:flex;align-items:center;gap:5px"><i class="icon-milestone" style="font-size:13px"></i>Milestone</div><div style="margin-top:4px;font:600 30px/1 var(--fig)">1</div></div>
+</div>
+<div style="font:400 13px/1.6 var(--ui);color:var(--soft)"><span style="font-family:var(--mono);color:var(--ink)">Tue 24 Nov – Mon 21 Dec</span><br>About 30 minutes a day, weekdays heavier.</div>
+<div style="border-radius:16px;box-shadow:inset 0 0 0 1px var(--edge)"><button type="button" aria-expanded="true" style="width:100%;min-height:48px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font:600 14px var(--ui)">Options<i class="icon-chevron-up" style="font-size:15px;color:var(--soft)"></i></button><div style="padding:12px 14px;border-top:1px solid var(--edge);display:flex;align-items:center;gap:12px"><label for="p8other2" style="flex:1;font:400 14px var(--ui)">Put the tasks in another list</label><button type="button" id="p8other2" role="switch" aria-checked="false" style="flex:none;width:44px;height:26px;border-radius:999px;background:var(--track);padding:3px;display:flex"><span style="width:20px;height:20px;border-radius:50%;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></button></div></div>
+<div style="flex:1"></div>
+<button type="button" class="b1" aria-keyshortcuts="Control+Enter" style="height:48px;width:100%"><i class="icon-check" style="font-size:17px"></i>Add plan<span class="kbd" style="background:transparent;color:var(--on-ink);box-shadow:inset 0 0 0 1px var(--on-ink);opacity:.8">Ctrl Enter</span></button>
+<div style="text-align:center;font:400 12px var(--ui);color:var(--soft)">Tasks go to a new list, Start freelancing.</div>
+</aside>
+</div>
+<p class="note" style="max-width:760px">Same cards, one line each. E opens a row in place with the card's fields; a hovered row shows Remove (the keyboard equivalent is X). Cut rows stay in their phase, struck through, so bringing one back is right there. The panel is sticky and Ctrl+Enter adds the plan from anywhere on the page.</p>
+</div>
+
+<!-- 8j -->
+<div id="8j" class="fr">
+<div class="lb"><a href="#8j">8j</a>A plan's page, phone (and dark)</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div data-screen-label="8j Plan page" class="ph">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8a" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Plans</a><a href="#8l" class="ib" aria-label="Plan options"><i class="icon-ellipsis"></i></a></div>
+<div><div style="display:flex;align-items:center;gap:10px"><h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Start freelancing</h1><span class="pill" style="background:var(--well);color:var(--ink)"><i class="icon-circle-play" style="font-size:12px"></i>Active</span></div>
+<div role="progressbar" aria-label="Plan progress" aria-valuenow="4" aria-valuemin="0" aria-valuemax="18" style="margin-top:14px;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:22%;height:100%;background:var(--accent)"></div></div>
+<div style="margin-top:8px;display:flex;justify-content:space-between" class="mono"><span style="color:var(--ink)">4 of 18 done · 24 days left</span><span>Ends Mon 21 Dec</span></div></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Week 1 · Your offer</span><span class="mono">4 of 6</span></div>
+<dc-import name="LedgeTask" title="Pick one offer you can sell" due="Tue 24 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Look at 5 freelancers who sell it" due="Wed 25 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Set your starter prices" due="Wed 25 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Set up a simple profile" due="Thu 26 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Write your pitch" due="Tomorrow" pri="med" sub="0/2" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Make a one-page offer sheet" due="Sun 29 Nov" pri="" list="" hint-size="100%,60px"></dc-import>
+</div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Week 2 · Portfolio</span><span class="mono">0 of 3</span></div>
+<dc-import name="LedgeTask" title="Build two sample sites" due="Fri 4 Dec" pri="high" sub="0/3" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Write a short case study for each" due="Sat 5 Dec" pri="" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Ask two friends for feedback" due="Sun 6 Dec" pri="low" list="" hint-size="100%,60px"></dc-import>
+</div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Weeks 3–4 · Outreach</span><span class="mono">0 of 9</span></div>
+<dc-import name="LedgeTask" title="Send 3 pitches every weekday" due="Mon 7 Dec" repeat="Every weekday until 21 Dec" pri="" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="List 30 businesses to contact" due="Mon 7 Dec" pri="med" list="" hint-size="100%,60px"></dc-import>
+<button type="button" style="width:100%;min-height:44px;padding:0 12px;display:flex;align-items:center;gap:12px;font:500 14px var(--ui);color:var(--soft)"><i class="icon-chevron-down" style="width:20px;text-align:center"></i>6 more tasks</button>
+<div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 10px;border-top:1px solid var(--edge)"><span style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px"><i class="icon-milestone"></i></span><div style="flex:1;min-width:0"><div style="font:600 15px var(--ui)">Land a first paid client</div><div style="margin-top:2px;display:flex;gap:10px;font:400 12px var(--ui);color:var(--soft)"><span style="display:inline-flex;align-items:center;gap:4px"><i class="icon-flag-triangle-right" style="font-size:12px"></i>Milestone</span><span style="display:inline-flex;align-items:center;gap:4px"><i class="icon-calendar" style="font-size:12px"></i>Mon 21 Dec</span></div></div></div>
+</div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:12px"><span style="flex:none;width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-list-plus"></i></span><div style="flex:1;min-width:0"><div style="font:600 15px var(--ui)">Add more tasks</div><div style="margin-top:2px;font:400 13px/1.4 var(--ui);color:var(--soft)">Ledge suggests next steps from what you've done.</div></div><button type="button" class="b3" style="height:40px;font-size:13px;font-weight:600">Suggest</button></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 16px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 6px"><span style="font:600 15px var(--ui)">Resources</span><span class="mono">5 suggested</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-top:1px solid var(--edge)"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px" title="Book"><i class="icon-book-open"></i></span><div style="flex:1;min-width:0"><div style="font:600 14px var(--ui)">The Win Without Pitching Manifesto</div><div style="margin-top:2px;font:400 12px/1.4 var(--ui);color:var(--soft)"><span style="font-family:var(--mono)">Book</span> · Selling as an expert, not a supplier</div></div><button type="button" class="b3" aria-label="Search for The Win Without Pitching Manifesto" style="height:36px;padding:0 12px;font-size:13px"><i class="icon-search" style="font-size:14px"></i>Search</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-top:1px solid var(--edge)"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px"><i class="icon-graduation-cap"></i></span><div style="flex:1;min-width:0"><div style="font:600 14px var(--ui)">freeCodeCamp Responsive Web Design</div><div style="margin-top:2px;font:400 12px/1.4 var(--ui);color:var(--soft)"><span style="font-family:var(--mono)">Course</span> · Fills the gaps before sample sites</div></div><button type="button" class="b3" aria-label="Search for freeCodeCamp Responsive Web Design" style="height:36px;padding:0 12px;font-size:13px"><i class="icon-search" style="font-size:14px"></i>Search</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-top:1px solid var(--edge)"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px"><i class="icon-circle-play"></i></span><div style="flex:1;min-width:0"><div style="font:600 14px var(--ui)">Kevin Powell</div><div style="margin-top:2px;font:400 12px/1.4 var(--ui);color:var(--soft)"><span style="font-family:var(--mono)">Video channel</span> · Short, clear CSS lessons</div></div><button type="button" class="b3" aria-label="Search for Kevin Powell" style="height:36px;padding:0 12px;font-size:13px"><i class="icon-search" style="font-size:14px"></i>Search</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-top:1px solid var(--edge)"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px"><i class="icon-users"></i></span><div style="flex:1;min-width:0"><div style="font:600 14px var(--ui)">r/freelance</div><div style="margin-top:2px;font:400 12px/1.4 var(--ui);color:var(--soft)"><span style="font-family:var(--mono)">Community</span> · Real first-client stories</div></div><button type="button" class="b3" aria-label="Search for r/freelance" style="height:36px;padding:0 12px;font-size:13px"><i class="icon-search" style="font-size:14px"></i>Search</button></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-top:1px solid var(--edge)"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:16px"><i class="icon-wrench"></i></span><div style="flex:1;min-width:0"><div style="font:600 14px var(--ui)">Carrd</div><div style="margin-top:2px;font:400 12px/1.4 var(--ui);color:var(--soft)"><span style="font-family:var(--mono)">Tool</span> · A one-page site for your offer</div></div><button type="button" class="b3" aria-label="Search for Carrd" style="height:36px;padding:0 12px;font-size:13px"><i class="icon-search" style="font-size:14px"></i>Search</button></div>
+</div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow)">
+<button type="button" aria-expanded="true" style="width:100%;min-height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;font:600 15px var(--ui)">What you told Ledge<i class="icon-chevron-up" style="font-size:16px;color:var(--soft)"></i></button>
+<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+<blockquote style="margin:0;padding:12px 14px;border-radius:14px;background:var(--well);font:400 14px/1.5 var(--ui)">"I want to start freelancing. I'm a beginner and have no idea what to do. People say it's more about sales than skills."</blockquote>
+<dl style="margin:0;display:grid;grid-template-columns:1fr auto;gap:8px 12px;font:400 13px/1.4 var(--ui)"><dt style="color:var(--soft)">Plan length</dt><dd style="margin:0;font-weight:500;text-align:right">1 month</dd><dt style="color:var(--soft)">Time you can give it</dt><dd style="margin:0;font-weight:500;text-align:right">30 min a day</dd><dt style="color:var(--soft)">What kind of websites?</dt><dd style="margin:0;font-weight:500;text-align:right">Landing pages</dd><dt style="color:var(--soft)">How good are you at web design?</dt><dd style="margin:0;font-weight:500;text-align:right;font-family:var(--mono)">2 of 5</dd><dt style="color:var(--soft)">Anything to avoid?</dt><dd style="margin:0;font-weight:500;text-align:right">Cold calls</dd><dt style="color:var(--soft)">Ever pitched to a client?</dt><dd style="margin:0;font-weight:500;text-align:right">Never</dd></dl>
+</div></div>
+<div style="text-align:center;font:400 12px/1.5 var(--ui);color:var(--soft)">AI used for this plan:<br><span style="font-family:var(--mono)">4 requests · 9,800 tokens · about $0.004 (₹0.34)</span></div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+
+<div data-screen-label="8j Plan page dark" class="ph" data-theme="dark" style="height:844px">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8a" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Plans</a><a href="#8l" class="ib" aria-label="Plan options"><i class="icon-ellipsis"></i></a></div>
+<div><div style="display:flex;align-items:center;gap:10px"><h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Start freelancing</h1><span class="pill" style="background:var(--well);color:var(--ink)"><i class="icon-circle-play" style="font-size:12px"></i>Active</span></div>
+<div role="progressbar" aria-label="Plan progress" aria-valuenow="4" aria-valuemin="0" aria-valuemax="18" style="margin-top:14px;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:22%;height:100%;background:var(--accent)"></div></div>
+<div style="margin-top:8px;display:flex;justify-content:space-between" class="mono"><span style="color:var(--ink)">4 of 18 done · 24 days left</span><span>Ends Mon 21 Dec</span></div></div>
+<div style="background:var(--card);border-radius:16px;padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Week 1 · Your offer</span><span class="mono">4 of 6</span></div>
+<dc-import name="LedgeTask" title="Pick one offer you can sell" due="Tue 24 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Look at 5 freelancers who sell it" due="Wed 25 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Set your starter prices" due="Wed 25 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Set up a simple profile" due="Thu 26 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Write your pitch" due="Tomorrow" pri="med" sub="0/2" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Make a one-page offer sheet" due="Sun 29 Nov" pri="" list="" hint-size="100%,60px"></dc-import>
+</div>
+<div style="background:var(--card);border-radius:16px;padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Week 2 · Portfolio</span><span class="mono">0 of 3</span></div>
+<dc-import name="LedgeTask" title="Build two sample sites" due="Fri 4 Dec" pri="high" sub="0/3" list="" hint-size="100%,60px"></dc-import>
+</div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+</div>
+<p class="note" style="max-width:804px">Phases are ordinary sections of task rows, and the rows are the same tasks that show in Today and Upcoming. Resources have no links on purpose: Search opens a web search for the name, so nothing points at a made-up URL. The dark frame is cropped to the first screen.</p>
+</div>
+
+<!-- 8k -->
+<div id="8k" class="fr">
+<div class="lb"><a href="#8k">8k</a>A plan's page, desktop, with the open task</div>
+<div data-screen-label="8k Plan page desktop" class="dk">
+<dc-import name="LedgeSidebar" active="plans" hint-size="248px,900px"></dc-import>
+<div style="flex:1;min-width:0;padding:40px 40px 40px 48px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:flex-start;gap:16px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;font:500 12px var(--mono);color:var(--soft)"><span>Plans</span><i class="icon-chevron-right" style="font-size:12px"></i></div><div style="margin-top:6px;display:flex;align-items:center;gap:12px"><h1 style="margin:0;font:600 44px/1.05 var(--fig);letter-spacing:-.02em">Start freelancing</h1><span class="pill" style="background:var(--well);color:var(--ink)"><i class="icon-circle-play" style="font-size:12px"></i>Active</span></div></div><button type="button" class="ib" aria-label="Plan options"><i class="icon-ellipsis"></i></button></div>
+<div style="background:var(--card);border-radius:16px;padding:16px 20px;box-shadow:var(--shadow)"><div style="display:flex;justify-content:space-between;font:500 13px var(--ui)"><span style="font-family:var(--mono)">4 of 18 done · 24 days left</span><span style="color:var(--soft)">Tue 24 Nov – Mon 21 Dec · 30 min a day</span></div><div role="progressbar" aria-label="Plan progress" aria-valuenow="4" aria-valuemin="0" aria-valuemax="18" style="height:8px;border-radius:4px;background:var(--track);margin-top:10px;overflow:hidden"><div style="width:22%;height:100%;background:var(--accent)"></div></div></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 12px 4px"><span style="font:600 15px var(--ui)">Week 1 · Your offer</span><span class="mono">4 of 6</span></div>
+<dc-import name="LedgeTask" title="Set up a simple profile" due="Thu 26 Nov" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Write your pitch" due="Tomorrow" pri="med" sub="0/2" list="" selected="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Make a one-page offer sheet" due="Sun 29 Nov" pri="" list="" hint-size="100%,60px"></dc-import>
+<button type="button" style="width:100%;min-height:40px;padding:0 14px;display:flex;align-items:center;gap:12px;font:500 13px var(--ui);color:var(--soft)"><i class="icon-eye" style="width:20px;text-align:center"></i>Show 3 done</button>
+</div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 12px 4px"><span style="font:600 15px var(--ui)">Week 2 · Portfolio</span><span class="mono">0 of 3</span></div>
+<dc-import name="LedgeTask" title="Build two sample sites" due="Fri 4 Dec" pri="high" sub="0/3" list="" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Write a short case study for each" due="Sat 5 Dec" pri="" list="" hint-size="100%,60px"></dc-import>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:12px"><span style="flex:none;width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-list-plus"></i></span><div style="flex:1"><div style="font:600 14px var(--ui)">Add more tasks</div><div style="font:400 12px/1.4 var(--ui);color:var(--soft)">Ledge suggests next steps from what you've done.</div></div></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;align-items:center;gap:12px"><span style="flex:none;width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-library"></i></span><div style="flex:1"><div style="font:600 14px var(--ui)">Resources</div><div style="font:400 12px/1.4 var(--ui);color:var(--soft)">5 suggested: a book, a course, a channel, a community, a tool</div></div><i class="icon-chevron-down" style="color:var(--soft)"></i></div>
+</div>
+<div class="mono" style="font-weight:400">AI used for this plan: 4 requests · 9,800 tokens · about $0.004 (₹0.34)</div>
+</div>
+<div style="width:420px;flex:none;background:var(--card);border-left:1px solid var(--edge);padding:28px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+<div style="display:flex;justify-content:space-between;align-items:center;font:500 12px var(--ui);color:var(--soft)"><span style="display:flex;align-items:center;gap:5px"><i class="icon-check" style="font-size:13px"></i>Saved 4:10 pm</span><span style="display:flex;gap:4px"><button type="button" aria-label="Open as a full page" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--well)"><i class="icon-external-link" style="font-size:15px"></i></button><button type="button" aria-label="Close" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--well)"><i class="icon-x" style="font-size:15px"></i></button></span></div>
+<div style="display:flex;gap:10px;align-items:flex-start"><span style="flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--warn);box-sizing:border-box;margin-top:4px"></span><h2 style="margin:0;font:600 24px/1.25 var(--fig)">Write your pitch</h2></div>
+<span style="align-self:flex-start;height:32px;padding:0 12px;border-radius:999px;background:var(--well);display:inline-flex;align-items:center;gap:6px;font:500 13px var(--ui)"><i class="icon-target" style="font-size:14px"></i>Start freelancing · Week 1</span>
+<div style="display:grid;grid-template-columns:96px 1fr;row-gap:4px;font:400 14px var(--ui);align-items:center">
+<span style="color:var(--soft)">List</span><span style="height:40px;display:flex;align-items:center;gap:6px;font-weight:500"><i class="icon-target" style="font-size:14px"></i>Start freelancing</span>
+<span style="color:var(--soft)">Due</span><span style="height:40px;display:flex;align-items:center;font-weight:500">Tomorrow, Sat 28 Nov</span>
+<span style="color:var(--soft)">Time</span><span style="height:40px;display:flex;align-items:center;font:500 13px var(--mono)">about 30 min</span>
+<span style="color:var(--soft)">Priority</span><span style="height:40px;display:flex;align-items:center;gap:6px;font-weight:500;color:var(--warn)"><i class="icon-flag" style="font-size:14px"></i>Medium</span>
+<span style="color:var(--soft)">Repeat</span><span style="height:40px;display:flex;align-items:center;color:var(--soft)">Does not repeat</span>
+</div>
+<div style="border-radius:14px;background:var(--well);padding:12px 14px;font:400 14px/1.55 var(--ui)">Three sentences: who you help, what you make for them, and one result. Write it for a café owner, not a designer. Read it out loud once.</div>
+<div style="display:flex;flex-direction:column;font:400 14px var(--ui)"><span style="display:flex;align-items:center;gap:10px;min-height:40px"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Write a first version</span><span style="display:flex;align-items:center;gap:10px;min-height:40px"><span class="box" style="width:16px;height:16px;border-radius:5px"></span>Cut it to under 60 words</span><span style="display:flex;align-items:center;gap:10px;min-height:44px;color:var(--soft)"><i class="icon-plus"></i>Add subtask</span></div>
+<div style="flex:1"></div>
+<div style="display:flex;gap:8px;font:500 13px var(--ui)"><span style="height:40px;padding:0 14px;border-radius:999px;background:var(--well);display:flex;align-items:center;gap:6px"><i class="icon-copy" style="font-size:14px"></i>Duplicate</span><span style="height:40px;padding:0 14px;border-radius:999px;background:var(--well);display:flex;align-items:center;gap:6px"><i class="icon-folder-input" style="font-size:14px"></i>Move</span><span style="height:40px;padding:0 14px;border-radius:999px;background:var(--well);display:flex;align-items:center;gap:6px"><i class="icon-trash-2" style="font-size:14px"></i>Delete</span></div>
+</div>
+</div>
+<p class="note" style="max-width:760px">The detail pane is the 2h pane with one addition: a chip naming the plan and phase, which links back here. Done tasks fold per phase on desktop to keep the next step near the top.</p>
+</div>
+
+<!-- 8l -->
+<div id="8l" class="fr">
+<div class="lb"><a href="#8l">8l</a>Plan menus and states: menu, reschedule, delete, empty, done</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div data-screen-label="8l Plan menu" class="ph" style="height:844px">
+<div aria-hidden="true" style="padding:60px 16px;display:flex;flex-direction:column;gap:14px"><span style="font:600 32px/1.1 var(--fig)">Start freelancing</span><span style="height:6px;border-radius:3px;background:var(--track)"></span></div>
+<div style="position:absolute;inset:0;background:var(--tint)"></div>
+<div role="dialog" aria-label="Plan options" style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:10px 16px 28px;display:flex;flex-direction:column;gap:6px">
+<span style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--track);margin-bottom:8px"></span>
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px 8px"><span style="font:600 18px var(--ui)">Start freelancing</span><span class="mono">4 of 18 done</span></div>
+<button type="button" class="row" style="min-height:52px;font-size:15px"><i class="icon-pencil" style="font-size:18px;width:20px;text-align:center"></i>Rename</button>
+<button type="button" class="row" style="min-height:52px;font-size:15px"><i class="icon-calendar-clock" style="font-size:18px;width:20px;text-align:center"></i>Reschedule<span style="margin-left:auto;font:400 13px var(--ui);color:var(--soft)">14 open tasks</span></button>
+<button type="button" class="row" style="min-height:52px;font-size:15px"><i class="icon-archive" style="font-size:18px;width:20px;text-align:center"></i>Archive<span style="margin-left:auto;font:400 13px var(--ui);color:var(--soft)">Tasks stay in your lists</span></button>
+<button type="button" class="row" style="min-height:52px;font-size:15px;color:var(--bad);font-weight:600"><i class="icon-trash-2" style="font-size:18px;width:20px;text-align:center"></i>Delete</button>
+<button type="button" class="b2" style="margin-top:8px;height:48px;font-size:14px">Cancel</button>
+</div>
+</div>
+
+<div data-screen-label="8l Reschedule" class="ph" style="height:844px">
+<div aria-hidden="true" style="padding:60px 16px;display:flex;flex-direction:column;gap:14px"><span style="font:600 32px/1.1 var(--fig)">Start freelancing</span><span style="height:6px;border-radius:3px;background:var(--track)"></span></div>
+<div style="position:absolute;inset:0;background:var(--tint)"></div>
+<div role="dialog" aria-label="Reschedule plan" style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:10px 16px 28px;display:flex;flex-direction:column;gap:12px">
+<span style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--track)"></span>
+<div style="font:600 18px var(--ui)">Reschedule plan</div>
+<p style="margin:-6px 0 0;font:400 13px/1.45 var(--ui);color:var(--soft)">Only the 14 open tasks move. Done tasks keep their dates.</p>
+<div role="radiogroup" aria-label="How to reschedule" style="display:flex;flex-direction:column;gap:8px">
+<div style="border-radius:16px;box-shadow:inset 0 0 0 2px var(--ink);padding:14px;display:flex;flex-direction:column;gap:12px">
+<button type="button" role="radio" aria-checked="true" style="display:flex;align-items:center;gap:10px;font:600 15px var(--ui);min-height:24px"><span style="flex:none;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:grid;place-items:center;font-size:12px"><i class="icon-check"></i></span>Move every open task by</button>
+<div style="display:flex;align-items:center;gap:10px;padding-left:30px"><button type="button" aria-label="One day fewer" style="width:44px;height:44px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-minus"></i></button><label for="p8days" style="position:absolute;left:-9999px">Days</label><input id="p8days" value="3" inputmode="numeric" style="width:64px;height:44px;border-radius:14px;background:var(--well);text-align:center;font:600 22px var(--fig);color:var(--ink)"><button type="button" aria-label="One day more" style="width:44px;height:44px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-plus"></i></button><span style="font:500 15px var(--ui)">days</span></div>
+<div style="padding-left:30px;font:400 12px/1.6 var(--ui);color:var(--soft)">Write your pitch <span style="font-family:var(--mono);color:var(--ink)">Sat 28 Nov → Tue 1 Dec</span><br>Land a first paid client <span style="font-family:var(--mono);color:var(--ink)">Mon 21 Dec → Thu 24 Dec</span></div>
+</div>
+<div style="border-radius:16px;box-shadow:inset 0 0 0 1px var(--edge);padding:14px;display:flex;flex-direction:column;gap:10px">
+<button type="button" role="radio" aria-checked="false" style="display:flex;align-items:center;gap:10px;font:500 15px var(--ui);min-height:24px"><span class="rad"></span>Spread to a new end date</button>
+<div style="padding-left:30px;font:400 12px/1.45 var(--ui);color:var(--soft)">Keeps the order and gaps, stretched or squeezed to fit.</div>
+</div>
+</div>
+<div style="display:flex;gap:8px"><button type="button" class="b2" style="height:48px;font-size:14px">Cancel</button><button type="button" class="b1" style="flex:1;height:48px;font-size:14px">Move 14 tasks</button></div>
+</div>
+</div>
+
+<div data-screen-label="8l Delete plan" class="ph" style="height:844px">
+<div aria-hidden="true" style="padding:60px 16px;display:flex;flex-direction:column;gap:14px"><span style="font:600 32px/1.1 var(--fig)">Start freelancing</span><span style="height:6px;border-radius:3px;background:var(--track)"></span></div>
+<div style="position:absolute;inset:0;background:var(--tint)"></div>
+<div role="alertdialog" aria-label="Delete Start freelancing?" style="position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:24px 24px 0 0;padding:10px 16px 28px;display:flex;flex-direction:column;gap:12px">
+<span style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--track)"></span>
+<div style="font:600 18px var(--ui)">Delete "Start freelancing"?</div>
+<p style="margin:-4px 0 0;font:400 14px/1.5 var(--ui);color:var(--soft)">The plan goes to Trash and can be restored for 30 days.</p>
+<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:16px;background:var(--well);cursor:pointer"><input type="checkbox" checked aria-checked="true" style="position:absolute;opacity:0;width:1px;height:1px"><span class="box on" style="margin-top:1px"><i class="icon-check"></i></span><span><span style="display:block;font:500 15px var(--ui)">Also move its 18 tasks to Trash</span><span style="display:block;margin-top:2px;font:400 13px/1.4 var(--ui);color:var(--soft)">Unticked, they stay in your lists as ordinary tasks.</span></span></label>
+<button type="button" class="b1" style="background:var(--bad);color:var(--on-ink);height:48px;font-size:14px"><i class="icon-trash-2" style="font-size:16px"></i>Delete plan and 18 tasks</button>
+<button type="button" class="b3" style="background:transparent;font-weight:600">Cancel</button>
+</div>
+</div>
+
+<div data-screen-label="8l Plans empty" class="ph" style="height:844px">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px;height:100%;box-sizing:border-box">
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8n" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Home</a></div>
+<h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Plans</h1>
+<div style="margin:auto 0;background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:32px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px">
+<span style="width:56px;height:56px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:24px"><i class="icon-target"></i></span>
+<div style="margin-top:6px;font:600 20px/1.3 var(--fig)">Plan a goal and Ledge turns it into tasks.</div>
+<div style="font:400 14px/1.5 var(--ui);color:var(--soft)">Say what you want to do. Ledge asks a few questions, then drafts dated tasks for you to keep or cut.</div>
+<a href="#8c" class="b1" style="margin-top:10px"><i class="icon-plus" style="font-size:17px"></i>New plan</a>
+</div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+
+<div data-screen-label="8l Done plan" class="ph" style="height:844px">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between"><a href="#8a" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Plans</a><button type="button" class="ib" aria-label="Plan options"><i class="icon-ellipsis"></i></button></div>
+<div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Learn Spanish basics</h1><span class="pill" style="background:var(--good-bg);color:var(--good)"><i class="icon-check" style="font-size:12px"></i>Done</span></div>
+<div role="progressbar" aria-label="Plan progress" aria-valuenow="20" aria-valuemin="0" aria-valuemax="20" style="margin-top:14px;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:100%;height:100%;background:var(--accent)"></div></div>
+<div style="margin-top:8px;display:flex;justify-content:space-between" class="mono"><span style="color:var(--ink)">20 of 20 done</span><span>Finished 21 Dec</span></div></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:10px"><div style="font:600 15px var(--ui)">Nicely done.</div><div style="font:400 14px/1.5 var(--ui);color:var(--soft)">Six weeks, 20 tasks, one 10-minute practice a day. Keep going with a follow-up plan, or archive this one.</div><div style="display:flex;gap:8px"><button type="button" class="b2" style="height:44px;font-size:14px;flex:1">Plan what's next</button><button type="button" class="b3" style="height:44px">Archive</button></div></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 6px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 10px 4px"><span style="font:600 15px var(--ui)">Weeks 5–6 · Conversation</span><span class="mono">6 of 6</span></div>
+<dc-import name="LedgeTask" title="Order a coffee in Spanish" due="Sat 19 Dec" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Ten-minute practice" due="Every day" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+<dc-import name="LedgeTask" title="Hold a 5-minute chat" due="Mon 21 Dec" pri="" list="" done="{{ true }}" hint-size="100%,60px"></dc-import>
+</div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+
+</div>
+<p class="note" style="max-width:1000px">Delete is the only plan action that asks to confirm, because it can take tasks with it; the box is ticked by default and its count matches the plan. Archive needs no confirm: it hides the plan, leaves its tasks alone and shows an Undo toast. Reschedule previews the first and last moved dates before anything changes.</p>
+</div>
+
+<!-- 8m -->
+<div id="8m" class="fr">
+<div class="lb"><a href="#8m">8m</a>Settings, AI usage card, phone and desktop</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+<div data-screen-label="8m AI usage phone" class="ph">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center"><a href="#6g" class="b3" style="padding-left:8px;background:transparent"><i class="icon-chevron-left" style="font-size:18px"></i>Settings</a></div>
+<h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">AI usage</h1>
+<div style="background:var(--card);border-radius:24px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:14px">
+<div role="radiogroup" aria-label="Month" style="height:44px;padding:4px;box-sizing:border-box;border-radius:999px;background:var(--well);display:flex;font:500 14px var(--ui)"><button type="button" role="radio" aria-checked="true" style="flex:1;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--raised);box-shadow:0 0 0 1px var(--edge),var(--shadow);font-weight:600"><i class="icon-check" style="font-size:14px"></i>November</button><button type="button" role="radio" aria-checked="false" style="flex:1;border-radius:999px;display:flex;align-items:center;justify-content:center;color:var(--soft)">October</button></div>
+<div><div style="font:500 12px var(--ui);color:var(--soft)">Estimated cost this month</div><div style="margin-top:4px;display:flex;align-items:baseline;gap:10px"><span style="font:600 30px/1 var(--fig)">$0.007</span><span style="font:500 14px var(--mono);color:var(--soft)">₹0.60</span></div></div>
+<table class="tbl"><thead><tr><th scope="col">Feature</th><th scope="col" style="text-align:right">Requests</th><th scope="col" style="text-align:right">Tokens</th><th scope="col" style="text-align:right">Cost</th></tr></thead><tbody>
+<tr><td><i class="icon-mic" style="font-size:13px;color:var(--soft)"></i> Voice</td><td class="n">5</td><td class="n">2,100</td><td class="n">$0.003</td></tr>
+<tr><td><i class="icon-target" style="font-size:13px;color:var(--soft)"></i> Planner</td><td class="n">4</td><td class="n">9,800</td><td class="n">$0.004</td></tr>
+<tr class="t"><td>Total</td><td class="n">9</td><td class="n">11,900</td><td class="n">$0.007</td></tr>
+</tbody></table>
+<div style="font:400 12px var(--ui);color:var(--soft)">October: <span style="font-family:var(--mono)">14 requests · 5,600 tokens · $0.003</span></div>
+<div style="display:flex;gap:10px;padding:12px 14px;border-radius:14px;background:var(--well);font:400 13px/1.5 var(--ui)"><i class="icon-info" style="font-size:15px;margin-top:2px"></i><span>On Groq's free plan you're not charged. This is what it would cost on the paid plan.</span></div>
+<div style="font:400 11px/1.5 var(--ui);color:var(--soft)">Rupees at ₹85 to the dollar.</div>
+</div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+<div data-screen-label="8m AI usage desktop" class="dk">
+<dc-import name="LedgeSidebar" active="settings" hint-size="248px,900px"></dc-import>
+<div style="flex:1;display:flex;gap:40px;padding:48px">
+<nav aria-label="Settings sections" style="width:180px;flex:none;display:flex;flex-direction:column;gap:2px;font:500 14px var(--ui)"><span style="height:36px;padding:0 12px;display:flex;align-items:center;color:var(--soft)">Profile</span><span style="height:36px;padding:0 12px;display:flex;align-items:center;color:var(--soft)">Preferences</span><span style="height:36px;padding:0 12px;display:flex;align-items:center;color:var(--soft)">Reports</span><span style="height:36px;padding:0 12px;border-radius:999px;background:var(--raised);box-shadow:0 0 0 1px var(--edge);display:flex;align-items:center;font-weight:600">AI usage</span><span style="height:36px;padding:0 12px;display:flex;align-items:center;color:var(--soft)">Security</span></nav>
+<div style="width:680px;display:flex;flex-direction:column;gap:16px">
+<h1 style="margin:0 0 4px;font:600 32px var(--fig)">Settings</h1>
+<div style="background:var(--card);border-radius:20px;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 15px var(--ui)">AI usage</span><span class="mono">Voice and Planner use Groq</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<div style="border-radius:16px;background:var(--well);padding:14px 16px"><div style="font:500 12px var(--ui);color:var(--soft)">November, so far</div><div style="margin-top:6px;display:flex;align-items:baseline;gap:10px"><span style="font:600 30px/1 var(--fig)">$0.007</span><span style="font:500 13px var(--mono);color:var(--soft)">₹0.60</span></div><div class="mono" style="margin-top:6px">9 requests · 11,900 tokens</div></div>
+<div style="border-radius:16px;background:var(--well);padding:14px 16px"><div style="font:500 12px var(--ui);color:var(--soft)">October</div><div style="margin-top:6px;display:flex;align-items:baseline;gap:10px"><span style="font:600 30px/1 var(--fig)">$0.003</span><span style="font:500 13px var(--mono);color:var(--soft)">₹0.26</span></div><div class="mono" style="margin-top:6px">14 requests · 5,600 tokens</div></div>
+</div>
+<table class="tbl"><thead><tr><th scope="col">Feature</th><th scope="col" style="text-align:right">Nov requests</th><th scope="col" style="text-align:right">Nov tokens</th><th scope="col" style="text-align:right">Oct requests</th><th scope="col" style="text-align:right">Oct tokens</th><th scope="col" style="text-align:right">Nov cost</th></tr></thead><tbody>
+<tr><td><i class="icon-mic" style="font-size:13px;color:var(--soft)"></i> Voice</td><td class="n">5</td><td class="n">2,100</td><td class="n">14</td><td class="n">5,600</td><td class="n">$0.003</td></tr>
+<tr><td><i class="icon-target" style="font-size:13px;color:var(--soft)"></i> Planner</td><td class="n">4</td><td class="n">9,800</td><td class="n">0</td><td class="n">0</td><td class="n">$0.004</td></tr>
+<tr class="t"><td>Total</td><td class="n">9</td><td class="n">11,900</td><td class="n">14</td><td class="n">5,600</td><td class="n">$0.007</td></tr>
+</tbody></table>
+<div style="display:flex;gap:10px;padding:12px 14px;border-radius:14px;background:var(--well);font:400 13px/1.5 var(--ui)"><i class="icon-info" style="font-size:15px;margin-top:2px"></i><span>On Groq's free plan you're not charged. This is what it would cost on the paid plan. <span style="color:var(--soft)">Rupees at ₹85 to the dollar.</span></span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p class="note" style="max-width:760px">Costs are estimates worked out from token counts and the paid plan's prices, so they're always marked "about" elsewhere in the app. The phone switches months with a segmented control; the desktop table shows both side by side.</p>
+</div>
+
+<!-- 8n -->
+<div id="8n" class="fr">
+<div class="lb"><a href="#8n">8n</a>Home with the Plans row, phone</div>
+<div data-screen-label="8n Home with Plans" class="ph">
+<div style="padding:60px 16px 120px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span class="mono">Fri, 27 Nov</span><span style="width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:grid;place-items:center;font:600 15px var(--ui)">A</span></div>
+<div><h1 style="margin:0;font:600 32px/1.1 var(--fig);letter-spacing:-.01em">Good afternoon, Aditi</h1><p style="margin:8px 0 0;font:400 15px/1.45 var(--ui);color:var(--soft)">Two tasks left today, one of them from your plan.</p></div>
+<div style="display:flex;gap:8px"><span style="flex:1;height:52px;border-radius:999px;background:var(--ink);color:var(--on-ink);display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px var(--ui)"><i class="icon-plus" style="font-size:18px"></i>Add a task</span><span style="flex:1.25;height:52px;border-radius:999px;background:var(--card);box-shadow:0 0 0 1px var(--edge);display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px var(--ui)"><i class="icon-indian-rupee" style="font-size:16px"></i>Log a transaction</span></div>
+<div style="background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:4px 16px">
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-bottom:1px solid var(--edge)"><span style="width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-list-todo"></i></span><div style="flex:1"><div style="font:600 15px var(--ui)">Tasks</div><div style="font:400 13px/1.5 var(--ui);color:var(--soft)">2 due today</div></div><i class="icon-chevron-right" style="color:var(--soft)"></i></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-bottom:1px solid var(--edge)"><span style="width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-wallet"></i></span><div style="flex:1"><div style="font:600 15px var(--ui)">Expense Tracker</div><div style="font:400 13px/1.5 var(--ui);color:var(--soft)">₹8,940 spent in November</div></div><i class="icon-chevron-right" style="color:var(--soft)"></i></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:72px;border-bottom:1px solid var(--edge)"><span style="width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-notebook-pen"></i></span><div style="flex:1"><div style="font:600 15px var(--ui)">Journal</div><div style="font:400 13px/1.5 var(--ui);color:var(--soft)">Not written today</div></div><i class="icon-chevron-right" style="color:var(--soft)"></i></div>
+<a href="#8a" style="display:flex;align-items:center;gap:12px;min-height:72px;text-decoration:none"><span style="width:40px;height:40px;border-radius:50%;background:var(--well);display:grid;place-items:center;font-size:18px"><i class="icon-target"></i></span><span style="flex:1;min-width:0"><span style="display:block;font:600 15px var(--ui)">Plans</span><span style="display:block;font:400 13px/1.5 var(--ui);color:var(--soft)">Freelancing · <span style="font-family:var(--mono);font-size:12px">4 of 18</span> done · next: Write your pitch</span></span><i class="icon-chevron-right" style="color:var(--soft)"></i></a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<span style="height:64px;border-radius:16px;background:var(--track);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12px var(--ui)"><i class="icon-search" style="font-size:18px"></i>Search</span>
+<span style="height:64px;border-radius:16px;background:var(--track);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12px var(--ui)"><i class="icon-trash-2" style="font-size:18px"></i>Trash</span>
+<span style="height:64px;border-radius:16px;background:var(--track);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12px var(--ui)"><i class="icon-settings" style="font-size:18px"></i>Settings</span>
+</div>
+</div>
+<dc-import name="LedgeTabBar" active="home" hint-size="358px,64px" style="position:absolute;left:16px;right:16px;bottom:20px"></dc-import>
+</div>
+<p class="note">Plans joins Home as a module row, like the others, rather than a tile in the bottom grid. Its hint names the plan touched most recently. With two active plans it reads "2 plans · next: Write your pitch".</p>
+</div>
+
+</div>
+</section></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">

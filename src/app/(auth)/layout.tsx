@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { Brand, BrandTile, Wordmark } from "@/components/shell/brand";
 import { GrainGradient, randomGradient } from "@/components/shell/grain-gradient";
 
@@ -12,7 +13,7 @@ const CONTENTS = [
   { name: "Tasks", status: "Ready" },
   { name: "Expense Tracker", status: "Ready" },
   { name: "Journal", status: "Ready" },
-  { name: "Reminders", status: "Later" },
+  { name: "Plans", status: "Ready", beta: true },
   { name: "Health", status: "Later" },
 ] as const;
 
@@ -36,6 +37,11 @@ function Contents() {
               <span className={open ? "font-medium text-[#f2f4f1]" : "text-[#f2f4f1]/70"}>
                 {item.name}
               </span>
+              {"beta" in item && item.beta ? (
+                <span className="rounded-full bg-dash-accent/20 px-1.5 py-px font-mono text-[10px] leading-4 font-medium tracking-wide text-dash-accent uppercase">
+                  Beta
+                </span>
+              ) : null}
               <span
                 aria-hidden
                 className="mb-1 flex-1 border-b border-dotted border-[#f2f4f1]/25"
@@ -57,6 +63,25 @@ function Contents() {
         })}
       </ol>
     </section>
+  );
+}
+
+/**
+ * First visit? The public page explains the app (src/app/(site)/welcome). A dark frosted pill keeps
+ * the text readable on any part of the random gradient.
+ */
+function SiteLink({ className }: { className: string }) {
+  return (
+    <Link
+      href="/welcome"
+      className={cn(
+        "inline-flex min-h-11 w-fit items-center gap-1.5 rounded-full bg-black/45 px-4 text-sm font-semibold text-[#f2f4f1] backdrop-blur-md outline-none hover:bg-black/60 focus-visible:ring-3 focus-visible:ring-white/60",
+        className,
+      )}
+    >
+      See what Ledge does
+      <ArrowRight className="size-3.5" aria-hidden />
+    </Link>
   );
 }
 
@@ -84,13 +109,6 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             Ledge comes from ledger, the book where you write things down so nothing slips. It
             starts with your tasks and your money, and more of everyday life joins it over time.
           </p>
-          <Link
-            href="/welcome"
-            className="group mt-7 inline-flex h-11 items-center gap-2 rounded-full border border-[#f2f4f1]/25 px-5 text-sm font-medium text-[#f2f4f1] transition-colors hover:bg-[#f2f4f1]/10"
-          >
-            See what Ledge does
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
         </div>
         <Contents />
       </aside>
@@ -112,19 +130,13 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto w-full max-w-sm rounded-3xl bg-card p-6 text-card-foreground shadow-[0_30px_80px_-24px_rgb(0_0_0/0.55)] sm:p-8">
             {children}
           </div>
-          {/* First visit? The public page explains the app (src/app/(site)/welcome). A dark frosted
-              pill keeps the text readable on any part of the random gradient. */}
-          <p className="mx-auto mt-6 flex w-fit items-center gap-1 rounded-full bg-black/45 py-0.5 pr-2 pl-4 text-sm text-[#f2f4f1] backdrop-blur-md">
-            New to Ledge?
-            <Link
-              href="/welcome"
-              className="inline-flex min-h-11 items-center gap-1 rounded-full px-2 font-semibold underline decoration-[#f2f4f1]/40 underline-offset-4 hover:decoration-[#f2f4f1]"
-            >
-              See what it does
-              <ArrowRight className="size-3.5" aria-hidden />
-            </Link>
-          </p>
+          {/* Phones: the link to the public page sits under the card. */}
+          <SiteLink className="mx-auto mt-6 md:hidden" />
         </main>
+        {/* Wide screens: the link to the public page waits in the top right corner, like a site's
+            nav link, so it doesn't compete with "New to Ledge? Create an account" in the card. It
+            comes after the form in the page, so Tab reaches the form first. */}
+        <SiteLink className="absolute top-6 right-6 hidden md:flex lg:top-8 lg:right-8" />
       </div>
     </div>
   );

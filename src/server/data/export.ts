@@ -2,7 +2,15 @@ import "server-only";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { toCsv } from "@/lib/csv";
 import { db } from "@/server/db/client";
-import { financeEntries, journalEntries, lists, tasks, userSettings } from "@/server/db/schema";
+import {
+  aiUsage,
+  financeEntries,
+  journalEntries,
+  lists,
+  plans,
+  tasks,
+  userSettings,
+} from "@/server/db/schema";
 
 /**
  * Export (CLAUDE.md §6.2, P1): everything a user owns, so they can leave at any time. Every query
@@ -11,7 +19,7 @@ import { financeEntries, journalEntries, lists, tasks, userSettings } from "@/se
 
 /** Everything as one JSON document: settings, lists, tasks, money entries and journal pages. */
 export async function exportEverything(userId: string) {
-  const [settings, myLists, myTasks, entries, pages] = await Promise.all([
+  const [settings, myLists, myTasks, entries, pages, myPlans, usage] = await Promise.all([
     db.select().from(userSettings).where(eq(userSettings.userId, userId)),
     db
       .select()
@@ -33,6 +41,13 @@ export async function exportEverything(userId: string) {
       .from(journalEntries)
       .where(eq(journalEntries.userId, userId))
       .orderBy(asc(journalEntries.entryDate)),
+    db
+      .select()
+      .from(plans)
+      .where(and(eq(plans.userId, userId), isNull(plans.deletedAt)))
+      .orderBy(asc(plans.createdAt)),
+    // Counts only (never words): what each AI request used.
+    db.select().from(aiUsage).where(eq(aiUsage.userId, userId)).orderBy(asc(aiUsage.createdAt)),
   ]);
   // The PIN hash and lock counters are not data the user wrote either.
   const shownSettings = settings[0]
@@ -61,6 +76,8 @@ export async function exportEverything(userId: string) {
     tasks: cleanTasks,
     moneyEntries: entries,
     journal: pages,
+    plans: myPlans,
+    aiUsage: usage,
   };
 }
 

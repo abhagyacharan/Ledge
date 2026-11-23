@@ -440,9 +440,9 @@ describe("Trash for entries", () => {
       .update(financeEntries)
       .set({ deletedAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000) })
       .where(eq(financeEntries.id, old.id));
-    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 1 });
+    expect(await purgeExpiredTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 1, plans: 0 });
     expect((await listTrash(a.id)).entries.map((x) => x.title)).toEqual(["fresh"]);
-    expect(await emptyTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 1 });
+    expect(await emptyTrash(a.id)).toEqual({ lists: 0, tasks: 0, entries: 1, plans: 0 });
   });
 });
 

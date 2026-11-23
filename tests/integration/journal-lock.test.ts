@@ -25,6 +25,8 @@ beforeEach(async () => {
   a = await createUser("a@example.com", "A");
   testAuth.reset(a.id);
   lock.resetPasswordTries();
+  // The lock needs an account password (the way back in after a forgotten PIN).
+  await givePassword();
 });
 
 const state = async () => (await lock.journalLock(a.id)).state;
@@ -38,6 +40,23 @@ async function givePassword(password = "correct horse battery") {
     updatedAt: new Date(),
   });
 }
+
+describe("an account made with Google", () => {
+  it("cannot turn the lock on until it has a password", async () => {
+    await db.delete(account).where(eq(account.userId, a.id));
+    await db.insert(account).values({
+      accountId: "google-123",
+      providerId: "google",
+      userId: a.id,
+      updatedAt: new Date(),
+    });
+    expect(await actions.turnOnJournalLockAction({ pin: "1234", confirm: "1234" })).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/Set a password/),
+    });
+    expect(await state()).toBe("off");
+  });
+});
 
 describe("turning the lock on and unlocking", () => {
   it("is off until turned on; then unlocks for this sign-in only, and locks again", async () => {
@@ -129,7 +148,6 @@ describe("wrong PINs", () => {
   });
 
   it("the account password always gets in, and clears the pause", async () => {
-    await givePassword();
     await lock.turnOnJournalLock(a.id, "1234");
     await actions.lockJournalAction({});
     for (let i = 0; i < 5; i++) await lock.unlockJournal(a.id, "0000");
@@ -147,7 +165,6 @@ describe("wrong PINs", () => {
   });
 
   it("limits password tries to 5 in 15 minutes", async () => {
-    await givePassword();
     for (let i = 0; i < 5; i++) expect(await lock.passwordMatches(a.id, "wrong")).toBe("wrong");
     expect(await lock.passwordMatches(a.id, "correct horse battery")).toBe("limited");
   });
@@ -180,7 +197,6 @@ describe("Settings: change, forgot, turn off, lock again", () => {
   });
 
   it("resets a forgotten PIN with the account password, and unlocks", async () => {
-    await givePassword();
     await lock.turnOnJournalLock(a.id, "1234");
     await actions.lockJournalAction({});
     expect(await actions.checkPasswordAction({ password: "wrong" })).toMatchObject({ ok: false });

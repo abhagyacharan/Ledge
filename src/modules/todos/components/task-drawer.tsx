@@ -12,6 +12,7 @@ import {
   FolderInput,
   FolderOpen,
   Repeat as RepeatIcon,
+  Target,
   Trash2,
   TriangleAlert,
   X,
@@ -64,6 +65,8 @@ export type TaskDetailData = {
   subtasks: TaskRow[];
   /** Title of the parent when this task is a subtask. */
   parentTitle: string | null;
+  /** The plan this task belongs to, and its phase, for the chip under the title. */
+  plan?: { planId: string; title: string; phase: string | null } | null;
 };
 
 type Props = {
@@ -132,7 +135,7 @@ function DrawerBody({
 }: {
   detail: TaskDetailData;
 } & Omit<Props, "detail"> & { close: () => void }) {
-  const { task, subtasks, parentTitle } = detail;
+  const { task, subtasks, parentTitle, plan } = detail;
   const isSubtask = task.parentId !== null;
   const { hrefFor } = useTaskLinks();
   const router = useRouter();
@@ -345,6 +348,20 @@ function DrawerBody({
             ) : null}
           </div>
         </div>
+
+        {plan && !isSubtask ? (
+          <Link
+            href={`/plans/${plan.planId}`}
+            className="inline-flex h-8 w-fit max-w-full items-center gap-1.5 rounded-full bg-dash-well px-3 text-[13px] font-medium text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <Target aria-hidden className="size-3.5 shrink-0" />
+            <span className="sr-only">Part of the plan </span>
+            <span className="truncate">
+              {plan.title}
+              {plan.phase ? ` · ${plan.phase}` : ""}
+            </span>
+          </Link>
+        ) : null}
 
         {late ? (
           <p className="inline-flex items-center gap-2 rounded-xl bg-dash-bad-bg px-3 py-2.5 text-[13px] font-semibold text-dash-bad">

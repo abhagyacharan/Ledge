@@ -25,7 +25,7 @@ You designed the page yourself in Claude Design, after two drafts. The brief, th
 
 ## Things to know
 
-- **From the sign-in page.** Someone who lands on sign-in or sign-up first can find the public page too: a "New to Ledge? See what it does" link sits under the form on every screen size, the logo links to it, and on wide screens the dark cover panel has a "See what Ledge does" button.
+- **From the sign-in page.** Someone who lands on sign-in or sign-up first can find the public page too: a "New to Ledge? See what it does" link sits under the form on every screen size, and the logo links to it. (The wide-screen cover panel used to have a "See what Ledge does" button too; it was removed on 2026-11-23 at O's request.)
 
 - **Widths and padding.** The hero, the three dark panels, the orange panel and the footer all share one width, a little wider than before (22 November). Inside each panel the space is the same on the top, the bottom and the sides, on every screen size. The top of the page now starts right at the top of the window: a thin strip above it used to look like a shadow over the links.
 - **Always light.** The page is always shown in its light colours, even when your phone or the app is set to dark mode (your choice, 21 November). The three dark panels (How it works, Say it, the footer) are part of the design and stay dark.
@@ -35,7 +35,8 @@ You designed the page yourself in Claude Design, after two drafts. The brief, th
   - **Before and With Ledge** show one card at a time, with a Before | With Ledge switch above them. It turns to With Ledge by itself once, and you can tap or swipe to switch;
   - **How it works** becomes a timeline from top to bottom: an orange line with a dot for each moment of the day;
   - **Say it, or type it** keeps the moving demo but smaller, without the list of example sentences;
-  - **In your pocket** shows only the phone screenshot (a laptop picture is too small to read on a phone) and three short lines with icons.
+  - **In your pocket** shows no pictures, just the text and three short lines with icons (a laptop picture is too small to read on a phone, and a phone picture alone says nothing about the laptop; 22 November).
+  - the phone in the top section is smaller, so the headline, the whole phone and its screen buttons fit on the first screen with room around them (checked at Galaxy S24 Ultra size).
 - **Reduced motion.** If a visitor's device asks for less motion, nothing moves by itself: the phone stays on Home and the voice demo shows its finished cards.
 - **The buttons.** "Open Ledge", "Get started" and "Log in" all go to the sign-in page. Sign-up is open (23 November), so anyone who finds the page can make their own account and try the app; there is no shared demo account. Each account gets about 15 voice commands a day (see Phase 12). If you ever turn sign-up off, new visitors can look but cannot make an account, and you may want different wording on these buttons.
 - **Your details.** The footer says "Built by Bhagya Charan Aela" and links to `https://abhagyacharan.xyz` and the GitHub repository. Both links were checked on 23 November and work. All of these live in one file, `src/modules/site/content.ts`.

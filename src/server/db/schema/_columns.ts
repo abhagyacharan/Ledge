@@ -19,3 +19,10 @@ export const tsvector = customType<{ data: string }>({
     return "tsvector";
   },
 });
+
+/** Raw bytes (`bytea`): the small profile photo. node-postgres reads and writes it as a Buffer. */
+export const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});

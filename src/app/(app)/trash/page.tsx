@@ -1,4 +1,4 @@
-import { Folder, ListChecks, Trash2 } from "lucide-react";
+import { Folder, ListChecks, Target, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
 import { PageTitle } from "@/components/dash/page-title";
 import { EmptyState } from "@/components/shell/empty-state";
@@ -25,7 +25,7 @@ export const metadata: Metadata = { title: "Trash" };
 export default async function TrashPage() {
   const { userId } = await requireUser();
   await maybePurgeTrash(userId);
-  const [{ lists, tasks: trashedTasks, entries }, ctx] = await Promise.all([
+  const [{ lists, tasks: trashedTasks, entries, plans: trashedPlans }, ctx] = await Promise.all([
     listTrash(userId),
     loadMoneyContext(userId),
   ]);
@@ -67,6 +67,25 @@ export default async function TrashPage() {
       ...timing(l.deletedAt),
       at: l.deletedAt?.getTime() ?? 0,
     })),
+    ...trashedPlans.map((p) => {
+      const what =
+        p.taskCount > 0
+          ? `Plan with ${p.taskCount} ${p.taskCount === 1 ? "task" : "tasks"}`
+          : "Plan";
+      return {
+        kind: "plan" as const,
+        id: p.id,
+        title: p.title,
+        extra:
+          p.taskCount > 0 ? `${p.taskCount} ${p.taskCount === 1 ? "task" : "tasks"}` : undefined,
+        icon: <Target className="size-[18px]" strokeWidth={1.75} />,
+        detail: `${what} · ${deleted(p.deletedAt)}`,
+        from: `${what} · ${when(p.deletedAt)}`,
+        href: `/plans/${p.id}`,
+        ...timing(p.deletedAt),
+        at: p.deletedAt?.getTime() ?? 0,
+      };
+    }),
     ...trashedTasks.map((t) => ({
       kind: "task" as const,
       id: t.id,

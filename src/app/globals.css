@@ -398,6 +398,15 @@
   }
 }
 
+/* Switching theme: the old page stays as a picture and the new one is revealed through a circle
+   that theme-transition.ts grows from the clicked control. Both pictures must be plain (no fade,
+   no blending), or the circle's edge would look muddy. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* The journal lock screen takes the whole phone screen: no tab bar or + (screen 7b). Outside the
    layers on purpose, so it beats the buttons' own display classes. */
 @media (max-width: 767px) {

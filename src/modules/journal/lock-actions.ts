@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { fail, ok } from "@/lib/result";
 import { guarded } from "@/server/action-guard";
+import { getSignInMethods } from "@/server/data/sign-in-methods";
 import {
   changeJournalPin,
   lockJournal,
@@ -43,8 +44,13 @@ function pausedFor(until: Date) {
   return { paused: until.toISOString() };
 }
 
+/** Shown to an account made with Google that has no password yet (O, 2026-11-23). */
+const NEEDS_PASSWORD =
+  "Set a password in Settings › Security first. The lock needs it in case you forget the PIN.";
+
 export async function turnOnJournalLockAction(input: unknown) {
   return guarded(turnOnSchema, input, async ({ pin }, userId) => {
+    if (!(await getSignInMethods(userId)).password) return fail(NEEDS_PASSWORD);
     if (!(await turnOnJournalLock(userId, pin))) {
       return fail("The lock is already on. Change the PIN in Settings.");
     }

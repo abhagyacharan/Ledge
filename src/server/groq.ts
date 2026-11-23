@@ -34,6 +34,8 @@ function waitFor(response: Response): number | null {
 
 /** A rate-limit wait up to this long is sat out once instead of failing. */
 const MAX_WAIT_MS = 10_000;
+/** Used when Groq rate-limits without saying how long to wait. */
+const NO_HINT_WAIT_MS = 3_000;
 
 async function call(config: VoiceConfig, path: string, init: RequestInit): Promise<unknown> {
   if (!config.apiKey) throw new GroqError("unavailable", "No Groq API key");
@@ -60,8 +62,9 @@ async function call(config: VoiceConfig, path: string, init: RequestInit): Promi
       );
     }
     if (response.status !== 429 || attempt === 1) break;
-    const wait = waitFor(response);
-    if (wait === null || wait > MAX_WAIT_MS) break;
+    // Groq gave a wait: sit it out if it is short. No wait given: try again after a short pause.
+    const wait = waitFor(response) ?? NO_HINT_WAIT_MS;
+    if (wait > MAX_WAIT_MS) break;
     await new Promise((resolve) => setTimeout(resolve, wait + 250));
   }
   if (!response) throw new GroqError("unavailable", "Groq did not answer");
@@ -77,7 +80,9 @@ async function call(config: VoiceConfig, path: string, init: RequestInit): Promi
   }
 }
 
-const transcription = z.object({ text: z.string() });
+const transcription = z.object({ text: z.string(), duration: z.number().optional() });
+
+export type TranscribeResult = { text: string; audioSeconds: number; model: string };
 
 /** Speech to text with Whisper. `prompt` lists words to spell right (max 224 tokens). */
 export async function transcribe(
@@ -85,19 +90,26 @@ export async function transcribe(
   audio: Blob,
   filename: string,
   prompt: string,
-): Promise<string> {
+  /** ISO 639-1 code to force, or null to let Whisper detect the language. */
+  language: string | null,
+): Promise<TranscribeResult> {
   const form = new FormData();
   form.append("file", audio, filename);
   form.append("model", config.transcribeModel);
-  form.append("language", "en");
+  if (language) form.append("language", language);
   form.append("temperature", "0");
-  form.append("response_format", "json");
+  // verbose_json also returns the length of the audio, which is what Whisper is billed by.
+  form.append("response_format", "verbose_json");
   if (prompt) form.append("prompt", prompt);
   const parsed = transcription.safeParse(
     await call(config, "/audio/transcriptions", { method: "POST", body: form }),
   );
   if (!parsed.success) throw new GroqError("bad_response", "Unexpected transcription reply");
-  return parsed.data.text.trim();
+  return {
+    text: parsed.data.text.trim(),
+    audioSeconds: Math.max(0, Math.round(parsed.data.duration ?? 0)),
+    model: config.transcribeModel,
+  };
 }
 
 const completion = z.object({
@@ -105,9 +117,12 @@ const completion = z.object({
   choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })).min(1),
 });
 
+/** What one chat completion used, for the usage table (counts only). */
+export type CompletionUsage = { model: string; inputTokens: number; outputTokens: number };
+
 /**
- * One chat completion with strict structured outputs. Returns the parsed JSON object; the caller
- * validates it with its own Zod schema.
+ * One chat completion with strict structured outputs. Returns the parsed JSON object, which the
+ * caller validates with its own Zod schema, and the tokens used.
  */
 export async function completeJson(
   config: VoiceConfig,
@@ -115,7 +130,7 @@ export async function completeJson(
   user: string,
   schemaName: string,
   schema: object,
-): Promise<unknown> {
+): Promise<{ data: unknown; usage: CompletionUsage }> {
   const body = {
     model: config.parseModel,
     temperature: 0,
@@ -138,14 +153,19 @@ export async function completeJson(
       body: JSON.stringify(body),
     }),
   );
-  if (parsed.success && parsed.data.usage && process.env.NODE_ENV !== "production") {
-    const { prompt_tokens: input, completion_tokens: output } = parsed.data.usage;
-    console.info(`Voice: ${input} + ${output} tokens`);
+  const counted = parsed.success ? parsed.data.usage : undefined;
+  const usage: CompletionUsage = {
+    model: config.parseModel,
+    inputTokens: counted?.prompt_tokens ?? 0,
+    outputTokens: counted?.completion_tokens ?? 0,
+  };
+  if (counted && process.env.NODE_ENV !== "production") {
+    console.info(`Groq: ${usage.inputTokens} + ${usage.outputTokens} tokens`);
   }
   const content = parsed.success ? parsed.data.choices[0]?.message.content : null;
   if (!content) throw new GroqError("bad_response", "Empty completion");
   try {
-    return JSON.parse(content) as unknown;
+    return { data: JSON.parse(content) as unknown, usage };
   } catch {
     throw new GroqError("bad_response", "Completion was not JSON");
   }

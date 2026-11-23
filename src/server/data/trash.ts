@@ -2,12 +2,15 @@ import "server-only";
 import { and, count, desc, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/server/db/client";
+import { purgeRemovedAvatar } from "./avatars";
 import {
   financeEntries,
   lists,
+  plans,
   tasks,
   type FinanceEntry,
   type List,
+  type Plan,
   type Task,
 } from "@/server/db/schema";
 
@@ -34,17 +37,66 @@ const parent = alias(tasks, "parent_task");
 
 export type TrashedList = List & { taskCount: number };
 
-/** What each Trash operation removed. */
-export type TrashCounts = { lists: number; tasks: number; entries: number };
+/** A plan in Trash. Its list and tasks trashed with it are shown inside it, not separately. */
+export type TrashedPlan = Plan & { taskCount: number };
 
-export async function listTrash(
-  userId: string,
-): Promise<{ lists: TrashedList[]; tasks: TrashedTask[]; entries: FinanceEntry[] }> {
-  const trashedLists = await db
+/** What each Trash operation removed. */
+export type TrashCounts = { lists: number; tasks: number; entries: number; plans: number };
+
+export async function listTrash(userId: string): Promise<{
+  lists: TrashedList[];
+  tasks: TrashedTask[];
+  entries: FinanceEntry[];
+  plans: TrashedPlan[];
+}> {
+  const allTrashedLists = await db
     .select()
     .from(lists)
     .where(and(eq(lists.userId, userId), isNotNull(lists.deletedAt)))
     .orderBy(desc(lists.deletedAt));
+
+  const trashedPlanRows = await db
+    .select()
+    .from(plans)
+    .where(and(eq(plans.userId, userId), isNotNull(plans.deletedAt)))
+    .orderBy(desc(plans.deletedAt));
+  // What went to Trash with a plan (its list, with the same timestamp; its tasks by id) is shown
+  // inside the plan, not as separate items.
+  const hiddenListIds = new Set(
+    trashedPlanRows
+      .filter((p) => p.listId && p.deletedAt)
+      .flatMap((p) => {
+        const list = allTrashedLists.find((l) => l.id === p.listId);
+        return list && list.deletedAt?.getTime() === p.deletedAt?.getTime() ? [list.id] : [];
+      }),
+  );
+  const hiddenTaskIds = new Set(
+    trashedPlanRows.flatMap((p) =>
+      Array.isArray(p.trashedTaskIds)
+        ? p.trashedTaskIds.filter((v): v is string => typeof v === "string")
+        : [],
+    ),
+  );
+  const trashedLists = allTrashedLists.filter((l) => !hiddenListIds.has(l.id));
+  const planTaskRows =
+    trashedPlanRows.length === 0
+      ? []
+      : await db
+          .select({ planId: tasks.planId, n: count() })
+          .from(tasks)
+          .where(
+            and(
+              eq(tasks.userId, userId),
+              isNull(tasks.parentId),
+              isNull(tasks.recurrenceOriginId),
+              inArray(
+                tasks.planId,
+                trashedPlanRows.map((p) => p.id),
+              ),
+            ),
+          )
+          .groupBy(tasks.planId);
+  const planTaskCounts = new Map(planTaskRows.map((r) => [r.planId, r.n]));
 
   // Top-level tasks inside each trashed list, for "List with 4 tasks".
   const countRows =
@@ -95,13 +147,16 @@ export async function listTrash(
 
   return {
     entries,
+    plans: trashedPlanRows.map((p) => ({ ...p, taskCount: planTaskCounts.get(p.id) ?? 0 })),
     lists: trashedLists.map((l) => ({ ...l, taskCount: taskCounts.get(l.id) ?? 0 })),
-    tasks: rows.map((r) => ({
-      ...r.task,
-      listName: r.listName,
-      listIcon: r.listIcon,
-      parentTitle: r.parentTitle,
-    })),
+    tasks: rows
+      .filter((r) => !hiddenTaskIds.has(r.task.id))
+      .map((r) => ({
+        ...r.task,
+        listName: r.listName,
+        listIcon: r.listIcon,
+        parentTitle: r.parentTitle,
+      })),
   };
 }
 
@@ -161,10 +216,15 @@ export async function emptyTrash(userId: string): Promise<TrashCounts> {
       .delete(financeEntries)
       .where(and(eq(financeEntries.userId, userId), isNotNull(financeEntries.deletedAt)))
       .returning({ id: financeEntries.id });
+    const removedPlans = await tx
+      .delete(plans)
+      .where(and(eq(plans.userId, userId), isNotNull(plans.deletedAt)))
+      .returning({ id: plans.id });
     return {
       lists: removedLists.length,
       tasks: removedTasks.length,
       entries: removedEntries.length,
+      plans: removedPlans.length,
     };
   });
 }
@@ -197,10 +257,15 @@ export async function purgeExpiredTrash(
         ),
       )
       .returning({ id: financeEntries.id });
+    const removedPlans = await tx
+      .delete(plans)
+      .where(and(eq(plans.userId, userId), isNotNull(plans.deletedAt), lt(plans.deletedAt, cutoff)))
+      .returning({ id: plans.id });
     return {
       lists: removedLists.length,
       tasks: removedTasks.length,
       entries: removedEntries.length,
+      plans: removedPlans.length,
     };
   });
 }
@@ -218,6 +283,8 @@ export async function maybePurgeTrash(userId: string): Promise<void> {
   lastPurge.set(userId, now);
   try {
     await purgeExpiredTrash(userId);
+    // A removed profile photo goes too, once Undo is long past (Settings � Account).
+    await purgeRemovedAvatar(userId);
   } catch (error) {
     console.error("Trash cleanup failed:", error);
   }

@@ -3,7 +3,7 @@ import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
 import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
 import { db } from "@/server/db/client";
-import { lists, tasks, type Task } from "@/server/db/schema";
+import { lists, plans, tasks, type Task } from "@/server/db/schema";
 import { getInbox, getList, trashList } from "./lists";
 
 /**
@@ -109,6 +109,9 @@ export type NewTaskInput = {
   recurrenceRule?: string | null;
   recurrenceMode?: RecurrenceMode;
   recurrenceUntil?: string | null;
+  /** The plan this task belongs to (docs/plans-module-spec.md) and the phase of it. Top-level tasks only. */
+  planId?: string | null;
+  planPhase?: string | null;
 };
 
 /**
@@ -126,6 +129,17 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
     listId = parent.listId;
   } else {
     if (!(await getList(userId, listId))) return null;
+  }
+
+  // A plan link must point at one of this user's plans (and only top-level tasks carry it).
+  let planId: string | null = null;
+  if (input.planId && !parentId) {
+    const [own] = await db
+      .select({ id: plans.id })
+      .from(plans)
+      .where(and(eq(plans.id, input.planId), eq(plans.userId, userId)));
+    if (!own) return null;
+    planId = own.id;
   }
 
   const dueDate = input.dueDate ?? null;
@@ -149,6 +163,8 @@ export async function createTask(userId: string, input: NewTaskInput): Promise<T
       recurrenceRule,
       recurrenceMode: input.recurrenceMode ?? "fixed",
       recurrenceUntil,
+      planId,
+      planPhase: planId ? (input.planPhase?.slice(0, 40) ?? null) : null,
       position: positionAtEnd(await lastPositionInGroup(userId, listId, parentId)),
     })
     .returning();

@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -6,6 +6,8 @@ type FormFieldProps = Omit<ComponentProps<typeof Input>, "id"> & {
   id: string;
   label: string;
   error?: string;
+  /** Shown at the end of the label row, such as "Forgot password?". */
+  labelAside?: ReactNode;
 };
 
 /** Labelled input with an associated, announced error message. 44px tap target. */
@@ -13,6 +15,7 @@ export function FormField({
   id,
   label,
   error,
+  labelAside,
   className,
   "aria-describedby": describedBy,
   ...props
@@ -21,7 +24,14 @@ export function FormField({
   const described = [error ? errorId : null, describedBy].filter(Boolean).join(" ");
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      {labelAside ? (
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor={id}>{label}</Label>
+          {labelAside}
+        </div>
+      ) : (
+        <Label htmlFor={id}>{label}</Label>
+      )}
       <Input
         id={id}
         name={id}

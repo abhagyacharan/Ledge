@@ -28,9 +28,7 @@ async function expectSignedOut(page: Page) {
 test("sign out from Settings on a phone", async ({ page }) => {
   await signIn(page);
   await page.goto("/settings");
-  await page
-    .getByRole("region", { name: "Profile" })
-    .getByRole("button", { name: "Sign out" })
-    .click();
+  // The full-width row at the bottom of the phone settings home (screen 9a).
+  await page.getByRole("button", { name: "Sign out" }).click();
   await expectSignedOut(page);
 });

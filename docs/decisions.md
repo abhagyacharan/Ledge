@@ -775,9 +775,70 @@ O's review after seeing the page.
 - **Multilingual voice:** O wants voice in about ten Indian languages and mixes of them. Written as a future idea in `docs/voice-multilingual-spec.md`. Today's voice forces Whisper to English (`language: "en"`), which is why Hindi comes out in English letters or half translated.
 - **Reason:** O's requests in chat (2026-11-22), choosing option B from three layouts.
 - **Floating nav:** below the hero, a slim solid-white bar with the wordmark, the four links, Log in (and the menu on phones) slides in on the first scroll up and away on scroll down, the usual pattern, so it never covers what you are reading. The link for the section in the middle of the screen gets a grey fill. Solid rather than frosted: over the dark panels a see-through bar showed their text. While hidden it is `inert` and `aria-hidden`, so keyboards and screen readers meet one nav. `FloatingNav` in `src/modules/site/components/site-nav.tsx`.
+- **Phones, 2026-11-22 (later):** the hero phone is smaller (`min(236px, 60vw)`, was up to 300px; it filled an S24 Ultra screen), and In your pocket shows no screenshot at all: without the laptop, a phone picture told half the story, so the text and three rows carry it.
+
+## 2026-11-22: Goal planner and multilingual voice (Phase 14)
+
+- **Asked by O:** "Plan and implement the 2 features", planned with Opus and coded by Sonnet subagents. This lifts the §1 non-goal for the planner.
+- **Both stay on Groq.** No second provider, key or bill. The planner uses the same key, model and per-user rate limit as voice capture, but not the voice on/off switch.
+- **Planner shape:** goal, up to 4 questions answered by tapping (plus "Something else"), then review cards; Add all saves everything or nothing, with one Undo. The code enforces the limits (4 questions, 5 answers, 20 tasks, today to 90 days ahead, repeats with a start and an end that defaults to the plan's last day).
+- **Prompt fixes after a real run:** the first real answer asked no questions and put the plan in General. The questions prompt now usually asks 2 or 3 (kind, level, time a day, deadline) unless the goal already says them all; the plan prompt names a new list unless an existing list is clearly about the goal; and General is never offered to the model, so it can't land there by itself (the page still lets O pick it).
+- **Multilingual voice, first stage:** Whisper's language is chosen from the Settings languages (only English: `en`; one other: that one; several: left to Whisper). The system prompt learns mixed speech, Indian number words and "kal" by tense. Titles are in English by default, or as spoken.
+- **Not done:** real speech in other languages; an Indian speech service if Whisper hears some languages badly; the planner's e2e run.
 
 ## 2026-11-23: Daily voice limit lowered for open sign-up
 
 - **Decision:** the default `VOICE_DAILY_LIMIT` drops from 300 to 30 requests per person per day (`DEFAULT_VOICE_DAILY_LIMIT` in `src/server/env.ts`). A spoken command is two requests (transcribe, then understand), so this is about 15 commands a day; the goal planner shares the same count.
 - **Why:** O is posting Ledge on X with sign-up left open (no shared demo account), and every voice or planner request is paid for on O's Groq key. O asked for 10 to 15 uses per account.
 - **Trade-off:** one limit for everyone, O included; O can raise it for the whole server with `VOICE_DAILY_LIMIT`. The count is kept in memory, so a restart resets it (unchanged).
+
+## 2026-11-23: Plans module go-ahead, and Plans on the sign-in contents
+
+- **Plans module** (`docs/plans-module-spec.md`): O approved building it, starting with P.1 (module, saved plans, plan page, delete and archive), but only once he is happy with the screens he is drawing in Claude Design. Resources start as Search buttons (no AI-written links); real links from web search come later. One round of up to 3 follow-up questions. Web first; the phone layout and tab bar come last.
+- **Sign-in contents page:** Reminders removed at O's request; Plans added as "Soon". Health stays "Later".
+
+## 2026-11-23: Plans module built (Phase 15)
+
+- **Asked by O:** a phase plan, then the whole feature built from his Claude Design screens (8a to 8n), planned by Opus and coded by Sonnet subagents. Web first; phone polish later.
+- **Open questions took their defaults:** a plan makes its own list (another list under Options); costs show in dollars and rupees at a rate set in Settings (default ₹85).
+- **Data:** `plans` holds the goal, basics, questions, answers, follow-ups, the unsaved review (`draft`), phases, resources, list and milestone ids; tasks link with `plan_id` and `plan_phase` and stay ordinary tasks. A cut card stays in the draft with `cut: true` so it can be brought back; the server never saves one.
+- **AI usage:** one `ai_usage` row per Groq request with counts only (tokens, audio seconds, searches), never text. Cost is worked out from the counts and a price table dated 2026-11-23, so a price change never rewrites history. A real freelancing plan cost about $0.003 for questions, follow-ups, the plan and one Add more tasks.
+- **Rate limits:** `groq.ts` retries once after a rate limit (Groq's wait, else 3 seconds), for voice too.
+- **Deleting a plan with its tasks** trashes its own list when it holds only the plan's tasks, else each task, and restoring reverses exactly that. Discarding a draft asks to confirm, since a draft has no Trash.
+- **Layout:** the Plans home and the review use the wide canvas; phase names read "Week 1 · Your offer" everywhere (`phase-label.ts`).
+- **Replaces** the one-page `/plan` (Phase 14), which now redirects to `/plans/new`.
+
+## 2026-11-23: Plans fixes after O tried it
+
+- **Follow-ups allow several picks:** a follow-up's single-choice question is shown as pick-several, and the question prompts ask for single only when the answers rule each other out.
+- **Type my own:** the row becomes a text box in place that grows downwards (Enter moves on, Shift+Enter adds a line, leaving it empty folds it back), with a microphone; typed-answer questions get "Speak it". Both use the goal step's recorder and `/api/voice/transcribe`.
+- **Scale:** the picked number only changes colour (no tick).
+- **Where the tasks go:** the Options fold became one visible "Create a new list?" switch (on: name the list; off: pick a list).
+- **Dropdowns:** the review editor and the list picker use a Radix select in the dashboard look (`review/plan-select.tsx`) instead of native selects, which the operating system draws. Esc in an open menu closes only the menu.
+- **Prompt:** no tasks that hand the planning back (checklists, study plans, roadmaps); the plan covers the whole goal with a phase for the bigger aim; task counts scale with the plan's length. High priority is capped in code at one task in four (milestones always high, the latest extra ones become medium), because the model marked most tasks high.
+
+## 2026-11-23: Theme changes spread out in a circle
+
+O found the instant light/dark flip hard on the eyes and asked for the new colours to spread from the clicked button in a circle. `src/lib/theme-transition.ts` (`switchTheme`) uses the browser's View Transitions: the page is frozen as a picture of the old theme, the new theme is applied underneath (the `dark` class is set inside the update callback, with `flushSync`, because next-themes applies it in an effect), and the new picture is revealed by animating `clip-path: circle()` on `::view-transition-new(root)` from the centre of the clicked control to the farthest corner, 650 ms, ease-out. The sidebar toggle and the Settings theme selector pass the clicked button; the Ctrl K "Switch theme" row has no button, so its circle starts at the middle of the screen. `globals.css` turns off the browser's default cross-fade for the page (`animation: none; mix-blend-mode: normal`), or the circle's edge would blur. With "reduce motion" on, or in a browser without View Transitions, the theme changes at once as before. Interaction is paused for the 0.65 s the transition runs (the browser's rule for view transitions).
+
+## 2026-11-23: Google sign-in and forgot password
+
+O asked for both. Choices, from O's answers in chat: reset emails go through **Resend** with a plain `fetch` (no SDK or new package); Google **follows `ALLOW_SIGNUP`** (a `user.create.before` hook throws `signup_disabled`, which covers Google and any other path); Google **links to an existing account with the same email** (`trustedProviders: ["google"]`); accounts made with Google **set a password in Settings** before they can turn on the journal lock (confirming with Google instead is parked). Better Auth 1.7 links only to accounts whose email is verified, to stop someone pre-registering another person's address; Ledge never verified emails, so a completed password reset now marks the email verified (the emailed link proves the address). An existing account therefore needs one reset before Google links. A reset ends every session of the account. In development and tests without a Resend key, emails go to an in-memory outbox and the dev server's console; in production without one, Forgot password? is hidden. Auth forms now post (`method="post"`) so a submit before the page's script runs never puts a password in the address bar; found while testing, when a not-yet-hydrated sign-up form did exactly that. `allowedDevOrigins: ["127.0.0.1"]` lets the dev server hydrate on 127.0.0.1, whose cookies are separate from localhost's (Better Auth already trusted it in development). Full spec: `docs/auth-google-reset-spec.md`.
+
+## 2026-11-23: Every Search button opens the Ctrl K palette
+
+The sidebar Search row showed "Ctrl K" but went to the Search page, while Ctrl K opened the palette (O: keep it consistent). The sidebar row and the round Search button in the Tasks and Expense Tracker headers now open the palette too. Typing words and pressing Enter there still opens the full Search page with results, and `/` still goes straight to it. The Search tile on Home opens it too.
+
+## 2026-11-23: Settings redesign (screens 9a to 9p) and the Google button under the form
+
+O drew the new Settings in Claude Design (`docs/settings-design-prompt.md`, the "Ledge" canvas, screens 9a to 9p) and asked for it to be built with three changes: no tab bar on Settings on a phone; on sign-in and sign-up the Google button goes **under** the email form, after an "or" rule, as a **black** button with Google's colour G ("Continue with Google" on sign-in, "Sign up with Google" on sign-up, like most apps; the canvas had it above the form as a white pill); and a good place on the desktop sign-in page for the link to the public page. Choices:
+
+- **Settings is one section at a time**, each with its own address (`/settings/account`, `/security`, `/appearance`, `/voice`, `/journal-lock`, `/tasks`, `/export`, `/delete`, `/about`). With a mouse a settings column sits beside the content and `/settings` shows Account; on a phone `/settings` is the settings home (profile card, grouped rows with live summaries, About, Sign out). Phones have **no tab bar and no + button** on any Settings page (O); the home has "‹ Home" and each section "‹ Settings" instead.
+- **Public page link**: on wide screens a frosted "See what Ledge does" pill in the top right corner of the form side, like a site's nav link, so it doesn't repeat the card's "New to Ledge? Create an account"; on phones it stays under the card.
+- **Profile photos live in the database** (O picked it over files on disk): a `user_avatars` row (migration 0017) of at most 256 KB, so backups and restores carry it with no new volume. The crop sheet cuts a 256px square in the browser (WebP, or JPEG where WebP can't be written); the server checks the real type from the first bytes, never the name. `user.image` points at `/api/avatar?v=<n>`, which serves only your own photo. Pages never load a picture from Google: "Use my Google photo" fetches it once on the server. Remove photo keeps the bytes for 10 minutes so Undo works; the hourly Trash clean-up then erases them.
+- **No "Unlock with my account password" switch** on the journal lock (O): turned off, a forgotten PIN would lock the journal for good. The section says the account password always works instead.
+- **Devices** are the account's live sessions, named from the browser's user agent ("Chrome on Windows"), never a place. "Last active" is when Better Auth last refreshed the session, which happens about once a day of use, so it is approximate. Sign out one device, or everywhere else (this device stays signed in); the old "sign out everywhere" (this device too) is gone.
+- **Change password** now exists (Better Auth's `changePassword`, with "Sign out other devices" on by default); before, it meant Forgot password?. **Connect Google** uses Better Auth's `linkSocial`, which needs the same email; **Disconnect Google** is offered only with a password set. It confirms in a sheet and has no Undo (an Undo would have to keep Google's tokens around).
+- **Delete account** now asks for proof besides the phrase: the password, or for an account with only Google a fresh Google sign-in ("Confirm with Google", accepted for 10 minutes after it). A sign-out failure no longer stops the delete.
+- **Saving**: every row autosaves and shows "Saved" for 2 seconds; a failure puts the old value back with "Couldn't save" and Try again. Sheets are the only places with a button to save.
+- The canvas showed each section's address in mono above the title on desktop; that was left out, as a note to the reader rather than part of the screen.

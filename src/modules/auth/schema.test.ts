@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fieldErrors, signInSchema, signUpSchema } from "./schema";
+import { fieldErrors, newPasswordSchema, signInSchema, signUpSchema } from "./schema";
 
 describe("signUpSchema", () => {
   const valid = { name: "Abhi", email: "A@Example.com ", password: "0123456789" };
@@ -33,5 +33,26 @@ describe("signInSchema", () => {
 
   it("requires both fields", () => {
     expect(signInSchema.safeParse({ email: "", password: "" }).success).toBe(false);
+  });
+});
+
+describe("newPasswordSchema", () => {
+  it("accepts two matching passwords of 10 or more characters", () => {
+    expect(
+      newPasswordSchema.safeParse({ password: "a-long-pass", confirm: "a-long-pass" }).success,
+    ).toBe(true);
+  });
+
+  it("puts a mismatch on the confirm field", () => {
+    const parsed = newPasswordSchema.safeParse({ password: "a-long-pass", confirm: "a-long-pas" });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success)
+      expect(fieldErrors(parsed.error).confirm).toBe("The two passwords don't match");
+  });
+
+  it("refuses a short password", () => {
+    const parsed = newPasswordSchema.safeParse({ password: "short", confirm: "short" });
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(fieldErrors(parsed.error).password).toMatch(/at least 10/);
   });
 });

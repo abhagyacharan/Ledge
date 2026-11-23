@@ -90,3 +90,17 @@ export function HomeActions() {
     </div>
   );
 }
+
+/** Home's Search tile: opens the same palette as Ctrl K, the sidebar row and the header button. */
+export function SearchTile({ className }: { className: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
+      className={className}
+    >
+      <Search aria-hidden className="size-4.5" strokeWidth={1.85} />
+      Search
+    </button>
+  );
+}

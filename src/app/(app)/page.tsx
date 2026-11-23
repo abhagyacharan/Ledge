@@ -3,7 +3,6 @@ import {
   Check,
   ChevronRight,
   Lock,
-  Search,
   Settings,
   Trash2,
   TriangleAlert,
@@ -15,10 +14,17 @@ import type { ReactNode } from "react";
 import { enabledModules, type AppModule } from "@/config/modules";
 import { formatShortDay, timeNowIn, todayIn } from "@/lib/dates";
 import { minorDigits } from "@/lib/money";
-import { HomeActions } from "@/modules/home/home-actions";
-import { greeting, tasksHint, tasksSentence, type TaskCounts } from "@/modules/home/hints";
+import { HomeActions, SearchTile } from "@/modules/home/home-actions";
+import {
+  greeting,
+  plansHint,
+  tasksHint,
+  tasksSentence,
+  type TaskCounts,
+} from "@/modules/home/hints";
 import { monthlyTotals } from "@/server/data/finance";
 import { getJournalEntry } from "@/server/data/journal";
+import { listPlans } from "@/server/data/plans";
 import { journalLock } from "@/server/journal-lock";
 import { getUserSettings } from "@/server/data/settings";
 import { getCompletedTasksOn, getDueByTasks } from "@/server/data/views";
@@ -39,12 +45,13 @@ export default async function HomePage() {
   const year = Number(today.slice(0, 4));
   const month = Number(today.slice(5, 7));
 
-  const [due, done, months, journal, lock] = await Promise.all([
+  const [due, done, months, journal, lock, activePlans] = await Promise.all([
     getDueByTasks(userId, today),
     getCompletedTasksOn(userId, today, timeZone),
     monthlyTotals(userId, year),
     getJournalEntry(userId, today),
     journalLock(userId),
+    listPlans(userId, { status: "active" }),
   ]);
 
   const overdueTasks = due.filter((t) => t.dueDate !== null && t.dueDate < today);
@@ -111,6 +118,18 @@ export default async function HomePage() {
       sub: writtenAt ? `today, ${writtenAt}` : "today’s page is empty",
     },
   };
+  // The most recently touched plan leads the Plans row.
+  const planHint = plansHint(
+    [...activePlans]
+      .sort((a, b) => b.touchedAt.getTime() - a.touchedAt.getTime())
+      .map((p) => ({
+        title: p.title,
+        done: p.progress.done,
+        total: p.progress.total,
+        next: p.nextTask?.title ?? null,
+      })),
+  );
+  hints.plans = planHint;
   const homeModules = enabledModules();
   // While the journal is locked, Home says so and shows only whether today's page is written.
   const journalLocked = lock.state === "locked" || lock.state === "paused";
@@ -156,7 +175,10 @@ export default async function HomePage() {
         </nav>
 
         {/* Desktop: one card per module. */}
-        <nav aria-label="Modules" className="mt-8 hidden gap-3 md:grid md:grid-cols-3">
+        <nav
+          aria-label="Modules"
+          className={`mt-8 hidden gap-3 md:grid ${homeModules.length === 4 ? "md:grid-cols-2" : "md:grid-cols-3"}`}
+        >
           {homeModules.map((m) => (
             <ModuleCard key={m.id} module={m} hint={hints[m.id]} badge={badgeFor(m.id)} />
           ))}
@@ -164,7 +186,8 @@ export default async function HomePage() {
 
         {/* Phone: the places that are not tabs. Desktop has them in the sidebar. */}
         <nav aria-label="More" className="mt-2.5 grid grid-cols-3 gap-2.5 md:hidden">
-          <Tile href="/search" label="Search" icon={Search} />
+          {/* The same palette as Ctrl K and the sidebar's Search row. */}
+          <SearchTile className={tileClass} />
           <Tile href="/trash" label="Trash" icon={Trash2} />
           <Tile href="/settings" label="Settings" icon={Settings} />
         </nav>
@@ -177,6 +200,8 @@ type Hint = { line: ReactNode; figure: ReactNode; sub: ReactNode };
 
 const focusRing =
   "outline-none focus-visible:shadow-[0_0_0_2px_var(--background),0_0_0_4px_var(--dash-ink)]";
+
+const tileClass = `flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl bg-dash-track text-[13px] font-medium text-dash-ink transition-colors duration-150 active:bg-dash-well ${focusRing}`;
 
 function IconCircle({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
   return (
@@ -273,10 +298,7 @@ function ModuleCard({
 
 function Tile({ href, label, icon: Icon }: { href: string; label: string; icon: LucideIcon }) {
   return (
-    <Link
-      href={href}
-      className={`flex h-16 flex-col items-center justify-center gap-1.5 rounded-2xl bg-dash-track text-[13px] font-medium text-dash-ink transition-colors duration-150 active:bg-dash-well ${focusRing}`}
-    >
+    <Link href={href} className={tileClass}>
       <Icon aria-hidden className="size-4.5" strokeWidth={1.85} />
       {label}
     </Link>

@@ -39,6 +39,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // The end-to-end tests run their own dev server next to yours, so they build into another folder.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  // Development only: 127.0.0.1 keeps its own cookies apart from localhost, handy for trying the
+  // signed-out pages while signed in on localhost. Without this, Next blocks its dev scripts there
+  // and nothing hydrates. Better Auth trusts 127.0.0.1 in development too (src/server/auth.ts).
+  allowedDevOrigins: ["127.0.0.1"],
   // A self-contained server (server.js plus only the files it needs) for the Docker image.
   output: "standalone",
   poweredByHeader: false,

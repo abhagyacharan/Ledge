@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { onSettings } from "./mobile-tab-bar";
 
 /**
  * The page area. The Expense Tracker gets the wide canvas. Every other page, including every Tasks
@@ -12,7 +13,14 @@ import { cn } from "@/lib/utils";
 export function AppMain({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // The Expense Tracker, the Tasks overview and All tasks use the wide canvas (screens 3f, 6a, 6d).
-  const wide = pathname.startsWith("/expenses") || pathname === "/tasks" || pathname === "/all";
+  // The Plans home (8b) and the plan review with its side panel (8i) use it too; the steps before
+  // the review keep their own narrow column inside it.
+  const wide =
+    pathname.startsWith("/expenses") ||
+    pathname === "/tasks" ||
+    pathname === "/all" ||
+    pathname === "/plans" ||
+    /^\/plans\/[^/]+\/(setup|more)$/.test(pathname);
   // An open task docks on the right from 1200px (screen 6b): leave it room.
   const taskOpen = useSearchParams().has("task");
   return (
@@ -22,6 +30,8 @@ export function AppMain({ children }: { children: ReactNode }) {
         // bottom for the floating tab bar and the + button beside it.
         "mx-auto w-full flex-1 px-[max(1rem,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))] pt-[calc(1.5rem+env(safe-area-inset-top,0px))] pb-[calc(var(--tabbar-gap)+6.5rem)] md:px-8 md:pt-10 md:pb-16",
         wide ? "max-w-6xl" : "max-w-4xl",
+        // Settings has no tab bar on a phone, so only the home bar needs room.
+        onSettings(pathname) && "pb-[calc(env(safe-area-inset-bottom,0px)+2rem)]",
         taskOpen && "min-[1200px]:mr-[456px] min-[1200px]:max-w-3xl",
       )}
     >

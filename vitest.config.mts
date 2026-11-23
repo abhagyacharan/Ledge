@@ -41,6 +41,9 @@ export default defineConfig({
       BETTER_AUTH_URL: "http://localhost:3000",
       ALLOW_SIGNUP: "true",
       TZ: "Asia/Kolkata",
+      // Tests read reset links from the in-memory outbox; a real key in .env must never send mail.
+      RESEND_API_KEY: "",
+      EMAIL_FROM: "",
     },
   },
 });

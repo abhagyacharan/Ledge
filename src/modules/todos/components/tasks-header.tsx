@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -42,8 +42,18 @@ export function TasksHeader({ todayCount, eyebrow }: { todayCount: number; eyebr
             <span className="hidden md:inline">Overview</span>
           </h1>
         </div>
-        <span className="md:hidden">
-          <SearchButton />
+        <span className="flex items-center gap-2 md:contents">
+          <Link
+            href="/plans/new"
+            aria-label="New plan"
+            className="inline-flex size-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-dash-edge bg-dash-card text-[13px] font-medium text-dash-ink outline-none transition-colors duration-150 hover:bg-dash-well focus-visible:ring-3 focus-visible:ring-ring/50 md:order-last md:h-11 md:w-auto md:px-4"
+          >
+            <Sparkles aria-hidden className="size-4" />
+            <span className="hidden md:inline">New plan</span>
+          </Link>
+          <span className="md:hidden">
+            <SearchButton />
+          </span>
         </span>
         {/* With a mouse: a field that opens quick add, with its shortcut (screen 6a). */}
         <button

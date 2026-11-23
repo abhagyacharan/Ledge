@@ -27,20 +27,22 @@ Port 5433 (not 5432) avoids clashing with other local Postgres containers. If yo
 
 Copy `.env.example` to `.env` and fill it in.
 
-| Name                                                | Purpose                                                                             |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `DATABASE_URL`                                      | Postgres connection string                                                          |
-| `BETTER_AUTH_SECRET`                                | Long random string (32+ chars) used by Better Auth                                  |
-| `BETTER_AUTH_URL`                                   | Public base URL of the app                                                          |
-| `ALLOW_SIGNUP`                                      | `true` or `false`. Set to `false` on the server after creating the owner account    |
-| `TZ`                                                | Server timezone (`Asia/Kolkata`)                                                    |
-| `CLIENT_IP_HEADER` (optional)                       | Header a proxy sets to the visitor's address (`cf-connecting-ip` behind Cloudflare) |
-| `GROQ_API_KEY` (optional)                           | Turns voice capture on (docs/voice-spec.md). Empty: voice is off                    |
-| `VOICE_FAKE` (optional)                             | `1` answers voice requests from built-in examples, without Groq (testing)           |
-| `GROQ_TRANSCRIBE_MODEL`, `GROQ_PARSE_MODEL` (opt.)  | Groq model ids; defaults `whisper-large-v3-turbo`, `openai/gpt-oss-120b`            |
+| Name                                                | Purpose                                                                              |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `DATABASE_URL`                                      | Postgres connection string                                                           |
+| `BETTER_AUTH_SECRET`                                | Long random string (32+ chars) used by Better Auth                                   |
+| `BETTER_AUTH_URL`                                   | Public base URL of the app                                                           |
+| `ALLOW_SIGNUP`                                      | `true` or `false`. Set to `false` on the server after creating the owner account     |
+| `TZ`                                                | Server timezone (`Asia/Kolkata`)                                                     |
+| `CLIENT_IP_HEADER` (optional)                       | Header a proxy sets to the visitor's address (`cf-connecting-ip` behind Cloudflare)  |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (opt.)   | Turn on "Continue with Google" (setup: docs/auth-google-reset-spec.md)               |
+| `RESEND_API_KEY`, `EMAIL_FROM` (optional)           | Send password-reset emails. Unset in development: the link prints in the console     |
+| `GROQ_API_KEY` (optional)                           | Turns voice capture on (docs/voice-spec.md). Empty: voice is off                     |
+| `VOICE_FAKE` (optional)                             | `1` answers voice requests from built-in examples, without Groq (testing)            |
+| `GROQ_TRANSCRIBE_MODEL`, `GROQ_PARSE_MODEL` (opt.)  | Groq model ids; defaults `whisper-large-v3-turbo`, `openai/gpt-oss-120b`             |
 | `VOICE_DAILY_LIMIT` (optional)                      | Voice and planner requests per person per day (default 30, about 15 spoken commands) |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                   |
-| `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server)  |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credentials for the Postgres container; must match `DATABASE_URL`                    |
+| `TEST_DATABASE_URL` (optional)                      | Overrides the integration-test database (default: `ledge_test` on the same server)   |
 
 ## Run
 

@@ -117,7 +117,55 @@ function clause(text: string, today: string, emis: PromptEmi[]): ModelAction[] {
   return [{ type: "unclear", text: text.trim(), reason: "Not sure what to do with this" }];
 }
 
+// Romanised Hindi and Telugu: "kal" with a future verb and "repu" mean tomorrow.
+const INDIAN_MARKERS = /\b(kal|repu|hai|lena|jaana|vellali|kharch|kiye|chesanu|pe|ki)\b/i;
+const INDIAN_TASKS: [RegExp, string][] = [
+  [/\b(doodh|dudh|milk)\b.*\b(lena|chahiye)\b/i, "Buy milk"],
+  [/\bgym\b.*\b(vellali|jaana|jana)\b/i, "Go to the gym"],
+];
+
+/** A Hindi or Telugu sentence with a task and an amount ("450 lunch pe", "200 auto ki"). */
+function indianReply(text: string, today: string): ModelAction[] | null {
+  if (!INDIAN_MARKERS.test(text) || /\b(spent|paid|create|add)\b/i.test(text)) return null;
+  const task = INDIAN_TASKS.find(([pattern]) => pattern.test(text));
+  const spent = /(\d[\d,]*)\s+([a-z]+)\s+(?:pe|par|ki|ke liye)\b/i.exec(text);
+  if (!task && !spent) return null;
+  const actions: ModelAction[] = [];
+  if (task) {
+    actions.push({
+      type: "create_task",
+      title: task[1],
+      list: null,
+      listRef: null,
+      dueDate: /\b(kal|repu)\b/i.test(text) ? addDaysIso(today, 1) : null,
+      dueTime: null,
+      priority: "none",
+      notes: null,
+    });
+  }
+  if (spent) {
+    const what = spent[2];
+    const hit = CATEGORY_WORDS.find(([pattern]) => pattern.test(what));
+    actions.push({
+      type: "log_entry",
+      kind: "expense",
+      amount: spent[1].replace(/,/g, ""),
+      title: capital(what),
+      category: hit?.[1] ?? "Miscellaneous",
+      categoryGuessed: true,
+      paymentMethod: null,
+      spendLabel: hit?.[2] ?? null,
+      spendLabelGuessed: true,
+      date: null,
+      currencyWord: null,
+    });
+  }
+  return actions;
+}
+
 export function fakeReply(transcript: string, today: string, emis: PromptEmi[]): ModelReply {
+  const indian = indianReply(transcript, today);
+  if (indian) return { actions: indian };
   // "... and create a task ..." splits into two clauses; a list's own "and" stays with the list.
   const parts = /create (?:a )?list/i.test(transcript)
     ? [transcript]

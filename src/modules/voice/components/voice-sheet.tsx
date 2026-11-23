@@ -380,7 +380,7 @@ function VoiceSheet({ currency, locale }: { currency: string; locale: string }) 
               />
               <p className="text-[14px] font-medium">{phase.label}</p>
               {phase.transcript ? (
-                <p className="max-w-sm text-center text-[14px] text-dash-ink-soft">
+                <p dir="auto" className="max-w-sm text-center text-[14px] text-dash-ink-soft">
                   &ldquo;{phase.transcript}&rdquo;
                 </p>
               ) : null}
@@ -391,7 +391,7 @@ function VoiceSheet({ currency, locale }: { currency: string; locale: string }) 
             <div className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
               <p className="max-w-sm text-[14px] font-medium">{phase.message}</p>
               {phase.transcript ? (
-                <p className="max-w-sm text-[13px] text-dash-ink-soft">
+                <p dir="auto" className="max-w-sm text-[13px] text-dash-ink-soft">
                   &ldquo;{phase.transcript}&rdquo;
                 </p>
               ) : null}
@@ -436,7 +436,9 @@ function VoiceSheet({ currency, locale }: { currency: string; locale: string }) 
             <div className="flex flex-col gap-3">
               <div className="rounded-xl bg-dash-well px-3 py-2.5">
                 <p className="text-[12px] text-dash-ink-soft">You said</p>
-                <p className="text-[14px]">&ldquo;{review.transcript}&rdquo;</p>
+                <p dir="auto" className="text-[14px]">
+                  &ldquo;{review.transcript}&rdquo;
+                </p>
                 <button
                   type="button"
                   onClick={() => typeInstead(review.transcript)}

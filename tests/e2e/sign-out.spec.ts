@@ -34,8 +34,9 @@ test("sign out from the sidebar", async ({ page }) => {
 test("sign out from Settings", async ({ page }) => {
   await signIn(page);
   await page.goto("/settings");
+  // The bottom of the settings column (screen 9b).
   await page
-    .getByRole("region", { name: "Profile" })
+    .getByRole("navigation", { name: "Settings sections" })
     .getByRole("button", { name: "Sign out" })
     .click();
   await expectSignedOut(page);

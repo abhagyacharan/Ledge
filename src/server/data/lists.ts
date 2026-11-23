@@ -1,8 +1,8 @@
 import "server-only";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { positionAtEnd, positionForStep } from "@/lib/ordering";
 import { db } from "@/server/db/client";
-import { lists, type List } from "@/server/db/schema";
+import { lists, tasks, type List } from "@/server/db/schema";
 import { ensureUserDefaults } from "@/server/user-defaults";
 
 /**
@@ -45,6 +45,27 @@ export async function listArchivedLists(userId: string): Promise<List[]> {
     .from(lists)
     .where(and(eq(lists.userId, userId), isNull(lists.deletedAt), eq(lists.isArchived, true)))
     .orderBy(asc(lists.position));
+}
+
+/** How many tasks (open or done, not in Trash, subtasks left out) each of these lists holds. */
+export async function countTasksByList(
+  userId: string,
+  listIds: string[],
+): Promise<Map<string, number>> {
+  if (listIds.length === 0) return new Map();
+  const rows = await db
+    .select({ listId: tasks.listId, n: count() })
+    .from(tasks)
+    .where(
+      and(
+        eq(tasks.userId, userId),
+        inArray(tasks.listId, listIds),
+        isNull(tasks.deletedAt),
+        isNull(tasks.parentId),
+      ),
+    )
+    .groupBy(tasks.listId);
+  return new Map(rows.map((r) => [r.listId, r.n]));
 }
 
 export async function listTrashedLists(userId: string): Promise<List[]> {

@@ -99,6 +99,34 @@
       "when": 1794830404612,
       "tag": "0013_journal_lock_options",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795299519537,
+      "tag": "0014_voice_languages",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795381584215,
+      "tag": "0015_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795382773105,
+      "tag": "0016_plan_milestones",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795436728771,
+      "tag": "0017_profile_photo",
+      "breakpoints": true
     }
   ]
 }

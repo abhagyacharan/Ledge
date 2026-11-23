@@ -52,12 +52,24 @@ export function DueDateField({
   ctx,
   onChange,
   trigger,
+  minDate,
+  allowClear = true,
+  allowTime = true,
+  title = "Due date",
 }: {
   value: Due;
   ctx: DateContext;
   onChange: (next: Due) => void;
   /** A custom opener (the task detail's Due row); defaults to a pill button. */
   trigger?: (label: string) => ReactNode;
+  /** Days before this one are turned off (a plan's new end date cannot be in the past). */
+  minDate?: string;
+  /** False hides "No date" (a date is required). */
+  allowClear?: boolean;
+  /** False hides the time row (a plan's end date is a day, not a moment). */
+  allowTime?: boolean;
+  /** The heading of the picker. */
+  title?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Month>(() => monthOf(value.dueDate ?? ctx.today));
@@ -85,7 +97,10 @@ export function DueDateField({
       icon: CalendarPlus,
     },
     { label: "No date", date: null, hint: "", icon: CalendarX },
-  ];
+  ].filter((q) =>
+    q.date === null ? allowClear : minDate === undefined || (q.date as string) >= minDate,
+  );
+  const tooEarly = (iso: string) => minDate !== undefined && iso < minDate;
 
   function pick(dueDate: string | null) {
     onChange({ dueDate, dueTime: dueDate ? value.dueTime : null });
@@ -94,7 +109,7 @@ export function DueDateField({
 
   function submitTyped() {
     const parsed = typed.trim() ? parseTypedDate(typed, ctx.today, ctx.locale) : null;
-    if (!parsed) {
+    if (!parsed || tooEarly(parsed)) {
       setTypedError(Boolean(typed.trim()));
       return;
     }
@@ -156,7 +171,7 @@ export function DueDateField({
         collisionPadding={16}
         className="dash max-h-(--radix-popover-content-available-height) w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-3xl border border-dash-edge bg-dash-card p-4 text-dash-ink shadow-[0_24px_48px_-16px_rgb(0_0_0/0.3)]"
       >
-        <h2 className="mb-3 font-display text-lg font-semibold">Due date</h2>
+        <h2 className="mb-3 font-display text-lg font-semibold">{title}</h2>
         <div className="grid grid-cols-2 gap-2">
           {quick.map((q) => {
             const on = value.dueDate === q.date;
@@ -260,12 +275,14 @@ export function DueDateField({
                 }).format(new Date(`${iso}T00:00:00Z`))}
                 aria-pressed={value.dueDate === iso}
                 aria-current={iso === ctx.today ? "date" : undefined}
+                disabled={tooEarly(iso)}
                 onClick={() => pick(iso)}
-                className="grid h-10 place-items-center outline-none"
+                className="grid h-10 place-items-center outline-none disabled:pointer-events-none"
               >
                 <span
                   className={cn(
                     "grid size-9 place-items-center rounded-full text-[13px] transition-colors duration-150",
+                    tooEarly(iso) && "text-dash-ink-soft/40 line-through",
                     value.dueDate === iso
                       ? "bg-dash-ink font-semibold text-dash-card"
                       : iso === ctx.today
@@ -280,47 +297,49 @@ export function DueDateField({
           )}
         </div>
 
-        <div className="mt-3 border-t border-dash-edge pt-3">
-          {showTime && value.dueDate ? (
-            <div className="flex items-center gap-2">
-              <Clock aria-hidden className="size-4 text-dash-ink-soft" />
-              <label htmlFor="due-time-input" className="text-sm font-medium">
-                Time
-              </label>
-              <input
-                id="due-time-input"
-                type="time"
-                value={value.dueTime ? trimTime(value.dueTime) : ""}
-                onChange={(e) =>
-                  onChange({ dueDate: value.dueDate, dueTime: e.target.value || null })
-                }
-                className="h-11 flex-1 rounded-xl bg-dash-well px-3 text-base outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:text-sm"
-              />
-              {value.dueTime ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange({ dueDate: value.dueDate, dueTime: null });
-                    setShowTime(false);
-                  }}
-                  className="h-11 rounded-full px-3 text-[13px] font-medium text-dash-ink-soft hover:text-dash-ink md:h-9"
-                >
-                  Clear
-                </button>
-              ) : null}
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={!value.dueDate}
-              onClick={() => setShowTime(true)}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-dash-well text-[14px] font-medium outline-none hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:h-9"
-            >
-              <Clock aria-hidden className="size-4" />
-              {value.dueDate ? "Add time" : "Pick a date to add a time"}
-            </button>
-          )}
-        </div>
+        {allowTime ? (
+          <div className="mt-3 border-t border-dash-edge pt-3">
+            {showTime && value.dueDate ? (
+              <div className="flex items-center gap-2">
+                <Clock aria-hidden className="size-4 text-dash-ink-soft" />
+                <label htmlFor="due-time-input" className="text-sm font-medium">
+                  Time
+                </label>
+                <input
+                  id="due-time-input"
+                  type="time"
+                  value={value.dueTime ? trimTime(value.dueTime) : ""}
+                  onChange={(e) =>
+                    onChange({ dueDate: value.dueDate, dueTime: e.target.value || null })
+                  }
+                  className="h-11 flex-1 rounded-xl bg-dash-well px-3 text-base outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 md:text-sm"
+                />
+                {value.dueTime ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange({ dueDate: value.dueDate, dueTime: null });
+                      setShowTime(false);
+                    }}
+                    className="h-11 rounded-full px-3 text-[13px] font-medium text-dash-ink-soft hover:text-dash-ink md:h-9"
+                  >
+                    Clear
+                  </button>
+                ) : null}
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={!value.dueDate}
+                onClick={() => setShowTime(true)}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-dash-well text-[14px] font-medium outline-none hover:bg-dash-edge focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 md:h-9"
+              >
+                <Clock aria-hidden className="size-4" />
+                {value.dueDate ? "Add time" : "Pick a date to add a time"}
+              </button>
+            )}
+          </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   );

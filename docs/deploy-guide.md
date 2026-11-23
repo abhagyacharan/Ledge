@@ -546,6 +546,15 @@ GROQ_API_KEY=gsk_...your key...
 
 and run `sh ~/ledge/scripts/deploy.sh` (or `docker compose up -d`). A **Voice capture** switch then appears in Settings > Preferences. Leave the key out to keep voice off. Voice needs HTTPS for the microphone, which the tunnel gives you.
 
+### Turning on Google sign-in and password-reset emails
+
+Both are optional and independent (full steps: `docs/auth-google-reset-spec.md`, "Setup").
+
+- **Google:** in Google Cloud Console create an OAuth client ID (Web application) with the redirect URI `https://<your host>/api/auth/callback/google`, then add `GOOGLE_CLIENT_ID=` and `GOOGLE_CLIENT_SECRET=` to `~/ledge/.env`. "Continue with Google" then appears on Sign in and Create account. While `ALLOW_SIGNUP=false`, Google signs in existing accounts only. Your own account links to Google after you reset its password once (that confirms your email).
+- **Reset emails:** verify your domain in Resend (resend.com; it gives you DNS records to add in Cloudflare), create an API key, and add `RESEND_API_KEY=` and `EMAIL_FROM=Ledge <no-reply@yourdomain.com>`. Without them, "Forgot password?" stays hidden.
+
+Then run `sh ~/ledge/scripts/deploy.sh` (or `docker compose up -d`).
+
 ---
 
 ## 11. Everyday commands

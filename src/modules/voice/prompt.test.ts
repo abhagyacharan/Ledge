@@ -50,9 +50,13 @@ describe("prompt", () => {
             dueDate: "2026-11-10",
           },
         ],
+        languages: ["English", "Telugu"],
+        titleLanguage: "as_spoken",
       },
       "paid the bike loan",
     );
+    expect(message).toContain('"languages":["English","Telugu"]');
+    expect(message).toContain('"titleLanguage":"as_spoken"');
     expect(message).toContain('"today":"2026-11-15"');
     expect(message).toContain('"Work"');
     expect(message).toContain('"ref":"E1"');
@@ -62,6 +66,24 @@ describe("prompt", () => {
 
   it("keeps the system prompt fixed (no dates or names inside it)", () => {
     expect(VOICE_SYSTEM_PROMPT).not.toMatch(/\d{4}-\d{2}-\d{2}/);
+  });
+
+  it("teaches the system prompt about mixed speech, number words and kal", () => {
+    expect(VOICE_SYSTEM_PROMPT).toContain("Languages");
+    expect(VOICE_SYSTEM_PROMPT).toContain("paanch sau");
+    expect(VOICE_SYSTEM_PROMPT).toContain('"kal"');
+    expect(VOICE_SYSTEM_PROMPT).toContain("titleLanguage");
+  });
+
+  it("adds native-script language names to the Whisper vocabulary", () => {
+    expect(buildWhisperPrompt([], [], ["en", "te"])).toContain("తెలుగు");
+    expect(buildWhisperPrompt([], [], ["en"])).not.toContain("తెలుగు");
+    const long = buildWhisperPrompt(
+      Array.from({ length: 200 }, (_, i) => `List number ${i}`),
+      [],
+      ["hi", "te", "ta"],
+    );
+    expect(long.length).toBeLessThanOrEqual(620);
   });
 
   it("builds a short, de-duplicated Whisper vocabulary", () => {
@@ -124,6 +146,36 @@ describe("fake mode replies", () => {
       paymentMethod: "UPI",
       currencyWord: "dollars",
       category: "Food & Groceries",
+    });
+  });
+
+  it("understands a Hindi sentence", () => {
+    const { actions } = reply("kal doodh lena hai aur 450 lunch pe kharch kiye");
+    expect(actions[0]).toMatchObject({
+      type: "create_task",
+      title: "Buy milk",
+      dueDate: "2026-11-16",
+    });
+    expect(actions[1]).toMatchObject({
+      type: "log_entry",
+      amount: "450",
+      title: "Lunch",
+      category: "Dining & Entertainment",
+    });
+  });
+
+  it("understands a Telugu and English mix", () => {
+    const { actions } = reply("repu gym ki vellali, 200 auto ki pay chesanu");
+    expect(actions[0]).toMatchObject({
+      type: "create_task",
+      title: "Go to the gym",
+      dueDate: "2026-11-16",
+    });
+    expect(actions[1]).toMatchObject({
+      type: "log_entry",
+      amount: "200",
+      title: "Auto",
+      category: "Transportation",
     });
   });
 

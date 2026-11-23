@@ -15,6 +15,8 @@ describe("proxy matcher", () => {
     "/icons/ledge-192.png",
     "/api/health",
     "/sign-in",
+    "/forgot-password",
+    "/reset-password",
     "/welcome",
     "/site/phone-home.png",
   ])("lets %s through signed out", (path) => {

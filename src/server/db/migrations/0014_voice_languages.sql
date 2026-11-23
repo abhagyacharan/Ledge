@@ -1,0 +1,3 @@
+ALTER TABLE "user_settings" ADD COLUMN "voice_languages" text[] DEFAULT '{en,hi}'::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_settings" ADD COLUMN "voice_title_language" text DEFAULT 'english' NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_settings" ADD CONSTRAINT "user_settings_voice_title_language_check" CHECK ("user_settings"."voice_title_language" in ('english', 'as_spoken'));

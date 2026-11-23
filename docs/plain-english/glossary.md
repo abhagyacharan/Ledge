@@ -148,6 +148,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Next.js.** The toolkit used to build the app's pages and server side.
 
+**OAuth.** The standard behind "Continue with Google": Google confirms who you are and tells Ledge your name and email, so you need no separate Ledge password. Ledge never sees your Google password.
+
 **Off-site backup.** A copy of your backups kept somewhere other than the server (a cloud drive, another computer, a second disk), so one disaster cannot destroy both the data and its backup.
 
 **Optimistic update.** Showing the result of your action instantly, before the server confirms it, and quietly undoing it if the server says no.
@@ -178,6 +180,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **PWA (installable web app).** Short for "progressive web app". A website that you can add to your phone's home screen so it opens full screen with its own icon, like an app, while staying the same website. Planned; not built yet.
 
+**Plans (planner).** The Plans module: you describe a goal, answer a few questions, and Ledge's AI drafts a plan of dated tasks in phases for you to keep or cut before anything is saved. Each plan keeps its own page and history.
+
 **Radix.** A set of building blocks for interface parts such as menus and dialogs that work well with keyboards and screen readers.
 
 **RAG.** Short for "retrieval-augmented generation". First find the pieces of your data that matter for a question, then give them to a language model so it can write an answer. Planned for search; not built yet.
@@ -187,6 +191,10 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Reduced motion.** A setting on your computer or phone that asks apps not to animate. Ledge obeys it.
 
 **requireUser().** A small helper run at the start of every private page and action. It confirms who you are, or sends you to Sign in.
+
+**Resend.** The email service Ledge uses to send password-reset links. It needs a key and a domain you have proved is yours.
+
+**Reset link.** The one-time web address in a Forgot password email. It works once, for 60 minutes, and opens the page where you choose a new password.
 
 **Restore.** Putting a backup back, so the database matches how it was when the backup was taken. Anything saved after the backup is lost.
 
@@ -246,6 +254,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 
 **Toast.** A short message that pops up briefly, for example "Added to Home", sometimes with an Undo button.
 
+**Token.** The small pieces of text an AI model reads and writes, roughly three quarters of a word each. AI services charge by the number of tokens, which is how Ledge estimates what voice and plans cost.
+
 **Transaction.** A group of database changes that either all happen or none do.
 
 **Trash.** Where deleted tasks and lists wait before they are erased for good, so a mistake can be undone.
@@ -259,6 +269,8 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Undo.** A button in a toast that reverses what you just did, for a few seconds.
 
 **UUID.** A long random identifier (like `3f2b8c1e-…`) used instead of 1, 2, 3, so IDs cannot be guessed.
+
+**Verified email.** An email address the person has proved is theirs, here by opening a reset link. Google joins an existing account only when its email is verified.
 
 **Validation.** Checking that information is acceptable (for example, that an email looks like an email) before using it.
 
@@ -299,3 +311,6 @@ Plain meanings of words that appear in this project. Terms are in alphabetical o
 **Manifest.** A small file that tells a phone a website's name, icon and colours when it is added to the home screen.
 
 **Cache.** A stored copy of something so it loads faster next time. Ledge only caches files that hold no personal information.
+
+- **User agent**: a short line every browser sends with each request, naming itself and the system it runs on ("Chrome on Windows"). Settings uses it to name your signed-in devices.
+- **Crop**: cutting a picture down to the part you want. The crop sheet in Settings cuts a square from your photo before it is saved.

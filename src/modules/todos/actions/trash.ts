@@ -1,6 +1,7 @@
 "use server";
 
 import { fail, ok } from "@/lib/result";
+import { deletePlanForever } from "@/server/data/plans";
 import {
   deleteTrashedListForever,
   deleteTrashedTaskForever,
@@ -23,6 +24,15 @@ export async function deleteTaskForeverAction(input: unknown) {
 export async function deleteListForeverAction(input: unknown) {
   return guarded(listIdSchema, input, async ({ id }, userId) => {
     if (!(await deleteTrashedListForever(userId, id))) return fail(NOT_FOUND);
+    refresh();
+    return ok();
+  });
+}
+
+/** Permanently deletes a plan that is in Trash, with what was trashed together with it. */
+export async function deletePlanForeverAction(input: unknown) {
+  return guarded(z.object({ planId: z.uuid() }), input, async ({ planId }, userId) => {
+    if (!(await deletePlanForever(userId, planId))) return fail(NOT_FOUND);
     refresh();
     return ok();
   });
