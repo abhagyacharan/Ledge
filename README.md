@@ -4,6 +4,8 @@ A self-hosted personal life-management app: tasks, money, a daily journal and go
 
 Built with Next.js 16 (App Router), TypeScript, Tailwind and shadcn/ui, PostgreSQL with Drizzle, and Better Auth.
 
+Try it out here: https://ledge.abhagyacharan.xyz/
+
 ## What's in it
 
 | Module          | What it does                                                                                                                                                                       | Spec                                                             |
