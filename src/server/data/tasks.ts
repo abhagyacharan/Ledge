@@ -1,9 +1,9 @@
 import "server-only";
-import { and, asc, eq, isNull, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { positionAtEnd, positionBetween } from "@/lib/ordering";
 import { nextDueDate, parseRule, type RecurrenceMode } from "@/lib/recurrence";
 import { todayIn } from "@/lib/dates";
-import type { ReminderChoice } from "@/modules/reminders/schema";
+import { rowToChoice } from "@/modules/reminders/reminder-time";
 import { hasActiveReminder } from "@/modules/todos/reminders";
 import { db } from "@/server/db/client";
 import { lists, plans, taskReminders, tasks, type Task } from "@/server/db/schema";
@@ -37,7 +37,18 @@ export async function withReminderFlags<T extends Task>(
     return rows.map((r) => ({ ...r, hasReminder: false }));
   }
   const [reminders, reminderSettings, settings] = await Promise.all([
-    db.select().from(taskReminders).where(eq(taskReminders.userId, userId)),
+    db
+      .select()
+      .from(taskReminders)
+      .where(
+        and(
+          eq(taskReminders.userId, userId),
+          inArray(
+            taskReminders.taskId,
+            rows.map((r) => r.id),
+          ),
+        ),
+      ),
     getReminderSettings(userId),
     getUserSettings(userId),
   ]);
@@ -271,16 +282,29 @@ export type RecurringCompletion = {
   reopenedSubtaskIds: string[];
 };
 
+/** Thrown by `completeRecurringTask` with `exclusive` when another call finished the round first. */
+export class RecurringRoundTaken extends Error {
+  constructor() {
+    super("This round was already finished");
+    this.name = "RecurringRoundTaken";
+  }
+}
+
 /**
  * Completing a repeating task (CLAUDE.md §6.2): a finished copy ("snapshot", pointing back at the
  * task through `recurrence_origin_id`) is added to Completed, and the task itself stays open with
  * its due date moved to the next date. Its done subtasks are reopened. Returns null when the task is not the user's, is not a repeating open task, or the rule is
  * not understood (then the caller completes it like any other task).
+ *
+ * With `exclusive` (the notification's Done) the due date only moves if it is still the one read
+ * here, so two presses at once finish one round: the second throws `RecurringRoundTaken` and its
+ * copy is rolled back.
  */
 export async function completeRecurringTask(
   userId: string,
   taskId: string,
   completedOn: string,
+  options: { exclusive?: boolean } = {},
 ): Promise<RecurringCompletion | null> {
   const task = await getTask(userId, taskId);
   if (!task || task.status !== "open" || task.parentId || !task.recurrenceRule) return null;
@@ -326,10 +350,24 @@ export async function completeRecurringTask(
       )
       .returning({ id: tasks.id });
 
-    await tx
+    const advanced = await tx
       .update(tasks)
       .set({ dueDate: nextDue })
-      .where(and(eq(tasks.userId, userId), eq(tasks.id, task.id)));
+      .where(
+        and(
+          eq(tasks.userId, userId),
+          eq(tasks.id, task.id),
+          options.exclusive
+            ? and(
+                eq(tasks.status, "open"),
+                sql`${tasks.dueDate} is not distinct from ${task.dueDate}`,
+              )
+            : undefined,
+        ),
+      )
+      .returning({ id: tasks.id });
+    // Someone else finished this round first: take back the copy made here.
+    if (options.exclusive && advanced.length === 0) throw new RecurringRoundTaken();
 
     return {
       snapshotId: snapshot.id,
@@ -589,15 +627,7 @@ export async function duplicateTask(userId: string, taskId: string): Promise<Tas
   // The reminder comes along, "None" included (it may be switching the default off).
   const reminder = await getTaskReminder(userId, source.id);
   if (reminder) {
-    const choice: ReminderChoice =
-      reminder.kind === "before" && reminder.offsetMinutes !== null
-        ? { kind: "before", offsetMinutes: reminder.offsetMinutes }
-        : reminder.kind === "custom" && reminder.customDate && reminder.customTime
-          ? { kind: "custom", date: reminder.customDate, time: reminder.customTime.slice(0, 5) }
-          : reminder.kind === "at_due"
-            ? { kind: "at_due" }
-            : { kind: "none" };
-    await setTaskReminder(userId, copy.id, choice);
+    await setTaskReminder(userId, copy.id, rowToChoice(reminder));
   }
   if (!source.parentId) {
     for (const sub of subtasks) {

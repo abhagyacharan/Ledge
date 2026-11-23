@@ -42,6 +42,8 @@ export const taskReminders = pgTable(
     /** Identifies the round last sent, so a reminder never goes out twice (§9). */
     sentKey: text("sent_key"),
     snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
+    /** The round key when Snooze was pressed: a snooze rings only for that same round. */
+    snoozedKey: text("snoozed_key"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

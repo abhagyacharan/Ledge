@@ -1,10 +1,11 @@
 import "server-only";
 import { and, asc, eq, gt, isNull } from "drizzle-orm";
 import { describeDevice } from "@/modules/account/devices";
-import type {
-  PushSubscriptionInput,
-  ReminderChoice,
-  ReminderSettingsInput,
+import {
+  isAllowedPushEndpoint,
+  type PushSubscriptionInput,
+  type ReminderChoice,
+  type ReminderSettingsInput,
 } from "@/modules/reminders/schema";
 import { db } from "@/server/db/client";
 import {
@@ -107,7 +108,8 @@ export async function clearTaskReminder(userId: string, taskId: string): Promise
 
 /**
  * Saves a device's push subscription (upsert by endpoint: an endpoint that moved to another
- * account or session is taken over). Returns null when the session is not this user's.
+ * account or session is taken over). Returns null when the session is not this user's, or the
+ * endpoint is not at a known push service (checked again here: the server posts to it).
  */
 export async function saveSubscription(
   userId: string,
@@ -115,6 +117,7 @@ export async function saveSubscription(
   sub: PushSubscriptionInput,
   userAgent: string | null,
 ): Promise<PushSubscriptionRow | null> {
+  if (!isAllowedPushEndpoint(sub.endpoint)) return null;
   const [owned] = await db
     .select({ id: session.id })
     .from(session)
@@ -156,6 +159,18 @@ export async function deleteSubscription(userId: string, id: string): Promise<bo
   const rows = await db
     .delete(pushSubscriptions)
     .where(and(eq(pushSubscriptions.id, id), eq(pushSubscriptions.userId, userId)))
+    .returning({ id: pushSubscriptions.id });
+  return rows.length > 0;
+}
+
+/** Removes the user's subscription at `endpoint` (another user's is left alone). */
+export async function deleteSubscriptionByEndpoint(
+  userId: string,
+  endpoint: string,
+): Promise<boolean> {
+  const rows = await db
+    .delete(pushSubscriptions)
+    .where(and(eq(pushSubscriptions.endpoint, endpoint), eq(pushSubscriptions.userId, userId)))
     .returning({ id: pushSubscriptions.id });
   return rows.length > 0;
 }

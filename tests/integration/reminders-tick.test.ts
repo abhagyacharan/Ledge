@@ -8,10 +8,11 @@ vi.mock("next/cache", () => ({ revalidatePath: () => undefined }));
 
 import { POST as donePost } from "@/app/api/reminders/[taskId]/done/route";
 import { POST as snoozePost } from "@/app/api/reminders/[taskId]/snooze/route";
+import { POST as subscriptionPost } from "@/app/api/reminders/subscription/route";
 import { saveSubscription, setTaskReminder } from "@/server/data/reminders";
-import { completeRecurringTask, getTask, updateTask } from "@/server/data/tasks";
+import { completeRecurringTask, getTask, setTaskDone, updateTask } from "@/server/data/tasks";
 import { db } from "@/server/db/client";
-import { session, taskReminders, userSettings } from "@/server/db/schema";
+import { pushSubscriptions, session, taskReminders, tasks, userSettings } from "@/server/db/schema";
 import { runReminderTick, snoozeReminder } from "@/server/reminders";
 import { testAuth } from "../helpers/action-session";
 import { sendNotification } from "../helpers/web-push-mock";
@@ -44,7 +45,7 @@ async function subscribe(userId: string, expiresAt: Date) {
   await saveSubscription(
     userId,
     row.id,
-    { endpoint: `https://push.example/${n}`, keys: { p256dh: "k", auth: "a" } },
+    { endpoint: `https://fcm.googleapis.com/fcm/send/${n}`, keys: { p256dh: "k", auth: "a" } },
     null,
   );
 }
@@ -58,7 +59,15 @@ const task = (title: string, overrides = {}) =>
   makeTask(a.id, list.id, title, { dueDate: DAY, dueTime: "17:00", ...overrides });
 
 const params = (taskId: string) => ({ params: Promise.resolve({ taskId }) });
-const post = () => new Request("http://localhost:3000/api/reminders", { method: "POST" });
+const post = (
+  body?: unknown,
+  headers: Record<string, string> = { "sec-fetch-site": "same-origin" },
+) =>
+  new Request("http://localhost:3000/api/reminders", {
+    method: "POST",
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 
 beforeEach(async () => {
   process.env.ALLOW_SIGNUP = "true";
@@ -92,6 +101,7 @@ describe("sending once", () => {
       url: `/today?task=${t.id}`,
       tag: t.id,
       late: false,
+      round: DAY,
     });
   });
 
@@ -276,5 +286,204 @@ describe("Done and Snooze routes", () => {
     testAuth.reset(a.id);
     expect((await donePost(post(), params("not-a-uuid"))).status).toBe(404);
     expect((await getTask(a.id, t.id))?.status).toBe("open");
+  });
+});
+
+describe("snooze and the round it was pressed on", () => {
+  it("is dropped when the round is ticked in the app, and the next round still rings", async () => {
+    const t = await task("Meds", { recurrenceRule: "FREQ=DAILY" });
+    await setTaskReminder(a.id, t.id, { kind: "at_due" });
+    expect((await runReminderTick(NOW)).sent).toBe(1);
+    await snoozeReminder(a.id, t.id, at(1));
+    await completeRecurringTask(a.id, t.id, DAY);
+    expect((await runReminderTick(at(11))).sent).toBe(0);
+    const [row] = await db.select().from(taskReminders).where(eq(taskReminders.taskId, t.id));
+    expect(row.snoozedUntil).toBeNull();
+    expect((await runReminderTick(at(24 * 60))).sent).toBe(1);
+    expect(sendNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it("is dropped when the due date moves", async () => {
+    const t = await task("Dentist");
+    await setTaskReminder(a.id, t.id, { kind: "at_due" });
+    await runReminderTick(NOW);
+    await snoozeReminder(a.id, t.id, at(1));
+    await updateTask(a.id, t.id, { dueDate: "2030-06-11" });
+    expect((await runReminderTick(at(11))).sent).toBe(0);
+    expect((await runReminderTick(at(24 * 60))).sent).toBe(1);
+  });
+
+  it("is dropped when a plain task is ticked in the app", async () => {
+    const t = await task("Plain");
+    await setTaskReminder(a.id, t.id, { kind: "at_due" });
+    await runReminderTick(NOW);
+    await snoozeReminder(a.id, t.id, at(1));
+    await setTaskDone(a.id, t.id, true);
+    await runReminderTick(at(11));
+    await setTaskDone(a.id, t.id, false);
+    expect((await runReminderTick(at(12))).sent).toBe(0);
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it("waits for quiet hours to end", async () => {
+    await db
+      .update(userSettings)
+      .set({ quietStart: "17:20", quietEnd: "18:00" })
+      .where(eq(userSettings.userId, a.id));
+    const t = await task("Quiet snooze");
+    await setTaskReminder(a.id, t.id, { kind: "at_due" });
+    expect((await runReminderTick(NOW)).sent).toBe(1);
+    // Snoozed at 17:15 IST: it would ring at 17:25, inside the window, so it waits until 18:00.
+    expect(await snoozeReminder(a.id, t.id, at(15))).toEqual(at(25));
+    expect((await runReminderTick(at(25))).sent).toBe(0);
+    expect((await runReminderTick(at(59))).sent).toBe(0);
+    expect(await runReminderTick(at(60))).toMatchObject({ sent: 1, snoozed: 1 });
+    expect(sentPayloads()[1].body).toContain("Held during quiet hours");
+    expect((await runReminderTick(at(61))).sent).toBe(0);
+  });
+});
+
+describe("stale notifications and double presses", () => {
+  it("Done and Snooze refuse a round that has passed with 409", async () => {
+    const t = await task("Moved", { dueDate: "2030-06-11" });
+    const done = await donePost(post({ round: DAY }), params(t.id));
+    expect(done.status).toBe(409);
+    expect(await done.json()).toEqual({ ok: false, error: "stale" });
+    expect((await snoozePost(post({ round: DAY }), params(t.id))).status).toBe(409);
+    expect((await getTask(a.id, t.id))?.status).toBe("open");
+    expect(await db.select().from(taskReminders)).toHaveLength(0);
+  });
+
+  it("Done accepts the current round, a null round and no body", async () => {
+    const one = await task("One");
+    expect((await donePost(post({ round: DAY }), params(one.id))).status).toBe(200);
+    const two = await task("Two");
+    expect((await donePost(post({ round: null }), params(two.id))).status).toBe(200);
+    const three = await task("Three");
+    expect((await donePost(post(), params(three.id))).status).toBe(200);
+    expect((await getTask(a.id, three.id))?.status).toBe("done");
+  });
+
+  it("refuses a body of the wrong shape with 400", async () => {
+    const t = await task("Odd body");
+    expect((await donePost(post({ round: 5 }), params(t.id))).status).toBe(400);
+    expect((await getTask(a.id, t.id))?.status).toBe("open");
+  });
+
+  it("two Done presses at once on a repeat finish one round", async () => {
+    const t = await task("Twice", { recurrenceRule: "FREQ=DAILY", dueDate: "2020-01-01" });
+    const results = await Promise.all([
+      donePost(post({ round: "2020-01-01" }), params(t.id)),
+      donePost(post({ round: "2020-01-01" }), params(t.id)),
+    ]);
+    expect(results.every((r) => r.status === 200 || r.status === 409)).toBe(true);
+    const copies = await db.select().from(tasks).where(eq(tasks.recurrenceOriginId, t.id));
+    expect(copies).toHaveLength(1);
+    expect(await getTask(a.id, t.id)).toMatchObject({ status: "open" });
+  });
+});
+
+describe("origin check", () => {
+  it("refuses another site with 403, before touching the task", async () => {
+    const t = await task("Cross site");
+    const refused: Record<string, string>[] = [
+      { "sec-fetch-site": "cross-site" },
+      { "sec-fetch-site": "same-site" },
+      { "sec-fetch-site": "none" },
+      { "sec-fetch-site": "cross-site", origin: "http://localhost:3000" },
+      { origin: "https://evil.example" },
+      {},
+    ];
+    for (const headers of refused) {
+      expect((await donePost(post(undefined, headers), params(t.id))).status).toBe(403);
+      expect((await snoozePost(post(undefined, headers), params(t.id))).status).toBe(403);
+    }
+    expect((await getTask(a.id, t.id))?.status).toBe("open");
+  });
+
+  it("allows same-origin, and the app's own Origin when Sec-Fetch-Site is absent", async () => {
+    const one = await task("Same origin");
+    expect((await donePost(post(), params(one.id))).status).toBe(200);
+    const two = await task("Origin header");
+    const res = await donePost(
+      post(undefined, { origin: "http://localhost:3000" }),
+      params(two.id),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("checks the origin before the session", async () => {
+    const t = await task("Signed out cross site");
+    testAuth.reset("");
+    const res = await donePost(post(undefined, { "sec-fetch-site": "cross-site" }), params(t.id));
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("POST /api/reminders/subscription", () => {
+  const newSub = {
+    endpoint: "https://fcm.googleapis.com/fcm/send/new",
+    keys: { p256dh: "k2", auth: "a2" },
+  };
+
+  async function signIn(userId: string) {
+    n += 1;
+    const [row] = await db
+      .insert(session)
+      .values({ userId, token: `sub-${n}-${Date.now()}`, expiresAt: new Date("2099-01-01") })
+      .returning({ id: session.id });
+    testAuth.reset(userId);
+    testAuth.sessionId = row.id;
+    return row.id;
+  }
+
+  const subPost = (body: unknown, site = "same-origin") =>
+    subscriptionPost(
+      new Request("http://localhost:3000/api/reminders/subscription", {
+        method: "POST",
+        headers: {
+          "sec-fetch-site": site,
+          "user-agent": "Mozilla/5.0 (Linux; Android 14) Chrome/130.0",
+        },
+        body: JSON.stringify(body),
+      }),
+    );
+
+  const endpointsOf = async (userId: string) =>
+    (await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId))).map(
+      (r) => r.endpoint,
+    );
+
+  it("saves the new subscription and removes this user's old one", async () => {
+    const sessionId = await signIn(a.id);
+    const [old] = await endpointsOf(a.id);
+    const res = await subPost({ oldEndpoint: old, subscription: newSub });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+    expect(await endpointsOf(a.id)).toEqual([newSub.endpoint]);
+    const [row] = await db
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.endpoint, newSub.endpoint));
+    expect(row).toMatchObject({ userId: a.id, sessionId, p256dh: "k2", auth: "a2" });
+  });
+
+  it("leaves another user's old endpoint alone", async () => {
+    const [aOld] = await endpointsOf(a.id);
+    await signIn(b.id);
+    expect((await subPost({ oldEndpoint: aOld, subscription: newSub })).status).toBe(200);
+    expect(await endpointsOf(a.id)).toEqual([aOld]);
+    expect(await endpointsOf(b.id)).toEqual([newSub.endpoint]);
+  });
+
+  it("answers 400 for a bad body or push address, 403 from another site, 401 signed out", async () => {
+    await signIn(a.id);
+    const ip = { ...newSub, endpoint: "https://10.0.0.1/x" };
+    expect((await subPost({ subscription: ip })).status).toBe(400);
+    expect((await subPost({ oldEndpoint: "x" })).status).toBe(400);
+    expect((await subPost({ subscription: newSub }, "cross-site")).status).toBe(403);
+    testAuth.reset("");
+    expect((await subPost({ subscription: newSub })).status).toBe(401);
+    expect(await endpointsOf(a.id)).not.toContain(newSub.endpoint);
   });
 });

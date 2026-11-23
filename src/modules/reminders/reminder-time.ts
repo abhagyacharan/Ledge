@@ -207,6 +207,44 @@ export function reminderMoment(input: ReminderTimeInput): ReminderMoment | null 
   return { at, held, key: roundKey(input.taskId, input.dueDate, input.dueTime, choice) };
 }
 
+/** What a stored reminder row holds (a `task_reminders` row, or the parts of it we read). */
+export type ReminderRowLike = {
+  kind: "none" | "at_due" | "before" | "custom";
+  offsetMinutes: number | null;
+  customDate: string | null;
+  customTime: string | null;
+};
+
+/** A stored row as a choice; custom times lose their seconds. A broken row reads as None. */
+export function rowToChoice(row: ReminderRowLike): ReminderChoice {
+  if (row.kind === "before" && row.offsetMinutes !== null) {
+    return { kind: "before", offsetMinutes: row.offsetMinutes };
+  }
+  if (row.kind === "custom" && row.customDate && row.customTime) {
+    return { kind: "custom", date: row.customDate, time: trimTime(row.customTime) };
+  }
+  if (row.kind === "at_due") return { kind: "at_due" };
+  return { kind: "none" };
+}
+
+/**
+ * When a snooze that ends at `until` rings: then, or when quiet hours end if it lands inside
+ * them (§6), with `held` set so the text says so.
+ */
+export function snoozeMoment(input: {
+  until: Date;
+  timeZone: string;
+  quietStart: IsoTime | null;
+  quietEnd: IsoTime | null;
+}): { at: Date; held: boolean } {
+  const { until, timeZone, quietStart, quietEnd } = input;
+  if (!quietStart || !quietEnd) return { at: until, held: false };
+  const local = localDateTime(until, timeZone);
+  if (!isInQuietHours(local.time, quietStart, quietEnd)) return { at: until, held: false };
+  const release = quietRelease(local, quietStart, quietEnd);
+  return { at: zonedTimeToUtc(release.date, release.time, timeZone), held: true };
+}
+
 /**
  * Which reminder applies to a task: its own choice when it has a row, otherwise the Settings
  * default, but only for a task with a due time created after the default was last changed (§5).

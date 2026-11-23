@@ -13,14 +13,16 @@ import {
   or,
   sql,
 } from "drizzle-orm";
-import { todayIn, trimTime } from "@/lib/dates";
+import { todayIn } from "@/lib/dates";
 import {
   effectiveChoice,
   reminderBody,
   reminderMoment,
   roundKey,
+  rowToChoice,
   sendDecision,
   SNOOZE_MS,
+  snoozeMoment,
   snoozeTooOld,
 } from "@/modules/reminders/reminder-time";
 import type { ReminderChoice } from "@/modules/reminders/schema";
@@ -32,10 +34,14 @@ import {
   taskReminders,
   tasks,
   userSettings,
-  type TaskReminder,
 } from "@/server/db/schema";
 import { getUserSettings } from "@/server/data/settings";
-import { completeRecurringTask, getTask, setTaskDone } from "@/server/data/tasks";
+import {
+  completeRecurringTask,
+  getTask,
+  RecurringRoundTaken,
+  setTaskDone,
+} from "@/server/data/tasks";
 import { pushConfigured, sendToUser, type PushPayload } from "@/server/push";
 
 /**
@@ -64,25 +70,6 @@ export type TickCounts = {
 
 function utcDate(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
-}
-
-function rowChoice(
-  row: Pick<TaskReminder, "kind" | "offsetMinutes" | "customDate" | "customTime">,
-) {
-  switch (row.kind) {
-    case "at_due":
-      return { kind: "at_due" } satisfies ReminderChoice;
-    case "before":
-      return { kind: "before", offsetMinutes: row.offsetMinutes ?? 0 } satisfies ReminderChoice;
-    case "custom":
-      return {
-        kind: "custom",
-        date: row.customDate ?? "",
-        time: trimTime(row.customTime ?? "00:00"),
-      } satisfies ReminderChoice;
-    default:
-      return { kind: "none" } satisfies ReminderChoice;
-  }
 }
 
 /** A user with at least one subscription whose sign-in session is still live. */
@@ -124,6 +111,7 @@ async function loadCandidates(now: Date) {
         customTime: taskReminders.customTime,
         sentKey: taskReminders.sentKey,
         snoozedUntil: taskReminders.snoozedUntil,
+        snoozedKey: taskReminders.snoozedKey,
         updatedAt: taskReminders.updatedAt,
       },
     })
@@ -201,16 +189,23 @@ async function claimDefault(
   return rows.length > 0;
 }
 
-/** Clears a snooze that has come due. True only for the caller that won the claim. */
+/**
+ * Clears a snooze that has come due. With `sentKey` the round is also marked sent. True only for
+ * the caller that won the claim.
+ */
 async function claimSnooze(
   userId: string,
   reminderId: string,
   now: Date,
-  key: string | null,
+  sentKey: string | null,
 ): Promise<boolean> {
   const rows = await db
     .update(taskReminders)
-    .set(key ? { snoozedUntil: null, sentKey: key } : { snoozedUntil: null })
+    .set(
+      sentKey
+        ? { snoozedUntil: null, snoozedKey: null, sentKey }
+        : { snoozedUntil: null, snoozedKey: null },
+    )
     .where(
       and(
         eq(taskReminders.id, reminderId),
@@ -220,6 +215,32 @@ async function claimSnooze(
     )
     .returning({ id: taskReminders.id });
   return rows.length > 0;
+}
+
+/**
+ * Snoozes that came due on a task finished or put in Trash in the meantime (a plain task ticked
+ * in the app, say) are dropped, so reopening it later does not ring an old snooze.
+ */
+async function dropFinishedSnoozes(now: Date): Promise<void> {
+  await db
+    .update(taskReminders)
+    .set({ snoozedUntil: null, snoozedKey: null })
+    .where(
+      and(
+        lte(taskReminders.snoozedUntil, now),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(tasks)
+            .where(
+              and(
+                eq(tasks.id, taskReminders.taskId),
+                or(ne(tasks.status, "open"), isNotNull(tasks.deletedAt)),
+              ),
+            ),
+        ),
+      ),
+    );
 }
 
 function payloadFor(c: Candidate, now: Date, held: boolean, late: boolean): PushPayload {
@@ -239,12 +260,18 @@ function payloadFor(c: Candidate, now: Date, held: boolean, late: boolean): Push
     url: `/today?task=${c.taskId}`,
     tag: c.taskId,
     late,
+    round: roundFor(choiceFor(c), c.dueDate),
   };
+}
+
+/** The round a notification belongs to: its due date, or null for a custom reminder. */
+function roundFor(choice: ReminderChoice, dueDate: string | null): string | null {
+  return choice.kind === "custom" ? null : dueDate;
 }
 
 function choiceFor(c: Candidate): ReminderChoice {
   return effectiveChoice({
-    own: c.reminder ? rowChoice(c.reminder) : null,
+    own: c.reminder ? rowToChoice(c.reminder) : null,
     reminderDefault: c.reminderDefault,
     reminderDefaultSince: c.reminderDefaultSince,
     taskCreatedAt: c.taskCreatedAt,
@@ -265,16 +292,35 @@ async function handle(c: Candidate, now: Date, counts: TickCounts): Promise<void
     quietEnd: c.quietEnd,
   });
 
-  // A snooze that has come due sends the same reminder again (§7), whatever the choice.
+  // A snooze that has come due sends the same reminder again (§7), whatever the choice, but only
+  // for the round it was pressed on: ticked, moved or changed since, it is dropped silently.
   const reminder = c.reminder;
   if (reminder?.snoozedUntil && reminder.snoozedUntil.getTime() <= now.getTime()) {
-    const key = moment?.key ?? null;
-    if (!(await claimSnooze(c.userId, reminder.id, now, key))) return;
-    if (snoozeTooOld(now, reminder.snoozedUntil)) {
+    const key = roundKey(c.taskId, c.dueDate, c.dueTime, choice);
+    if (reminder.snoozedKey !== null && reminder.snoozedKey !== key) {
+      await claimSnooze(c.userId, reminder.id, now, null);
+      return;
+    }
+    // Quiet hours hold a snooze too (§6): it waits, still pending, until they end.
+    const ring = snoozeMoment({
+      until: reminder.snoozedUntil,
+      timeZone: c.timezone,
+      quietStart: c.quietStart,
+      quietEnd: c.quietEnd,
+    });
+    if (ring.at.getTime() > now.getTime()) return;
+    // Mark the round sent only when its own moment has come, so a snooze pressed early (from a
+    // test, say) does not swallow the reminder itself.
+    const sentKey =
+      reminder.snoozedKey !== null && moment && moment.at.getTime() <= now.getTime()
+        ? moment.key
+        : null;
+    if (!(await claimSnooze(c.userId, reminder.id, now, sentKey))) return;
+    if (snoozeTooOld(now, ring.at)) {
       counts.skipped += 1;
       return;
     }
-    await sendToUser(c.userId, payloadFor(c, now, false, false));
+    await sendToUser(c.userId, payloadFor(c, now, ring.held, false));
     counts.sent += 1;
     counts.snoozed += 1;
     return;
@@ -318,6 +364,11 @@ function logSafely(context: string, error: unknown) {
 export async function runReminderTick(now: Date): Promise<TickCounts> {
   const counts: TickCounts = { considered: 0, sent: 0, late: 0, skipped: 0, snoozed: 0, errors: 0 };
   if (!pushConfigured()) return counts;
+  try {
+    await dropFinishedSnoozes(now);
+  } catch (error) {
+    logSafely("Reminder snooze clean-up failed", error);
+  }
   const candidates = await loadCandidates(now);
   counts.considered = candidates.length;
   await Promise.all(
@@ -370,53 +421,80 @@ export function stopReminderScheduler(): void {
   g.__ledgeReminderScheduler = undefined;
 }
 
-export type ReminderDoneResult = "done" | "not_found" | "too_early";
+export type ReminderDoneResult = "done" | "not_found" | "too_early" | "stale";
+
+/**
+ * True when a notification's round (its due date, sent in the payload) is not the task's round
+ * any more: ticked in the app, moved, or a second press after a repeat moved on. Older
+ * notifications send no round (undefined) and a custom reminder's is null; neither is checked.
+ */
+function isStale(round: string | null | undefined, dueDate: string | null): boolean {
+  return typeof round === "string" && round !== dueDate;
+}
 
 /**
  * Done from a notification (§7): the same path as ticking the task in the app. A repeating task
- * moves to its next round; a repeat whose day has not come is refused, never ticked ahead.
+ * moves to its next round; a repeat whose day has not come is refused, never ticked ahead. Two
+ * presses at once finish one round: the due date only moves if it has not moved already.
  */
 export async function completeFromReminder(
   userId: string,
   taskId: string,
   now: Date,
+  round?: string | null,
 ): Promise<ReminderDoneResult> {
   const task = await getTask(userId, taskId);
   if (!task) return "not_found";
+  if (isStale(round, task.dueDate)) return "stale";
   if (task.status === "done") return "done";
   const { timezone } = await getUserSettings(userId);
   const today = todayIn(timezone, now);
   if (task.recurrenceRule && !task.parentId && task.dueDate && task.dueDate > today) {
     return "too_early";
   }
-  // A pending snooze must not ring for the next round.
+  // A pending snooze must not ring for the next round (the tick's key check also drops it).
   await db
     .update(taskReminders)
-    .set({ snoozedUntil: null })
+    .set({ snoozedUntil: null, snoozedKey: null })
     .where(and(eq(taskReminders.taskId, taskId), eq(taskReminders.userId, userId)));
-  if (await completeRecurringTask(userId, taskId, today)) return "done";
+  try {
+    if (await completeRecurringTask(userId, taskId, today, { exclusive: true })) return "done";
+  } catch (error) {
+    // Another press finished this round a moment ago.
+    if (error instanceof RecurringRoundTaken) return "done";
+    throw error;
+  }
   return (await setTaskDone(userId, taskId, true)) ? "done" : "not_found";
 }
 
 /**
- * Snooze from a notification (§7): the same reminder again in ten minutes. A task reminded by
- * the default gets a row holding the default's choice; this round stays marked as sent. Returns
- * when it will ring again, or null when the task is not this user's open task.
+ * Snooze from a notification (§7): the same reminder again in ten minutes, for this round only
+ * (the round's key is stored with it). A task reminded by the default gets a row holding the
+ * default's choice; this round stays marked as sent. Returns when it will ring again, "stale"
+ * for a notification whose round has passed, or null when the task is not this user's open task.
  */
 export async function snoozeReminder(
   userId: string,
   taskId: string,
   now: Date,
-): Promise<Date | null> {
+  round?: string | null,
+): Promise<Date | "stale" | null> {
   const task = await getTask(userId, taskId);
   if (!task || task.status !== "open") return null;
+  if (isStale(round, task.dueDate)) return "stale";
   const until = new Date(now.getTime() + SNOOZE_MS);
-  const updated = await db
-    .update(taskReminders)
-    .set({ snoozedUntil: until })
-    .where(and(eq(taskReminders.taskId, taskId), eq(taskReminders.userId, userId)))
-    .returning({ id: taskReminders.id });
-  if (updated.length > 0) return until;
+  const [row] = await db
+    .select()
+    .from(taskReminders)
+    .where(and(eq(taskReminders.taskId, taskId), eq(taskReminders.userId, userId)));
+  if (row) {
+    const snoozedKey = roundKey(task.id, task.dueDate, task.dueTime, rowToChoice(row));
+    await db
+      .update(taskReminders)
+      .set({ snoozedUntil: until, snoozedKey })
+      .where(and(eq(taskReminders.id, row.id), eq(taskReminders.userId, userId)));
+    return until;
+  }
 
   const settings = await getUserSettings(userId);
   const choice = effectiveChoice({
@@ -426,17 +504,22 @@ export async function snoozeReminder(
     taskCreatedAt: task.createdAt,
     dueTime: task.dueTime,
   });
+  const key = roundKey(task.id, task.dueDate, task.dueTime, choice);
   const values =
     choice.kind === "at_due" || choice.kind === "before"
       ? {
           kind: choice.kind,
           offsetMinutes: choice.kind === "before" ? choice.offsetMinutes : null,
-          sentKey: roundKey(task.id, task.dueDate, task.dueTime, choice),
+          sentKey: key,
         }
       : { kind: "none" as const, offsetMinutes: null, sentKey: null };
   await db
     .insert(taskReminders)
-    .values({ userId, taskId, ...values, snoozedUntil: until })
-    .onConflictDoUpdate({ target: taskReminders.taskId, set: { snoozedUntil: until } });
+    .values({ userId, taskId, ...values, snoozedUntil: until, snoozedKey: key })
+    .onConflictDoUpdate({
+      target: taskReminders.taskId,
+      set: { snoozedUntil: until, snoozedKey: key },
+      setWhere: sql`${taskReminders.userId} = ${userId}`,
+    });
   return until;
 }

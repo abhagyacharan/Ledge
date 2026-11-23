@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isAllowedPushEndpoint,
   parseReminderDefault,
   pushSubscriptionSchema,
   reminderChoiceSchema,
@@ -64,20 +65,65 @@ describe("reminderSettingsSchema", () => {
 
 describe("pushSubscriptionSchema", () => {
   const keys = { p256dh: "abc", auth: "def" };
-  it("needs an https endpoint and both keys", () => {
+  it("needs an allowed https endpoint and both keys", () => {
     expect(
-      pushSubscriptionSchema.safeParse({ endpoint: "https://push.example/x", keys }).success,
+      pushSubscriptionSchema.safeParse({ endpoint: "https://fcm.googleapis.com/fcm/send/x", keys })
+        .success,
     ).toBe(true);
     expect(
-      pushSubscriptionSchema.safeParse({ endpoint: "http://push.example/x", keys }).success,
+      pushSubscriptionSchema.safeParse({ endpoint: "http://fcm.googleapis.com/fcm/send/x", keys })
+        .success,
+    ).toBe(false);
+    expect(
+      pushSubscriptionSchema.safeParse({ endpoint: "https://push.example/x", keys }).success,
     ).toBe(false);
     expect(pushSubscriptionSchema.safeParse({ endpoint: "not a url", keys }).success).toBe(false);
     expect(
       pushSubscriptionSchema.safeParse({
-        endpoint: "https://push.example/x",
+        endpoint: "https://fcm.googleapis.com/fcm/send/x",
         keys: { p256dh: "abc" },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("isAllowedPushEndpoint", () => {
+  it("accepts the four push services", () => {
+    for (const endpoint of [
+      "https://fcm.googleapis.com/fcm/send/abc",
+      "https://web.push.apple.com/QGx",
+      "https://api.push.apple.com/x",
+      "https://updates.push.services.mozilla.com/wpush/v2/x",
+      "https://wns2-par02p.notify.windows.com/w/?token=x",
+      "https://FCM.googleapis.com/fcm/send/abc",
+      "https://fcm.googleapis.com:443/fcm/send/abc",
+    ]) {
+      expect(isAllowedPushEndpoint(endpoint), endpoint).toBe(true);
+    }
+  });
+
+  it("refuses other hosts, http, ports, IP addresses and user names", () => {
+    for (const endpoint of [
+      "http://fcm.googleapis.com/fcm/send/abc",
+      "https://fcm.googleapis.com:8443/fcm/send/abc",
+      "https://evil.com/fcm.googleapis.com",
+      "https://fcm.googleapis.com.evil.com/x",
+      "https://googleapis.com/x",
+      "https://push.apple.com/x",
+      "https://.push.apple.com/x",
+      "https://evilpush.apple.com/x",
+      "https://notify.windows.com/x",
+      "https://mozilla.com/x",
+      "https://127.0.0.1/x",
+      "https://192.168.1.10/x",
+      "https://[::1]/x",
+      "https://user:pass@fcm.googleapis.com/x",
+      "https://localhost/x",
+      "not a url",
+      "",
+    ]) {
+      expect(isAllowedPushEndpoint(endpoint), endpoint).toBe(false);
+    }
   });
 });
 

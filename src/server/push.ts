@@ -20,6 +20,11 @@ export type PushPayload =
       url: string;
       tag: string;
       late: boolean;
+      /**
+       * The round's due date ("YYYY-MM-DD"), null for a custom reminder. Done and Snooze send it
+       * back, so a press on a notification for a round that has passed is refused.
+       */
+      round: string | null;
     }
   | { type: "test"; title: string; body: string; url: string };
 
@@ -63,6 +68,10 @@ export async function sendPush(subscription: Target, payload: PushPayload): Prom
     return "ok";
   } catch (error) {
     const status = (error as { statusCode?: unknown } | null)?.statusCode;
+    // Never log the endpoint, keys or payload: the error object carries all three.
+    const kind =
+      typeof status === "number" ? String(status) : error instanceof Error ? error.name : "error";
+    console.error(`[push] send failed ${kind}`);
     return status === 404 || status === 410 ? "gone" : "failed";
   }
 }

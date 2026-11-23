@@ -6,7 +6,9 @@ import {
   reminderBody,
   reminderMoment,
   roundKey,
+  rowToChoice,
   sendDecision,
+  snoozeMoment,
   snoozeTooOld,
   zonedTimeToUtc,
   type ReminderTimeInput,
@@ -280,6 +282,53 @@ describe("reminderBody", () => {
     expect(body({ now: new Date("2026-11-24T13:30:00Z") })).toBe("Overdue since 5:00 pm · Home");
     expect(body({ dueTime: "23:30", now: new Date("2026-11-25T01:30:00Z"), held: true })).toBe(
       "Overdue since yesterday, 11:30 pm · Home · Held during quiet hours",
+    );
+  });
+});
+
+describe("rowToChoice", () => {
+  const row = (kind: "none" | "at_due" | "before" | "custom", extra = {}) => ({
+    kind,
+    offsetMinutes: null,
+    customDate: null,
+    customTime: null,
+    ...extra,
+  });
+  it("reads each kind, trimming a custom time's seconds", () => {
+    expect(rowToChoice(row("none"))).toEqual({ kind: "none" });
+    expect(rowToChoice(row("at_due"))).toEqual({ kind: "at_due" });
+    expect(rowToChoice(row("before", { offsetMinutes: 30 }))).toEqual({
+      kind: "before",
+      offsetMinutes: 30,
+    });
+    expect(
+      rowToChoice(row("custom", { customDate: "2026-11-30", customTime: "08:15:00" })),
+    ).toEqual({ kind: "custom", date: "2026-11-30", time: "08:15" });
+  });
+  it("reads a broken row as None", () => {
+    expect(rowToChoice(row("before"))).toEqual({ kind: "none" });
+    expect(rowToChoice(row("custom", { customDate: "2026-11-30" }))).toEqual({ kind: "none" });
+  });
+});
+
+describe("snoozeMoment", () => {
+  const until = new Date("2026-11-24T11:55:00Z"); // 17:25 in Asia/Kolkata
+  const input = { until, timeZone: "Asia/Kolkata", quietStart: null, quietEnd: null };
+  it("rings at the snooze time outside quiet hours", () => {
+    expect(snoozeMoment(input)).toEqual({ at: until, held: false });
+    expect(snoozeMoment({ ...input, quietStart: "23:00", quietEnd: "07:00" })).toEqual({
+      at: until,
+      held: false,
+    });
+  });
+  it("waits for quiet hours to end, across midnight too", () => {
+    expect(snoozeMoment({ ...input, quietStart: "17:00", quietEnd: "18:00" })).toEqual({
+      at: new Date("2026-11-24T12:30:00Z"),
+      held: true,
+    });
+    const late = new Date("2026-11-24T17:45:00Z"); // 23:15 IST
+    expect(snoozeMoment({ ...input, until: late, quietStart: "23:00", quietEnd: "07:00" })).toEqual(
+      { at: new Date("2026-11-25T01:30:00Z"), held: true },
     );
   });
 });

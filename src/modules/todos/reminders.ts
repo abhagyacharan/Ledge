@@ -1,19 +1,18 @@
 import { formatRowDay, formatTime } from "@/lib/dates";
-import { parseReminderDefault, type ReminderChoice } from "@/modules/reminders/schema";
+import {
+  effectiveChoice,
+  rowToChoice,
+  type ReminderRowLike,
+} from "@/modules/reminders/reminder-time";
+import type { ReminderChoice } from "@/modules/reminders/schema";
+
+export { rowToChoice, type ReminderRowLike };
 
 /**
  * Pure helpers for a task's reminder in the task screens (docs/reminders-spec.md §3, §5): the
  * words for each choice, whether the Settings default applies to a task, and whether a row gets
  * its bell. Shared by the server (bell on rows) and the drawer and quick add (the field).
  */
-
-/** What a stored reminder row holds (a `task_reminders` row, or the parts of it we read). */
-export type ReminderRowLike = {
-  kind: "none" | "at_due" | "before" | "custom";
-  offsetMinutes: number | null;
-  customDate: string | null;
-  customTime: string | null;
-};
 
 /** The "before" choices in the order they are listed. */
 export const BEFORE_CHOICES = [5, 10, 15, 30, 60, 120, 1440] as const;
@@ -27,18 +26,6 @@ const BEFORE_LABELS: Record<number, string> = {
   120: "2 hours before",
   1440: "1 day before",
 };
-
-/** A stored row as a choice; custom times lose their seconds. */
-export function rowToChoice(row: ReminderRowLike): ReminderChoice {
-  if (row.kind === "before" && row.offsetMinutes !== null) {
-    return { kind: "before", offsetMinutes: row.offsetMinutes };
-  }
-  if (row.kind === "custom" && row.customDate && row.customTime) {
-    return { kind: "custom", date: row.customDate, time: row.customTime.slice(0, 5) };
-  }
-  if (row.kind === "at_due") return { kind: "at_due" };
-  return { kind: "none" };
-}
 
 /** "At due time", or "At 9:00 am" for a task with a date but no time (the morning time). */
 export function atDueLabel(hasTime: boolean, morningTime: string, locale: string): string {
@@ -78,9 +65,13 @@ export function defaultChoiceFor(
   task: { dueTime: string | null; createdAt: Date },
   settings: DefaultSettings,
 ): ReminderChoice | null {
-  if (!task.dueTime || !settings.reminderDefaultSince) return null;
-  if (task.createdAt.getTime() <= settings.reminderDefaultSince.getTime()) return null;
-  const choice = parseReminderDefault(settings.reminderDefault);
+  const choice = effectiveChoice({
+    own: null,
+    reminderDefault: settings.reminderDefault,
+    reminderDefaultSince: settings.reminderDefaultSince,
+    taskCreatedAt: task.createdAt,
+    dueTime: task.dueTime,
+  });
   return choice.kind === "none" ? null : choice;
 }
 

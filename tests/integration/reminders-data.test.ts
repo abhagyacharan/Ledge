@@ -6,6 +6,7 @@ vi.mock("web-push", async () => (await import("../helpers/web-push-mock")).webPu
 import {
   clearTaskReminder,
   deleteSubscription,
+  deleteSubscriptionByEndpoint,
   getReminderSettings,
   getTaskReminder,
   listLiveSubscriptions,
@@ -44,7 +45,7 @@ async function makeSession(userId: string, expiresAt: Date): Promise<string> {
 
 const inAMonth = () => new Date(Date.now() + 30 * 86_400_000);
 const sub = (name: string) => ({
-  endpoint: `https://push.example/${name}`,
+  endpoint: `https://fcm.googleapis.com/fcm/send/${name}`,
   keys: { p256dh: "p256dh-key", auth: "auth-key" },
 });
 const payload = {
@@ -184,6 +185,27 @@ describe("push subscriptions", () => {
     expect(await saveSubscription(b.id, aSessionId, sub("x"), null)).toBeNull();
   });
 
+  it("refuses an endpoint that is not a known push service, even past the schema", async () => {
+    for (const endpoint of [
+      "https://192.168.1.5/push",
+      "https://evil.example/x",
+      "http://fcm.googleapis.com/x",
+    ]) {
+      const bad = { endpoint, keys: { p256dh: "p", auth: "a" } };
+      expect(await saveSubscription(a.id, aSessionId, bad, null)).toBeNull();
+    }
+    expect(await db.select().from(pushSubscriptions)).toHaveLength(0);
+  });
+
+  it("deleteSubscriptionByEndpoint removes only the user's own row", async () => {
+    await saveSubscription(a.id, aSessionId, sub("by-endpoint"), null);
+    const endpoint = sub("by-endpoint").endpoint;
+    expect(await deleteSubscriptionByEndpoint(b.id, endpoint)).toBe(false);
+    expect(await listLiveSubscriptions(a.id)).toHaveLength(1);
+    expect(await deleteSubscriptionByEndpoint(a.id, endpoint)).toBe(true);
+    expect(await listLiveSubscriptions(a.id)).toHaveLength(0);
+  });
+
   it("B cannot delete A's subscription", async () => {
     const row = await saveSubscription(a.id, aSessionId, sub("mine"), null);
     expect(await deleteSubscription(b.id, row!.id)).toBe(false);
@@ -203,7 +225,7 @@ describe("push subscriptions", () => {
     await saveSubscription(a.id, aSessionId, sub("live"), null);
     await saveSubscription(a.id, expired, sub("expired"), null);
     const live = await listLiveSubscriptions(a.id);
-    expect(live.map((s) => s.endpoint)).toEqual(["https://push.example/live"]);
+    expect(live.map((s) => s.endpoint)).toEqual(["https://fcm.googleapis.com/fcm/send/live"]);
   });
 });
 
@@ -231,7 +253,29 @@ describe("sendToUser", () => {
     const counts = await sendToUser(a.id, payload);
     expect(counts).toEqual({ sent: 1, failed: 1, removed: 1 });
     const left = await db.select().from(pushSubscriptions);
-    expect(left.map((r) => r.endpoint)).toEqual(["https://push.example/alive"]);
+    expect(left.map((r) => r.endpoint)).toEqual(["https://fcm.googleapis.com/fcm/send/alive"]);
+  });
+
+  it("logs a failure by status or error name only, never the endpoint, keys or payload", async () => {
+    await saveSubscription(a.id, aSessionId, sub("secret-path"), null);
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      sendNotification.mockRejectedValueOnce(
+        Object.assign(new Error(`failed for ${sub("secret-path").endpoint}`), {
+          statusCode: 500,
+          endpoint: sub("secret-path").endpoint,
+        }),
+      );
+      await sendToUser(a.id, payload);
+      sendNotification.mockRejectedValueOnce(new TypeError("p256dh-key auth-key"));
+      await sendToUser(a.id, payload);
+      expect(log.mock.calls.map((c) => c.join(" "))).toEqual([
+        "[push] send failed 500",
+        "[push] send failed TypeError",
+      ]);
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("counts failures and deletes at the fifth in a row", async () => {

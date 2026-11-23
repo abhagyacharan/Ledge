@@ -49,12 +49,38 @@ export const reminderSettingsSchema = z
   });
 export type ReminderSettingsInput = z.infer<typeof reminderSettingsSchema>;
 
+/** Push services Ledge will post to: Chrome and Android, Apple, Firefox, Edge on Windows. */
+const PUSH_HOSTS = ["fcm.googleapis.com", "updates.push.services.mozilla.com"];
+const PUSH_HOST_SUFFIXES = [".push.apple.com", ".notify.windows.com"];
+
+/**
+ * True when `endpoint` is an https address at a known browser push service, with no port, no
+ * user name and no IP address. The server posts to this address, so anything else (a machine on
+ * the home network, say) is refused.
+ */
+export function isAllowedPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.port !== "" || url.username || url.password) return false;
+  const host = url.hostname.toLowerCase();
+  // IPv6 literals keep their brackets; an IPv4 literal is all digits and dots.
+  if (host.startsWith("[") || /^[\d.]+$/.test(host)) return false;
+  return (
+    PUSH_HOSTS.includes(host) ||
+    PUSH_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix) && host.length > suffix.length)
+  );
+}
+
 /** A browser's push subscription as `PushSubscription.toJSON()` gives it. */
 export const pushSubscriptionSchema = z.object({
   endpoint: z
     .url()
     .max(2048)
-    .refine((value) => value.startsWith("https://"), "The push address must be https"),
+    .refine(isAllowedPushEndpoint, "That push address is not a known push service"),
   keys: z.object({
     p256dh: z.string().min(1).max(512),
     auth: z.string().min(1).max(512),
